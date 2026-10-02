@@ -233,7 +233,9 @@ function freshState(){return{v:1,updatedAt:0,settings:{capital:{tommy:50,walter:
 /* ---------- cálculos ---------- */
 const betsOfAttempt=a=>ST.bets.filter(b=>b.attemptId===a.id);
 const settled=b=>b.status==="ganada"||b.status==="perdida";
-function attemptBal(a){let s=a.capital;for(const b of betsOfAttempt(a))if(settled(b))s+=b.ret-b.stake;return r2(s)}
+function attemptBal(a){let s=a.capital;for(const b of betsOfAttempt(a))if(settled(b))s+=b.ret-b.stake;
+  for(const mv of ST.moves)if(mv.type==="traspaso"&&mv.from===a.id)s-=mv.amount;return r2(s)}
+function suggestStake(m,bal){if(m==="walter")return bal<100?Math.floor(bal/10+1e-9)*10:Math.floor(bal/20+1e-9)*20;return Math.floor(bal+1e-9)}
 const liveAttempt=m=>ST.attempts.filter(a=>a.method===m&&a.status==="vivo").pop()||null;
 const lastAttempt=m=>ST.attempts.filter(a=>a.method===m).pop()||null;
 const pendingOf=m=>ST.bets.filter(b=>b.method===m&&b.status==="pendiente");
@@ -241,7 +243,7 @@ function dayNum(a){return betsOfAttempt(a).filter(settled).length+1}
 function walterTarget(bal){return bal<100?(Math.floor(bal/10+1e-9)+1)*10:(Math.floor(bal/20+1e-9)+1)*20}
 function targetFor(m,bal){return m==="tommy"?r2(bal*ST.settings.tommyCuota):walterTarget(bal)}
 function minCuota(m,bal){return m==="tommy"?ST.settings.tommyCuota:ceil2(walterTarget(bal)/bal)}
-function ragnarFund(){let s=0;for(const mv of ST.moves)if(mv.method==="ragnar")s+=mv.type==="entrada"?mv.amount:mv.type==="ajuste"?mv.amount:-mv.amount;
+function ragnarFund(){let s=0;for(const mv of ST.moves)if(mv.method==="ragnar")s+=(mv.type==="entrada"||mv.type==="ajuste"||mv.type==="traspaso")?mv.amount:-mv.amount;
   for(const b of ST.bets)if(b.method==="ragnar"&&settled(b))s+=b.ret-b.stake;return r2(s)}
 function ragnarFree(){return r2(ragnarFund()-pendingOf("ragnar").reduce((s,b)=>s+b.stake,0))}
 function ragnarAlive(){return ragnarFund()>=Math.min(...ST.settings.ragnarMontos)}
@@ -282,7 +284,10 @@ function checks(d){
   if(!(c>1))w.push({e:1,t:"Escribe la cuota del parlay."});
   if(d.method!=="ragnar"){
     const a=liveAttempt(d.method);
-    if(a){const bal=attemptBal(a),need=minCuota(d.method,bal);
+    if(a){const bal=attemptBal(a),st=num(d.stake);
+      if(!(st>0))w.push({e:1,t:"Escribe cuánto vas a meter."});
+      else if(st>bal+1e-9)w.push({e:1,t:`Solo tienes ${money(bal)} en este método.`});
+      const need=minCuota(d.method,st>0?st:bal);
       if(c>1&&c<need-1e-9)w.push({t:`La cuota ${c.toFixed(2)} no llega a la meta. Necesitas al menos ${need.toFixed(2)}.`});
       if(dayNum(a)>s.maxDias)w.push({t:`Ya pasaste los ${s.maxDias} días de este intento.`});}
     legs.filter(l=>l.pickId&&pick(l.pickId)?.player).forEach(l=>w.push({t:`“${l.text}” es estadística de jugador. En Tommy y Walter no se permite.`}));
@@ -344,7 +349,7 @@ function ladderCard(m){
      <div class="met-bal"><span class="num">${money(bal)}</span><span class="muted small">arrancó con ${money(a.capital)}</span></div>`;
     if(day>s.maxDias)h+=`<div class="advice"><p><b>Completaste los ${s.maxDias} días.</b> Toca cobrar.</p><button class="btn pri" data-act="close" data-id="${a.id}">Cerrar y cobrar ${money(bal)}</button></div>`;
     else if(p)h+=`<p class="next">Día ${day}: apuesta en juego a cuota ${p.cuota.toFixed(2)}. Resuélvela arriba.</p>`;
-    else{const tg=targetFor(m,bal);h+=`<p class="next">Día ${day}: mete <b>${money(bal)}</b> buscando <b>${money(tg)}</b> → cuota mínima <b class="num">${minCuota(m,bal).toFixed(2)}</b></p>`}
+    else{const st=suggestStake(m,bal)||bal,tg=targetFor(m,st),sob=r2(bal-st);h+=`<p class="next">Día ${day}: mete <b>${money(st)}</b> buscando <b>${money(tg)}</b> → cuota mínima <b class="num">${minCuota(m,st).toFixed(2)}</b>${sob>0.004?`<br><span class="muted small">Sobran ${money(sob)} que pasan a Ragnar.</span>`:""}</p>`}
     h+=strip(a,m);
     h+=`<div class="row" style="margin-top:12px"><button class="btn" data-act="detail" data-id="${m}">Ver escalera</button></div>`;
   }else{
@@ -356,13 +361,13 @@ function ladderCard(m){
 function strip(a,m){const bs=betsOfAttempt(a);const n=ST.settings.maxDias;let h=`<div class="strip" aria-label="Progreso de ${n} días">`;
   for(let i=1;i<=n;i++){const b=bs[i-1];let cl="",tx=i;
     if(b){if(b.status==="ganada")cl="w",tx="";else if(b.status==="perdida")cl="l",tx="×";else cl="p",tx=""}
-    else if(i===bs.length+1&&a.status==="vivo")cl="now";
+    else if(i===bs.length+1&&a.status==="vivo"&&!bs.some(x=>x.status==="pendiente"))cl="now";
     h+=`<span class="cell ${cl}">${tx}</span>`}
   return h+`</div>`}
 function ragnarCard(){
   const f=ragnarFund(),rb=ST.bets.filter(b=>b.method==="ragnar"&&settled(b));
   const w=rb.filter(b=>b.status==="ganada").length,l=rb.length-w;
-  const ent=ST.moves.filter(m=>m.method==="ragnar"&&m.type!=="ajuste").reduce((s,m)=>s+(m.type==="entrada"?m.amount:-m.amount),0);
+  const ent=ST.moves.filter(m=>m.method==="ragnar"&&m.type!=="ajuste").reduce((s,m)=>s+(m.type==="salida"?-m.amount:m.amount),0);
   const alive=ragnarAlive();
   return`<div class="met" style="--c:var(--ragnar)"><div class="met-h"><span class="met-name">Ragnar Lothbrok</span><span class="pill ${alive?"vivo":"caido"}">${alive?"Fondo activo":"Sin fondo"}</span></div>
    <div class="met-bal"><span class="num">${money(f)}</span><span class="muted small">metiste ${money(ent)} · ${signed(r2(f-ent))}</span></div>
@@ -415,8 +420,9 @@ function viewApostar(){
   if(m!=="ragnar"){const a=liveAttempt(m);
     if(!a)return h+`<div class="card"><p style="margin:0">${M[m].name} no tiene un intento vivo. Puedes empezar uno desde Inicio.</p></div>`;
     if(pendingOf(m).length)return h+`<div class="card"><p style="margin:0">Ya tienes la apuesta del día en juego. Resuélvela en Inicio antes de meter otra.</p></div>`;
-    const bal=attemptBal(a);
-    h+=`<div class="facts"><div class="fact"><small>Día ${dayNum(a)} · metes</small><span class="num">${money(bal)}</span></div><div class="fact"><small>Meta · cuota mínima</small><span class="num">${money(targetFor(m,bal))} · ${minCuota(m,bal).toFixed(2)}</span></div></div>`}
+    const bal=attemptBal(a);if(d.stake==="")d.stake=String(suggestStake(m,bal)||bal);
+    h+=`<p class="muted small" style="margin:12px 0 0">Día ${dayNum(a)} · tu saldo en ${M[m].name.split(" ")[0]}: <b style="color:var(--ink)">${money(bal)}</b></p>
+     <label class="f">Cuánto vas a meter</label><input class="in" type="text" inputmode="decimal" autocomplete="off" value="${esc(d.stake)}" data-bind="stake">`}
   else h+=`<label class="f">Monto (libre en el fondo: ${money(ragnarFree())})</label><div class="chips">${ST.settings.ragnarMontos.map(x=>`<button class="chip ${num(d.stake)===x?"on":""}" data-act="amt" data-id="${x}">$${x}</button>`).join("")}</div>
      <input class="in" style="margin-top:8px" type="text" inputmode="decimal" autocomplete="off" placeholder="Otro monto" value="${esc(d.stake)}" data-bind="stake">`;
   h+=`<div class="row" style="gap:10px"><div style="flex:1"><label class="f">Cuota del parlay</label><input class="in" type="text" inputmode="decimal" autocomplete="off" placeholder="1.15" value="${esc(d.cuota)}" data-bind="cuota"></div>
@@ -433,8 +439,11 @@ function viewApostar(){
   h+=`<div id="dyncheck">${dynCheck(d)}</div>`;
   return h}
 
-function dynPay(d){const m=d.method;const stake=m==="ragnar"?num(d.stake):(liveAttempt(m)?attemptBal(liveAttempt(m)):0);const c=num(d.cuota);
-  return stake>0&&c>1?`<p class="small muted" style="margin:6px 0 0">Si gana te paga <b class="num" style="color:var(--ink);font-size:17px">${money(stake*c)}</b></p>`:""}
+function dynPay(d){const m=d.method;const stake=num(d.stake);const c=num(d.cuota);let h="";
+  if(m!=="ragnar"&&liveAttempt(m)&&stake>0){const bal=attemptBal(liveAttempt(m)),sob=r2(bal-stake);
+    h+=`<div class="facts"><div class="fact"><small>Meta</small><span class="num">${money(targetFor(m,stake))}</span></div><div class="fact"><small>Cuota mínima</small><span class="num">${minCuota(m,stake).toFixed(2)}</span></div></div>`;
+    if(sob>0.004)h+=`<p class="small muted" style="margin:6px 0 0">Sobran ${money(sob)}: pasan al fondo de Ragnar al guardar.</p>`}
+  return h+(stake>0&&c>1?`<p class="small muted" style="margin:6px 0 0">Si gana te paga <b class="num" style="color:var(--ink);font-size:17px">${money(stake*c)}</b></p>`:"")}
 function dynCheck(d){const c=num(d.cuota);let h="";const w=checks(d);const real=w.filter(x=>!x.e);
   if(real.length)h+=`<div class="checks"><h3>Ojo con tus reglas</h3><ul>${real.map(x=>`<li>${esc(x.t)}</li>`).join("")}</ul></div>`;
   else if(d.legs.length&&c>1)h+=`<p class="ok-note">Cumple tus reglas.</p>`;
@@ -490,7 +499,7 @@ const back=`<button class="back" data-tab="mas">‹ Más</button>`;
 function viewReglas(){return back+`<h1>Reglas</h1><p class="muted small">Toca una para editarla.</p><ol class="rules">${ST.rules.map(r=>`<li><button class="link" style="color:var(--ink);text-decoration:none;text-align:left;font-size:16px" data-act="editrule" data-id="${r.id}">${esc(r.text)}</button></li>`).join("")}</ol><button class="btn full" style="margin-top:14px" data-act="newrule">+ Agregar regla</button>`}
 function viewDinero(){const c=cuenta();return back+`<h1>Entradas y salidas</h1><p class="muted small">Entrada es dinero que metes; salida es lo que retiras de Bet365. Toca una entrada para marcar si salió de tu bolsa o de ganancias anteriores.</p>
   <div class="facts"><div class="fact"><small>Metido de tu bolsa</small><span class="num">${money(c.ent)}</span></div><div class="fact"><small>Retirado</small><span class="num">${money(c.sal)}</span></div></div>
-  <div class="card scroll"><table class="t"><tr><th>Fecha</th><th>Método</th><th>Nota</th><th class="r">Monto</th></tr>${ST.moves.slice().reverse().map(m=>`<tr ${m.type==="entrada"?`data-act="togfuente" data-id="${m.id}" style="cursor:pointer"`:""}><td class="small">${esc(fmtDate(m.date))}</td><td class="small">${esc(M[m.method]?.name.split(" ")[0]||(m.method==="previo"?"Antes":m.method))}</td><td class="small">${esc(m.note||"")}${m.type==="entrada"?`<div class="muted" style="font-size:12px">${m.fuente==="previa"?"de ganancias anteriores":"de tu bolsa"}</div>`:""}</td><td class="r num ${m.type==="entrada"?"neg":m.type==="salida"?"pos":"muted"}">${m.type==="entrada"?"−$"+fmt(m.amount):m.type==="salida"?"+$"+fmt(m.amount):"ajuste "+signed(m.amount)}</td></tr>`).join("")}</table></div>`}
+  <div class="card scroll"><table class="t"><tr><th>Fecha</th><th>Método</th><th>Nota</th><th class="r">Monto</th></tr>${ST.moves.slice().reverse().map(m=>`<tr ${m.type==="entrada"?`data-act="togfuente" data-id="${m.id}" style="cursor:pointer"`:""}><td class="small">${esc(fmtDate(m.date))}</td><td class="small">${esc(M[m.method]?.name.split(" ")[0]||(m.method==="previo"?"Antes":m.method))}</td><td class="small">${esc(m.note||"")}${m.type==="entrada"?`<div class="muted" style="font-size:12px">${m.fuente==="previa"?"de ganancias anteriores":"de tu bolsa"}</div>`:""}</td><td class="r num ${m.type==="entrada"?"neg":m.type==="salida"?"pos":"muted"}">${m.type==="entrada"?"−$"+fmt(m.amount):m.type==="salida"?"+$"+fmt(m.amount):m.type==="traspaso"?"→ Ragnar $"+fmt(m.amount):"ajuste "+signed(m.amount)}</td></tr>`).join("")}</table></div>`}
 function viewAjustes(){const s=ST.settings;return back+`<h1>Ajustes</h1>
   <label class="f">Capital inicial de Tommy</label><input class="in" type="number" inputmode="decimal" data-set="capital.tommy" value="${s.capital.tommy}">
   <label class="f">Capital inicial de Walter</label><input class="in" type="number" inputmode="decimal" data-set="capital.walter" value="${s.capital.walter}">
@@ -539,7 +548,7 @@ const A={
     b.status=v;
     if(b.attemptId){const a=ST.attempts.find(x=>x.id===b.attemptId);if(v==="perdida"){a.status="caido";a.end=b.date}}
     delete UI.resolve[b.id];commit();toast(v==="ganada"?"Ganada":"Perdida registrada")},
-  delbet(e){confirmSheet("Borrar apuesta","<p>Se borra esta apuesta pendiente.</p>","Borrar",()=>{ST.bets=ST.bets.filter(x=>x.id!==e.dataset.id);commit()})},
+  delbet(e){confirmSheet("Borrar apuesta","<p>Se borra esta apuesta pendiente.</p>","Borrar",()=>{ST.bets=ST.bets.filter(x=>x.id!==e.dataset.id);ST.moves=ST.moves.filter(x=>x.betId!==e.dataset.id);commit()})},
   dm(e){const m=e.dataset.id;UI.draft.method=m;UI.draft.stake="";render()},
   amt(e){UI.draft.stake=e.dataset.id;render()},
   dteam(e){UI.draft.team=UI.draft.team===e.dataset.id?null:e.dataset.id;render()},
@@ -548,8 +557,9 @@ const A={
   addcustom(){const d=UI.draft,t=d.custom.trim();if(!t||!d.team)return;
     const p={id:"p"+uid(),teamId:d.team,text:t,player:false,baseUsed:0,baseHit:0};ST.picks.push(p);d.legs.push({pickId:p.id,text:t,teamId:d.team,ok:null});d.custom="";commit();toast("Pick agregado a tu lista")},
   savebet(){const d=UI.draft,m=d.method;let stake,attemptId=null,target;
-    if(m!=="ragnar"){const a=liveAttempt(m);stake=attemptBal(a);attemptId=a.id;target=targetFor(m,stake)}else{stake=num(d.stake);target=r2(stake*num(d.cuota))}
-    ST.bets.push({id:"b"+uid(),method:m,attemptId,date:d.date||todayISO(),stake:r2(stake),cuota:num(d.cuota),target,legs:d.legs.map(l=>({...l})),status:"pendiente",ret:0});
+    if(m!=="ragnar"){const a=liveAttempt(m),bal=attemptBal(a);stake=num(d.stake);attemptId=a.id;target=targetFor(m,stake);
+      const sob=r2(bal-stake);var bid="b"+uid();if(sob>0.004)ST.moves.push({id:uid(),date:d.date||todayISO(),type:"traspaso",method:"ragnar",from:a.id,betId:bid,amount:sob,note:`Sobrante de ${M[m].name.split(" ")[0]}`})}else{stake=num(d.stake);target=r2(stake*num(d.cuota))}
+    ST.bets.push({id:(typeof bid!=="undefined"&&bid)||"b"+uid(),method:m,attemptId,date:d.date||todayISO(),stake:r2(stake),cuota:num(d.cuota),target,legs:d.legs.map(l=>({...l})),status:"pendiente",ret:0});
     UI.draft=null;UI.tab="inicio";commit();scrollTo(0,0);toast("Apuesta guardada")},
   toggleteam(e){const t=e.dataset.id,tier=team(t).tier;UI.open[t]=!(UI.open[t]??(tier==="principal"));render()},
   editpick(e){const p=pick(e.dataset.id);formSheet("Editar pick",`<label class="f">Pick</label><input class="in" name="text" value="${esc(p.text)}"><label class="row" style="margin-top:12px"><input type="checkbox" name="player" ${p.player?"checked":""}> Es estadística de jugador</label>`,"Guardar",v=>{if(!v.text)return false;p.text=v.text;p.player=v.player;commit()},
