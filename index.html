@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Operación Sueldo extra</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#17202A">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#E6EAEE;--surface:#FFFFFF;--surface2:#F2F4F7;--ink:#17202A;--muted:#5C6875;--line:#D2D8DE;
+  --tommy:#3D5A80;--walter:#13827F;--ragnar:#A0631F;--win:#2B7A4B;--loss:#B4233A;--warn:#9A6A10;--warnbg:#FBF1DC;
+  --cond:"Barlow Condensed","Arial Narrow",Arial,sans-serif;--body:"Barlow","Segoe UI",Roboto,Arial,sans-serif;
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0F1318;--surface:#192028;--surface2:#212A33;--ink:#E6EBF0;--muted:#97A3AF;--line:#2D3742;
+  --tommy:#86A9D6;--walter:#45C4BF;--ragnar:#DDA05C;--win:#5DC48B;--loss:#F2697F;--warn:#E6B54E;--warnbg:#2E2717;}}
+:root[data-theme="dark"]{--bg:#0F1318;--surface:#192028;--surface2:#212A33;--ink:#E6EBF0;--muted:#97A3AF;--line:#2D3742;
+  --tommy:#86A9D6;--walter:#45C4BF;--ragnar:#DDA05C;--win:#5DC48B;--loss:#F2697F;--warn:#E6B54E;--warnbg:#2E2717;}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.45;-webkit-tap-highlight-color:transparent}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--tommy);outline-offset:2px}
+.wrap{max-width:560px;margin:0 auto;padding:16px 14px 110px}
+h1,h2,h3{font-family:var(--cond);font-weight:700;margin:0;line-height:1.1;letter-spacing:.01em}
+h1{font-size:28px}
+h2{font-size:22px;margin:26px 0 10px}
+h3{font-size:19px}
+.muted{color:var(--muted)}
+.small{font-size:14px}
+.num{font-family:var(--cond);font-variant-numeric:tabular-nums;font-weight:600}
+.top{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin-bottom:14px}
+.pay{font-size:14px;color:var(--muted);text-align:right}
+.pay b{color:var(--ink);font-weight:600}
+
+/* cuenta */
+.cuenta{background:var(--surface);border-radius:14px;padding:16px;border:1px solid var(--line)}
+.ledger{display:grid;grid-template-columns:auto 1fr auto;gap:4px 10px;align-items:baseline;font-size:15px}
+.ledger .op{font-family:var(--cond);font-size:20px;color:var(--muted);width:14px;text-align:center}
+.ledger .v{font-family:var(--cond);font-size:20px;font-weight:600;text-align:right;font-variant-numeric:tabular-nums}
+.ledger .rule{grid-column:1/-1;border-top:2px solid var(--ink);margin:4px 0 2px}
+.ledger .res{font-size:36px;font-weight:700}
+.pos{color:var(--win)}.neg{color:var(--loss)}
+
+/* método */
+.met{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 14px 14px 20px;margin-top:12px;overflow:hidden;width:100%;text-align:left;display:block}
+.met::before{content:"";position:absolute;left:0;top:0;bottom:0;width:6px;background:var(--c)}
+.met-h{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.met-name{font-family:var(--cond);font-size:24px;font-weight:700;color:var(--c)}
+.pill{font-size:13px;font-weight:600;padding:2px 10px;border-radius:99px;background:var(--surface2);white-space:nowrap}
+.pill.vivo{color:var(--win)}.pill.caido{color:var(--loss)}.pill.cerrado{color:var(--muted)}
+.met-bal{display:flex;align-items:baseline;gap:10px;margin:6px 0 2px}
+.met-bal .num{font-size:34px}
+.next{font-size:15px;margin-top:6px}
+.next b{font-weight:600}
+.strip{display:grid;grid-template-columns:repeat(15,1fr);gap:3px;margin-top:12px}
+.cell{aspect-ratio:1;border-radius:3px;background:var(--surface2);border:1px solid var(--line);font-size:9px;display:flex;align-items:center;justify-content:center;color:var(--muted)}
+.cell.w{background:var(--c);border-color:var(--c)}
+.cell.l{background:var(--loss);border-color:var(--loss);color:#fff;font-weight:700}
+.cell.now{border:2px solid var(--c);background:transparent;color:var(--c);font-weight:700}
+.cell.p{background:repeating-linear-gradient(45deg,var(--c) 0 3px,transparent 3px 6px);border-color:var(--c)}
+.advice{margin-top:10px;font-size:15px;padding:10px 12px;border-radius:10px;background:var(--surface2)}
+.advice p{margin:0 0 6px}.advice p:last-child{margin:0}
+
+/* botones */
+.btn{border:1px solid var(--line);background:var(--surface2);border-radius:10px;padding:10px 14px;font-weight:600;font-size:15px}
+.btn.pri{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.btn.win{background:var(--win);color:#fff;border-color:var(--win)}
+.btn.loss{background:var(--loss);color:#fff;border-color:var(--loss)}
+.btn.ghost{background:transparent}
+.btn:disabled{opacity:.45}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.row.end{justify-content:flex-end}
+.full{width:100%}
+.link{background:none;border:0;padding:0;color:var(--muted);text-decoration:underline;font-size:14px}
+
+/* tarjetas genéricas */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;margin-top:12px}
+.pend{border-color:var(--warn)}
+.legs{list-style:none;margin:10px 0 0;padding:0}
+.legs li{display:flex;align-items:center;gap:8px;padding:7px 0;border-top:1px solid var(--line);font-size:15px}
+.legs li span{flex:1}
+.tog{width:38px;height:34px;border-radius:8px;border:1px solid var(--line);background:var(--surface2);font-weight:700}
+.tog.on-ok{background:var(--win);color:#fff;border-color:var(--win)}
+.tog.on-no{background:var(--loss);color:#fff;border-color:var(--loss)}
+
+/* formularios */
+label.f{display:block;font-size:14px;color:var(--muted);margin:14px 0 6px}
+input.in,select.in,textarea.in{width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font-size:16px}
+textarea.in{min-height:90px}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.seg button{padding:10px 4px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font-family:var(--cond);font-size:18px;font-weight:600}
+.seg button.on{background:var(--c);color:#fff;border-color:var(--c)}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{padding:7px 12px;border-radius:99px;border:1px solid var(--line);background:var(--surface);font-size:14px;font-weight:500}
+.chip.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.chip.prin{font-weight:600}
+.facts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.fact{background:var(--surface2);border-radius:10px;padding:8px 10px}
+.fact small{display:block;font-size:12px;color:var(--muted)}
+.fact .num{font-size:22px}
+.checks{margin-top:14px;border-radius:12px;padding:12px;background:var(--warnbg);color:var(--ink)}
+.checks h3{font-size:17px;color:var(--warn)}
+.checks ul{margin:6px 0 0;padding-left:18px;font-size:15px}
+.ok-note{margin-top:14px;font-size:15px;color:var(--win);font-weight:600}
+
+/* picks */
+.team{margin-top:10px;background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.team-h{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;width:100%;background:none;border:0;text-align:left}
+.team-h h3{font-size:20px}
+.pk{display:flex;align-items:center;gap:10px;padding:9px 14px;border-top:1px solid var(--line);width:100%;background:none;border-left:0;border-right:0;border-bottom:0;text-align:left;font-size:15px}
+.pk .tx{flex:1}
+.tag{font-size:11px;font-weight:600;padding:1px 6px;border-radius:5px;border:1px solid var(--line);color:var(--muted);margin-left:6px;white-space:nowrap}
+.rec{min-width:64px;text-align:right}
+.bar{height:4px;border-radius:2px;background:var(--surface2);margin-top:3px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--win)}
+.tierlbl{font-family:var(--cond);font-size:16px;color:var(--muted);margin:22px 0 4px;font-weight:600}
+
+table.t{width:100%;border-collapse:collapse;font-size:15px}
+table.t th{font-weight:600;color:var(--muted);font-size:13px;text-align:left;padding:6px 4px;border-bottom:1px solid var(--line)}
+table.t td{padding:8px 4px;border-bottom:1px solid var(--line)}
+table.t td.r,table.t th.r{text-align:right}
+.scroll{overflow-x:auto}
+
+/* escalera */
+.lad{list-style:none;margin:10px 0 0;padding:0}
+.lad li{display:grid;grid-template-columns:44px 1fr auto;gap:8px;padding:9px 0;border-top:1px solid var(--line);align-items:start}
+.lad .d{font-family:var(--cond);font-size:20px;font-weight:700;color:var(--c)}
+.lad .fut{opacity:.5}
+.lad .det{font-size:13px;color:var(--muted);margin-top:2px}
+
+.menu{display:grid;gap:8px;margin-top:12px}
+.menu button{display:flex;justify-content:space-between;align-items:center;padding:14px;border-radius:12px;border:1px solid var(--line);background:var(--surface);font-size:16px;font-weight:600;text-align:left}
+.menu button span{font-weight:400;color:var(--muted);font-size:14px}
+.rules{margin:0;padding-left:28px}
+.rules li{padding:8px 0;border-bottom:1px solid var(--line)}
+
+/* barra inferior */
+nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px);z-index:10}
+nav.tabs .in{max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr)}
+nav.tabs button{background:none;border:0;padding:8px 2px 10px;font-size:12px;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:2px}
+nav.tabs button svg{width:22px;height:22px}
+nav.tabs button.on{color:var(--ink);font-weight:600}
+nav.tabs .plus span{width:46px;height:46px;border-radius:14px;background:var(--ink);color:var(--bg);display:flex;align-items:center;justify-content:center;margin-top:-14px;font-size:30px;line-height:1}
+
+/* hoja modal */
+.sheet-bg{position:fixed;inset:0;background:rgba(10,14,18,.45);z-index:20;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--surface);width:100%;max-width:560px;border-radius:18px 18px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px));max-height:88vh;overflow:auto}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:99px;font-size:14px;z-index:30;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.show{opacity:1}
+.sync{font-size:12px;color:var(--muted);text-align:center;margin-top:30px}
+.back{background:none;border:0;padding:0;font-size:15px;color:var(--muted);margin-bottom:10px}
+.empty{text-align:center;padding:40px 10px}
+@media (prefers-reduced-motion:reduce){.toast{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap" id="view"><p class="muted">Cargando…</p></div>
+<nav class="tabs" id="tabs"></nav>
+<div id="sheet"></div>
+<div class="toast" id="toast"></div>
+<script>
+"use strict";
+const KEY="operacion-sueldo-extra-v1";
+const M={tommy:{name:"Tommy Shelby",c:"var(--tommy)"},walter:{name:"Walter White",c:"var(--walter)"},ragnar:{name:"Ragnar Lothbrok",c:"var(--ragnar)"}};
+let ST=null, saveT=null, sync="local";
+const UI={tab:"inicio",detail:null,draft:null,open:{},resolve:{}};
+
+/* ---------- utilidades ---------- */
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const num=v=>parseFloat(String(v??"").replace(",","."));
+const r2=n=>Math.round(n*100)/100;
+const ceil2=n=>Math.ceil(n*100-1e-9)/100;
+const fmt=n=>Math.abs(n).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
+const money=n=>(n<-0.004?"−":"")+"$"+fmt(n);
+const signed=n=>(n>0.004?"+":n<-0.004?"−":"")+"$"+fmt(n);
+const uid=()=>Math.random().toString(36).slice(2,9);
+const pad=n=>String(n).padStart(2,"0");
+const toISO=d=>d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+const todayISO=()=>toISO(new Date());
+const parseISO=s=>{const[y,m,d]=s.split("-").map(Number);return new Date(y,m-1,d)};
+const sod=d=>new Date(d.getFullYear(),d.getMonth(),d.getDate());
+const fmtDate=s=>s?parseISO(s).toLocaleDateString("es-SV",{weekday:"short",day:"numeric",month:"short"}):"sin fecha";
+const fmtD=d=>d.toLocaleDateString("es-SV",{weekday:"long",day:"numeric",month:"long"});
+const daysTo=d=>Math.round((sod(d)-sod(new Date()))/864e5);
+const team=id=>ST.teams.find(t=>t.id===id);
+const pick=id=>ST.picks.find(p=>p.id===id);
+function toast(t){const e=document.getElementById("toast");e.textContent=t;e.classList.add("show");clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove("show"),1800)}
+
+/* ---------- guardado: celular + Google Drive ---------- */
+const DKEY="ose-drive",FKEY="ose-dirty";
+let DRIVE=null;try{DRIVE=JSON.parse(localStorage.getItem(DKEY))}catch(e){}
+let pushing=false,again=false;
+const isDirty=()=>localStorage.getItem(FKEY)==="1";
+const setDirty=v=>{try{v?localStorage.setItem(FKEY,"1"):localStorage.removeItem(FKEY)}catch(e){}};
+function saveLocal(){try{localStorage.setItem(KEY,JSON.stringify(ST))}catch(e){}}
+function commit(){ST.updatedAt=Date.now();saveLocal();setDirty(true);clearTimeout(saveT);saveT=setTimeout(pushNow,800);render()}
+function renderSync(){const e=document.getElementById("sync");if(e)e.textContent=syncText()}
+function syncText(){if(!DRIVE)return"Sin conectar a Google Drive. Conéctalo en Más → Google Drive.";
+  return{nube:"Guardado en tu Google Drive",subiendo:"Guardando en Google Drive…",offline:"Sin internet: guardado en el celular. Se sube a Drive cuando vuelva la conexión.",error:"No se pudo guardar en Drive. Revisa Más → Google Drive.",local:"Conectando con Google Drive…"}[sync]}
+async function driveGet(cfg){cfg=cfg||DRIVE;const r=await fetch(cfg.url+(cfg.url.includes("?")?"&":"?")+"clave="+encodeURIComponent(cfg.key)+"&t="+Date.now());
+  const j=await r.json();if(!j.ok)throw new Error(j.error||"error");return j.data}
+async function drivePut(data){const r=await fetch(DRIVE.url,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({clave:DRIVE.key,data})});
+  const j=await r.json();if(!j.ok)throw new Error(j.error||"error")}
+async function pushNow(){if(!DRIVE||!ST)return;if(pushing){again=true;return}
+  pushing=true;sync="subiendo";renderSync();
+  try{await drivePut(ST);setDirty(false);sync="nube"}catch(e){sync=navigator.onLine?"error":"offline"}
+  pushing=false;renderSync();if(again){again=false;pushNow()}}
+async function pull(){if(!DRIVE)return;
+  try{const r=await driveGet();
+    if(r&&(!ST||(r.updatedAt||0)>(ST.updatedAt||0))){ST=r;saveLocal();setDirty(false);sync="nube";
+      const a=document.activeElement;if(!(a&&a.dataset&&a.dataset.bind))render();return}
+    if(ST&&(isDirty()||!r||(ST.updatedAt||0)>(r.updatedAt||0)))return pushNow();
+    sync="nube"}catch(e){sync=navigator.onLine?"error":"offline"}
+  renderSync()}
+async function boot(){
+  let local=null;try{local=JSON.parse(localStorage.getItem(KEY))}catch(e){}
+  ST=local;render();await pull();if(!ST)render();
+  addEventListener("online",pull);
+  document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")pull()});
+  if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
+}
+function freshState(){return{v:1,updatedAt:0,settings:{capital:{tommy:50,walter:50,ragnar:25},tommyCuota:1.15,maxDias:30,ragnarMontos:[3,5,10],payDay:22,weekendShift:"antes"},teams:[],picks:[],rules:[],attempts:[],bets:[],moves:[]}}
+
+/* ---------- cálculos ---------- */
+const betsOfAttempt=a=>ST.bets.filter(b=>b.attemptId===a.id);
+const settled=b=>b.status==="ganada"||b.status==="perdida";
+function attemptBal(a){let s=a.capital;for(const b of betsOfAttempt(a))if(settled(b))s+=b.ret-b.stake;return r2(s)}
+const liveAttempt=m=>ST.attempts.filter(a=>a.method===m&&a.status==="vivo").pop()||null;
+const lastAttempt=m=>ST.attempts.filter(a=>a.method===m).pop()||null;
+const pendingOf=m=>ST.bets.filter(b=>b.method===m&&b.status==="pendiente");
+function dayNum(a){return betsOfAttempt(a).filter(settled).length+1}
+function walterTarget(bal){return bal<100?(Math.floor(bal/10+1e-9)+1)*10:(Math.floor(bal/20+1e-9)+1)*20}
+function targetFor(m,bal){return m==="tommy"?r2(bal*ST.settings.tommyCuota):walterTarget(bal)}
+function minCuota(m,bal){return m==="tommy"?ST.settings.tommyCuota:ceil2(walterTarget(bal)/bal)}
+function ragnarFund(){let s=0;for(const mv of ST.moves)if(mv.method==="ragnar")s+=mv.type==="entrada"?mv.amount:mv.type==="ajuste"?mv.amount:-mv.amount;
+  for(const b of ST.bets)if(b.method==="ragnar"&&settled(b))s+=b.ret-b.stake;return r2(s)}
+function ragnarFree(){return r2(ragnarFund()-pendingOf("ragnar").reduce((s,b)=>s+b.stake,0))}
+function ragnarAlive(){return ragnarFund()>=Math.min(...ST.settings.ragnarMontos)}
+function cuenta(){let ent=0,sal=0;for(const mv of ST.moves){if(mv.type==="entrada"&&mv.fuente!=="previa")ent+=mv.amount;else if(mv.type==="salida")sal+=mv.amount}
+  let juego=0;for(const a of ST.attempts)if(a.status==="vivo")juego+=attemptBal(a);juego+=Math.max(0,ragnarFund());
+  return{ent:r2(ent),sal:r2(sal),juego:r2(juego),neto:r2(sal+juego-ent)}}
+function paydayOf(y,m){const s=ST.settings;const d=new Date(y,m,s.payDay);const w=d.getDay();const after=s.weekendShift==="despues";
+  if(w===6)d.setDate(d.getDate()+(after?2:-1));if(w===0)d.setDate(d.getDate()+(after?1:-2));return d}
+function nextPayday(from){from=sod(from||new Date());for(let i=0;i<3;i++){const p=paydayOf(from.getFullYear(),from.getMonth()+i);if(p>=from)return p}}
+function lastPayday(){const t=sod(new Date());for(let i=0;i<3;i++){const p=paydayOf(t.getFullYear(),t.getMonth()-i);if(p<=t)return p}}
+function aliveOthers(m){const o=[];for(const k of["tommy","walter"])if(k!==m&&liveAttempt(k))o.push(M[k].name);
+  if(m!=="ragnar"&&ragnarAlive())o.push(M.ragnar.name);return o}
+
+function pickStats(p){let u=p.baseUsed||0,h=p.baseHit||0,f=(p.baseUsed||0)-(p.baseHit||0);
+  for(const b of ST.bets){if(!settled(b))continue;for(const l of b.legs)if(!l.imp&&l.pickId===p.id){u++;if(l.ok===true)h++;if(l.ok===false)f++}}
+  return{u,h,f,pct:u?Math.round(h/u*100):null}}
+
+/* ---------- consejo de reinicio ---------- */
+function restartAdvice(m){
+  const a=lastAttempt(m);const out=[];const np=nextPayday();const lp=lastPayday();
+  const paidSince=a&&a.end?lp>parseISO(a.end):false;
+  if(paidSince)out.push(`<p>Ya cobraste tu sueldo después de que cayó. <b>Por fecha, ya puedes reiniciarlo.</b></p>`);
+  else{const d=daysTo(np);out.push(`<p>Reinícialo con tu próximo pago: <b>${esc(fmtD(np))}</b> (${d===0?"es hoy":d===1?"falta 1 día":"faltan "+d+" días"}).</p>`)}
+  const o=aliveOthers(m);
+  if(o.length)out.push(`<p class="small">Tu regla 1 dice no meter más dinero mientras otro método siga vivo. Ahora mismo sigue vivo: ${esc(o.join(" y "))}.</p>`);
+  const allDead=!liveAttempt("tommy")&&!liveAttempt("walter")&&!ragnarAlive();
+  if(allDead){const ends=ST.attempts.map(x=>x.end).filter(Boolean).sort();const last=ends[ends.length-1];
+    if(last&&parseISO(last).getDate()>20)out.push(`<p class="small">Los tres cayeron después del día 20: según tus reglas, el próximo mes arrancan solo Tommy y Walter con $50.</p>`)}
+  return{html:out.join(""),ready:paidSince&&!o.length}}
+
+/* ---------- reglas automáticas ---------- */
+function checks(d){
+  const w=[];const s=ST.settings;
+  const legs=d.legs;const teams=[...new Set(legs.map(l=>l.teamId).filter(Boolean))];
+  const prin=teams.filter(t=>team(t)?.tier==="principal"),aux=teams.filter(t=>team(t)?.tier==="auxiliar");
+  if(!legs.length)w.push({e:1,t:"Agrega al menos un pick."});
+  const c=num(d.cuota);
+  if(!(c>1))w.push({e:1,t:"Escribe la cuota del parlay."});
+  if(d.method!=="ragnar"){
+    const a=liveAttempt(d.method);
+    if(a){const bal=attemptBal(a),need=minCuota(d.method,bal);
+      if(c>1&&c<need-1e-9)w.push({t:`La cuota ${c.toFixed(2)} no llega a la meta. Necesitas al menos ${need.toFixed(2)}.`});
+      if(dayNum(a)>s.maxDias)w.push({t:`Ya pasaste los ${s.maxDias} días de este intento.`});}
+    legs.filter(l=>l.pickId&&pick(l.pickId)?.player).forEach(l=>w.push({t:`“${l.text}” es estadística de jugador. En Tommy y Walter no se permite.`}));
+  }else{
+    const amt=num(d.stake);
+    if(!(amt>0))w.push({e:1,t:"Escribe cuánto vas a apostar."});
+    else{if(!s.ragnarMontos.includes(amt))w.push({t:`En Ragnar tus montos son ${s.ragnarMontos.map(x=>"$"+x).join(", ")}. Vas con $${fmt(amt)}.`});
+      if(amt>ragnarFree()+1e-9)w.push({e:1,t:`El fondo de Ragnar solo tiene ${money(ragnarFree())} libres.`});
+      const prev=ST.bets.filter(b=>b.method==="ragnar"&&settled(b)).pop();
+      if(prev&&prev.status==="perdida"&&amt>prev.stake)w.push({t:`Vienes de perder $${fmt(prev.stake)} y estás subiendo el monto. Regla 18: nunca aumentar para recuperar.`});}
+  }
+  legs.filter(l=>!l.pickId).forEach(l=>w.push({t:`“${l.text}” no está en tu lista de picks.`}));
+  legs.filter(l=>/tarjeta|c[oó]rner|falta/i.test(l.text)).forEach(l=>w.push({t:`“${l.text}”: no apuestas tarjetas, córners ni faltas.`}));
+  if(!prin.length&&aux.length===1)w.push({t:"Solo hay un equipo auxiliar. Si solo juega uno, ese día no se apuesta."});
+  if(prin.length===2&&aux.length)w.push({t:"Juegan dos principales: tu regla dice apostar solo a esos dos."});
+  return w}
+
+/* ---------- vistas ---------- */
+const ICON={
+ inicio:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>',
+ picks:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>',
+ stats:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>',
+ mas:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>'};
+function renderTabs(){
+  const t=(id,l)=>`<button class="${UI.tab===id?"on":""}" data-tab="${id}" aria-label="${l}">${ICON[id]}${l}</button>`;
+  document.getElementById("tabs").innerHTML=ST?`<div class="in">${t("inicio","Inicio")}${t("picks","Picks")}<button class="plus" data-tab="apostar" aria-label="Nueva apuesta"><span>+</span>Apostar</button>${t("stats","Números")}${t("mas","Más")}</div>`:""}
+function render(){
+  renderTabs();const v=document.getElementById("view");
+  if(!ST){if(UI.tab==="drive"){v.innerHTML=viewDrive();return}
+    v.innerHTML=`<div class="empty"><h1>Operación Sueldo extra</h1><p class="muted">Todavía no hay datos en este celular.</p>
+    <div class="menu" style="text-align:left"><button data-tab="drive">Conectar Google Drive <span>trae tus datos</span></button></div>
+    <p class="muted small" style="margin-top:20px">O restaura una copia guardada:</p><input type="file" accept=".json,application/json" id="impfile" class="in">
+    <textarea class="in" id="imp" style="margin-top:8px" placeholder="…o pega aquí el contenido"></textarea><button class="btn full" style="margin-top:8px" data-act="import">Restaurar</button>
+    <p style="margin-top:24px"><button class="link" data-act="fresh">Empezar desde cero</button></p></div>`;return}
+  let h="";
+  if(UI.detail)h=viewDetail(UI.detail);
+  else h={inicio:viewInicio,apostar:viewApostar,picks:viewPicks,stats:viewStats,mas:viewMas,reglas:viewReglas,drive:viewDrive,dinero:viewDinero,ajustes:viewAjustes,respaldo:viewRespaldo}[UI.tab]();
+  v.innerHTML=h+`<p class="sync" id="sync">${syncText()}</p>`}
+
+function viewInicio(){
+  const c=cuenta();const np=nextPayday();const d=daysTo(np);
+  let h=`<div class="top"><h1>Operación<br>Sueldo extra</h1><div class="pay">Próximo pago<br><b>${esc(np.toLocaleDateString("es-SV",{weekday:"short",day:"numeric",month:"short"}))}</b> · ${d===0?"hoy":d+" d"}</div></div>`;
+  h+=`<div class="cuenta"><div class="ledger">
+    <span class="op"></span><span>Retirado de Bet365</span><span class="v">${money(c.sal)}</span>
+    <span class="op">+</span><span>En juego ahora</span><span class="v">${money(c.juego)}</span>
+    <span class="op">−</span><span>Metido de tu bolsa</span><span class="v">${money(c.ent)}</span>
+    <span class="rule"></span>
+    <span class="op">=</span><span><b>Resultado real</b></span><span class="v res ${c.neto>=0?"pos":"neg"}">${signed(c.neto)}</span></div></div>`;
+  const pend=ST.bets.filter(b=>b.status==="pendiente");
+  if(pend.length){h+=`<h2>Por resolver</h2>`+pend.map(pendCard).join("")}
+  h+=`<h2>Métodos</h2>`+["tommy","walter"].map(ladderCard).join("")+ragnarCard();
+  return h}
+
+function ladderCard(m){
+  const a=liveAttempt(m),last=lastAttempt(m),s=ST.settings;
+  let h=`<div class="met" style="--c:${M[m].c}"><div class="met-h"><span class="met-name">${M[m].name}</span>`;
+  if(a){const bal=attemptBal(a),day=dayNum(a),p=pendingOf(m)[0];
+    h+=`<span class="pill vivo">Vivo · intento ${a.n}</span></div>
+     <div class="met-bal"><span class="num">${money(bal)}</span><span class="muted small">arrancó con ${money(a.capital)}</span></div>`;
+    if(day>s.maxDias)h+=`<div class="advice"><p><b>Completaste los ${s.maxDias} días.</b> Toca cobrar.</p><button class="btn pri" data-act="close" data-id="${a.id}">Cerrar y cobrar ${money(bal)}</button></div>`;
+    else if(p)h+=`<p class="next">Día ${day}: apuesta en juego a cuota ${p.cuota.toFixed(2)}. Resuélvela arriba.</p>`;
+    else{const tg=targetFor(m,bal);h+=`<p class="next">Día ${day}: mete <b>${money(bal)}</b> buscando <b>${money(tg)}</b> → cuota mínima <b class="num">${minCuota(m,bal).toFixed(2)}</b></p>`}
+    h+=strip(a,m);
+    h+=`<div class="row" style="margin-top:12px"><button class="btn" data-act="detail" data-id="${m}">Ver escalera</button></div>`;
+  }else{
+    h+=`<span class="pill ${last?.status==="cerrado"?"cerrado":"caido"}">${last?.status==="cerrado"?"Cobrado":"Caído"}</span></div>`;
+    if(last){const bs=betsOfAttempt(last);h+=`<p class="next">${last.status==="cerrado"?`Intento ${last.n} cerrado en ${money(attemptBal(last))}.`:`Intento ${last.n} cayó en el día ${bs.length}${last.end?" ("+esc(fmtDate(last.end))+")":""}, con ${money(bs[bs.length-1]?.stake||0)} en juego.`}</p>`}
+    const adv=restartAdvice(m);
+    h+=`<div class="advice">${adv.html}</div><div class="row" style="margin-top:10px"><button class="btn ${adv.ready?"pri":""}" data-act="restart" data-id="${m}">Empezar intento nuevo con ${money(s.capital[m])}</button><button class="btn ghost" data-act="detail" data-id="${m}">Historial</button></div>`}
+  return h+`</div>`}
+function strip(a,m){const bs=betsOfAttempt(a);const n=ST.settings.maxDias;let h=`<div class="strip" aria-label="Progreso de ${n} días">`;
+  for(let i=1;i<=n;i++){const b=bs[i-1];let cl="",tx=i;
+    if(b){if(b.status==="ganada")cl="w",tx="";else if(b.status==="perdida")cl="l",tx="×";else cl="p",tx=""}
+    else if(i===bs.length+1&&a.status==="vivo")cl="now";
+    h+=`<span class="cell ${cl}">${tx}</span>`}
+  return h+`</div>`}
+function ragnarCard(){
+  const f=ragnarFund(),rb=ST.bets.filter(b=>b.method==="ragnar"&&settled(b));
+  const w=rb.filter(b=>b.status==="ganada").length,l=rb.length-w;
+  const ent=ST.moves.filter(m=>m.method==="ragnar"&&m.type!=="ajuste").reduce((s,m)=>s+(m.type==="entrada"?m.amount:-m.amount),0);
+  const alive=ragnarAlive();
+  return`<div class="met" style="--c:var(--ragnar)"><div class="met-h"><span class="met-name">Ragnar Lothbrok</span><span class="pill ${alive?"vivo":"caido"}">${alive?"Fondo activo":"Sin fondo"}</span></div>
+   <div class="met-bal"><span class="num">${money(f)}</span><span class="muted small">metiste ${money(ent)} · ${signed(r2(f-ent))}</span></div>
+   <p class="next">${w} ganadas, ${l} perdidas. Montos permitidos: ${ST.settings.ragnarMontos.map(x=>"$"+x).join(", ")}.</p>
+   <div class="row" style="margin-top:10px"><button class="btn" data-act="detail" data-id="ragnar">Ver equipos y apuestas</button>${alive?"":`<button class="btn pri" data-act="ragnar-load">Recargar ${money(ST.settings.capital.ragnar)}</button>`}</div></div>`}
+
+function pendCard(b){
+  const r=UI.resolve[b.id]||(UI.resolve[b.id]={ret:r2(b.stake*b.cuota)});
+  return`<div class="card pend" style="--c:${M[b.method].c}"><div class="met-h"><h3 style="color:var(--c)">${M[b.method].name}</h3><span class="muted small">${esc(fmtDate(b.date))}</span></div>
+   <p class="small" style="margin:4px 0 0">${money(b.stake)} a cuota ${b.cuota.toFixed(2)} → paga ${money(b.stake*b.cuota)}</p>
+   <ul class="legs">${b.legs.map((l,i)=>`<li><span>${esc(l.text)}${l.teamId?` <span class="muted small">${esc(team(l.teamId)?.name||"")}</span>`:""}</span>
+     <button class="tog ${l.ok===true?"on-ok":""}" data-act="leg" data-id="${b.id}" data-i="${i}" data-v="1" aria-label="Se cumplió">✓</button>
+     <button class="tog ${l.ok===false?"on-no":""}" data-act="leg" data-id="${b.id}" data-i="${i}" data-v="0" aria-label="Falló">✗</button></li>`).join("")}</ul>
+   <label class="f">Cobro real si ganó</label><input class="in" type="text" inputmode="decimal" autocomplete="off" value="${r.ret}" data-bind="ret" data-id="${b.id}">
+   <div class="row" style="margin-top:12px"><button class="btn win" data-act="settle" data-id="${b.id}" data-v="ganada">Ganó</button><button class="btn loss" data-act="settle" data-id="${b.id}" data-v="perdida">Perdió</button><button class="link" data-act="delbet" data-id="${b.id}" style="margin-left:auto">Borrar</button></div></div>`}
+
+function viewDetail(m){
+  let h=`<button class="back" data-act="back">‹ Inicio</button><h1 style="color:${M[m].c}">${M[m].name}</h1>`;
+  if(m==="ragnar")return h+ragnarDetail();
+  const a=liveAttempt(m);
+  if(a){const bal=attemptBal(a),bs=betsOfAttempt(a);
+    h+=`<p class="muted">Intento ${a.n} desde ${esc(fmtDate(a.start))}. Saldo ${money(bal)}.</p><ul class="lad" style="--c:${M[m].c}">`;
+    bs.forEach((b,i)=>{h+=`<li><span class="d">${i+1}</span><div>${money(b.stake)} → ${money(b.status==="ganada"?b.ret:b.stake*b.cuota)} <span class="muted small">cuota ${b.cuota.toFixed(2)}</span><div class="det">${esc(b.legs.map(l=>l.text).join(" · "))||"sin picks"}</div></div><span class="${b.status==="ganada"?"pos":b.status==="perdida"?"neg":"muted"} small">${b.status==="ganada"?"Ganó":b.status==="perdida"?"Perdió":"En juego"}</span></li>`});
+    let cur=bal;const start=bs.length+1;
+    if(!pendingOf(m).length)for(let d=start;d<=ST.settings.maxDias;d++){const tg=targetFor(m,cur);h+=`<li class="fut"><span class="d">${d}</span><div>${money(cur)} → ${money(tg)} <span class="small">cuota ${minCuota(m,cur).toFixed(2)}</span></div><span class="small">meta</span></li>`;cur=tg}
+    h+=`</ul><div class="row" style="margin-top:14px"><button class="btn" data-act="close" data-id="${a.id}">Cerrar y cobrar ${money(bal)}</button></div>`}
+  const prev=ST.attempts.filter(x=>x.method===m&&x!==a).reverse();
+  if(prev.length){h+=`<h2>Intentos anteriores</h2>`;
+    prev.forEach(x=>{const bs=betsOfAttempt(x),lost=bs.find(b=>b.status==="perdida");const peak=Math.max(x.capital,...bs.filter(b=>b.status==="ganada").map(b=>b.ret));
+      h+=`<div class="card"><div class="met-h"><h3>Intento ${x.n}</h3><span class="pill ${x.status}">${x.status==="cerrado"?"Cobrado":"Caído"}</span></div>
+      <p class="small" style="margin:6px 0 0">Del ${esc(fmtDate(x.start))}${x.end?" al "+esc(fmtDate(x.end)):""}. Arrancó con ${money(x.capital)}, llegó a ${money(peak)} en ${bs.filter(b=>b.status==="ganada").length} días ganados.</p>
+      ${lost?`<p class="small" style="margin:6px 0 0"><b>Lo tumbó el día ${bs.indexOf(lost)+1}:</b> ${esc(lost.legs.filter(l=>l.ok!==true).map(l=>l.text).join(" · ")||lost.legs.map(l=>l.text).join(" · "))}</p>`:""}</div>`})}
+  return h}
+function ragnarDetail(){
+  const rb=ST.bets.filter(b=>b.method==="ragnar");const per={};
+  rb.filter(settled).forEach(b=>{const ts=[...new Set(b.legs.map(l=>l.teamId).filter(Boolean))];ts.forEach(t=>{const o=per[t]||(per[t]={n:0,w:0,f:0});o.n++;if(b.status==="ganada")o.w++;if(b.legs.some(l=>l.teamId===t&&l.ok===false))o.f++})});
+  let h=`<p class="muted">Fondo ${money(ragnarFund())}, libre ${money(ragnarFree())}.</p>
+   <div class="row"><button class="btn" data-act="ragnar-load">Recargar</button><button class="btn" data-act="ragnar-out">Retirar</button><button class="btn ghost" data-act="ragnar-fix">Corregir saldo</button></div>
+   <h2>Por equipo</h2><div class="scroll"><table class="t"><tr><th>Equipo</th><th class="r">Apuestas</th><th class="r">Ganadas</th><th class="r">Te falló</th></tr>`;
+  Object.entries(per).sort((a,b)=>b[1].n-a[1].n).forEach(([t,o])=>{h+=`<tr><td>${esc(team(t)?.name||t)}</td><td class="r">${o.n}</td><td class="r">${o.w}</td><td class="r ${o.f?"neg":""}">${o.f}</td></tr>`});
+  h+=`</table></div><h2>Apuestas</h2><ul class="lad" style="--c:var(--ragnar)">`;
+  rb.slice().reverse().forEach(b=>{h+=`<li><span class="d small" style="font-size:14px">${esc(b.date?b.date.slice(5).split("-").reverse().join("/"):"")}</span><div>${money(b.stake)} a ${b.cuota.toFixed(2)}<div class="det">${esc(b.legs.map(l=>l.text+(l.ok===false?" ✗":"")).join(" · "))}</div></div><span class="small ${b.status==="ganada"?"pos":b.status==="perdida"?"neg":"muted"}">${b.status==="ganada"?signed(b.ret-b.stake):b.status==="perdida"?signed(-b.stake):"En juego"}</span></li>`});
+  return h+`</ul>`}
+
+/* ---- apostar ---- */
+function newDraft(m){return{method:m||"tommy",date:todayISO(),cuota:"",stake:"",legs:[],team:null,custom:""}}
+function viewApostar(){
+  const d=UI.draft||(UI.draft=newDraft());const m=d.method;
+  let h=`<h1>Nueva apuesta</h1><div class="seg" style="margin-top:14px">${["tommy","walter","ragnar"].map(k=>`<button style="--c:${M[k].c}" class="${m===k?"on":""}" data-act="dm" data-id="${k}">${M[k].name.split(" ")[0]}</button>`).join("")}</div>`;
+  if(m!=="ragnar"){const a=liveAttempt(m);
+    if(!a)return h+`<div class="card"><p style="margin:0">${M[m].name} no tiene un intento vivo. Puedes empezar uno desde Inicio.</p></div>`;
+    if(pendingOf(m).length)return h+`<div class="card"><p style="margin:0">Ya tienes la apuesta del día en juego. Resuélvela en Inicio antes de meter otra.</p></div>`;
+    const bal=attemptBal(a);
+    h+=`<div class="facts"><div class="fact"><small>Día ${dayNum(a)} · metes</small><span class="num">${money(bal)}</span></div><div class="fact"><small>Meta · cuota mínima</small><span class="num">${money(targetFor(m,bal))} · ${minCuota(m,bal).toFixed(2)}</span></div></div>`}
+  else h+=`<label class="f">Monto (libre en el fondo: ${money(ragnarFree())})</label><div class="chips">${ST.settings.ragnarMontos.map(x=>`<button class="chip ${num(d.stake)===x?"on":""}" data-act="amt" data-id="${x}">$${x}</button>`).join("")}</div>
+     <input class="in" style="margin-top:8px" type="text" inputmode="decimal" autocomplete="off" placeholder="Otro monto" value="${esc(d.stake)}" data-bind="stake">`;
+  h+=`<div class="row" style="gap:10px"><div style="flex:1"><label class="f">Cuota del parlay</label><input class="in" type="text" inputmode="decimal" autocomplete="off" placeholder="1.15" value="${esc(d.cuota)}" data-bind="cuota"></div>
+   <div style="flex:1"><label class="f">Fecha</label><input class="in" type="date" value="${esc(d.date)}" data-bind="date"></div></div>`;
+  h+=`<div id="dynpay">${dynPay(d)}</div>`;
+  h+=`<label class="f">Picks del parlay (${d.legs.length})</label>`;
+  if(d.legs.length)h+=`<ul class="legs" style="margin:0 0 8px">${d.legs.map((l,i)=>`<li><span>${esc(l.text)} <span class="muted small">${esc(team(l.teamId)?.name||"")}</span></span><button class="tog" data-act="rmleg" data-i="${i}" aria-label="Quitar">−</button></li>`).join("")}</ul>`;
+  const tierChips=tier=>ST.teams.filter(t=>t.tier===tier).map(t=>`<button class="chip ${tier==="principal"?"prin":""} ${d.team===t.id?"on":""}" data-act="dteam" data-id="${t.id}">${esc(t.name)}</button>`).join("");
+  h+=`<p class="small muted" style="margin:4px 0 6px">Principales</p><div class="chips">${tierChips("principal")}</div><p class="small muted" style="margin:10px 0 6px">Auxiliares</p><div class="chips">${tierChips("auxiliar")}</div>`;
+  if(d.team){const ps=ST.picks.filter(p=>p.teamId===d.team).map(p=>({p,s:pickStats(p)})).sort((a,b)=>(b.s.u-a.s.u)||((b.s.pct??-1)-(a.s.pct??-1)));
+    h+=`<div class="team"><div class="team-h"><h3>${esc(team(d.team).name)}</h3><span class="muted small">toca para agregar</span></div>`+
+     ps.map(({p,s})=>{const used=d.legs.some(l=>l.pickId===p.id);return`<button class="pk" data-act="addleg" data-id="${p.id}" ${used?"disabled":""}><span class="tx">${used?"✓ ":""}${esc(p.text)}${p.player?`<span class="tag">jugador</span>`:""}</span><span class="rec small muted">${s.u?s.h+"/"+s.u:"nuevo"}</span></button>`}).join("")+
+     `<div style="padding:10px 14px;border-top:1px solid var(--line)" class="row"><input class="in" style="flex:1" placeholder="Pick nuevo para ${esc(team(d.team).name)}" value="${esc(d.custom)}" data-bind="custom"><button class="btn" data-act="addcustom">Agregar</button></div></div>`}
+  h+=`<div id="dyncheck">${dynCheck(d)}</div>`;
+  return h}
+
+function dynPay(d){const m=d.method;const stake=m==="ragnar"?num(d.stake):(liveAttempt(m)?attemptBal(liveAttempt(m)):0);const c=num(d.cuota);
+  return stake>0&&c>1?`<p class="small muted" style="margin:6px 0 0">Si gana te paga <b class="num" style="color:var(--ink);font-size:17px">${money(stake*c)}</b></p>`:""}
+function dynCheck(d){const c=num(d.cuota);let h="";const w=checks(d);const real=w.filter(x=>!x.e);
+  if(real.length)h+=`<div class="checks"><h3>Ojo con tus reglas</h3><ul>${real.map(x=>`<li>${esc(x.t)}</li>`).join("")}</ul></div>`;
+  else if(d.legs.length&&c>1)h+=`<p class="ok-note">Cumple tus reglas.</p>`;
+  const blocking=w.filter(x=>x.e);
+  h+=`<button class="btn pri full" style="margin-top:16px;padding:14px" data-act="savebet" ${blocking.length?"disabled":""}>${real.length?"Guardar de todos modos":"Guardar apuesta"}</button>`;
+  if(blocking.length)h+=`<p class="small muted" style="text-align:center">${esc(blocking[0].t)}</p>`;
+  return h}
+/* ---- picks ---- */
+function viewPicks(){
+  let h=`<h1>Picks</h1><p class="muted small" style="margin:6px 0 0">Ordenados por los que más usas. El número es cumplidos / usados.</p>`;
+  for(const tier of["principal","auxiliar"]){h+=`<p class="tierlbl">${tier==="principal"?"Equipos principales":"Equipos auxiliares"}</p>`;
+    ST.teams.filter(t=>t.tier===tier).forEach(t=>{const open=UI.open[t.id]??(tier==="principal");
+      const ps=ST.picks.filter(p=>p.teamId===t.id).map(p=>({p,s:pickStats(p)})).sort((a,b)=>(b.s.u-a.s.u)||((b.s.pct??-1)-(a.s.pct??-1)));
+      h+=`<div class="team"><button class="team-h" data-act="toggleteam" data-id="${t.id}" aria-expanded="${open}"><span><h3>${esc(t.name)}</h3><span class="muted small">${esc(t.sport)} · ${ps.length} picks</span></span><span class="muted">${open?"−":"+"}</span></button>`;
+      if(open){h+=ps.map(({p,s})=>`<button class="pk" data-act="editpick" data-id="${p.id}"><span class="tx">${esc(p.text)}${p.player?`<span class="tag">jugador</span>`:""}${s.u?`<div class="bar"><i style="width:${s.pct}%"></i></div>`:""}</span><span class="rec num">${s.u?s.h+"/"+s.u:"—"}</span></button>`).join("");
+        h+=`<div class="row" style="padding:10px 14px;border-top:1px solid var(--line)"><button class="btn" data-act="newpick" data-id="${t.id}">+ Pick</button><button class="link" data-act="editteam" data-id="${t.id}" style="margin-left:auto">Editar equipo</button></div>`}
+      h+=`</div>`})}
+  return h+`<button class="btn full" style="margin-top:16px" data-act="newteam">+ Agregar equipo</button>`}
+
+/* ---- números ---- */
+function viewStats(){
+  const by=m=>{const b=ST.bets.filter(x=>x.method===m&&settled(x));const w=b.filter(x=>x.status==="ganada").length;return{n:b.length,w,l:b.length-w}};
+  let h=`<h1>Números</h1><h2>Por método</h2><div class="card"><table class="t"><tr><th>Método</th><th class="r">Apuestas</th><th class="r">Ganó</th><th class="r">Perdió</th><th class="r">Acierto</th></tr>`;
+  for(const m of["tommy","walter","ragnar"]){const s=by(m);h+=`<tr><td style="color:${M[m].c};font-weight:600">${M[m].name.split(" ")[0]}</td><td class="r">${s.n}</td><td class="r">${s.w}</td><td class="r">${s.l}</td><td class="r num">${s.n?Math.round(s.w/s.n*100)+"%":"—"}</td></tr>`}
+  h+=`</table></div>`;
+  const att=ST.attempts.filter(a=>a.method!=="ragnar"&&a.status!=="vivo");
+  if(att.length){const avg=att.reduce((s,a)=>s+betsOfAttempt(a).length,0)/att.length;
+    h+=`<div class="card"><p style="margin:0">Tus intentos de Tommy y Walter que ya terminaron duraron <b>${avg.toFixed(1)} días</b> en promedio (de ${ST.settings.maxDias}).</p></div>`}
+  const all=ST.picks.map(p=>({p,s:pickStats(p)})).filter(x=>x.s.u);
+  const fails=all.filter(x=>x.s.f).sort((a,b)=>b.s.f-a.s.f).slice(0,6);
+  h+=`<h2>Los que te han fallado</h2>`;
+  h+=fails.length?`<div class="card"><table class="t">${fails.map(({p,s})=>`<tr><td>${esc(p.text)}<div class="muted small">${esc(team(p.teamId)?.name)}</div></td><td class="r neg num">${s.f} ${s.f===1?"vez":"veces"}</td></tr>`).join("")}</table></div>`:`<p class="muted">Ningún pick registrado te ha fallado todavía.</p>`;
+  const top=all.sort((a,b)=>b.s.u-a.s.u).slice(0,10);
+  h+=`<h2>Los que más usas</h2><div class="card"><table class="t">${top.map(({p,s})=>`<tr><td>${esc(p.text)}<div class="muted small">${esc(team(p.teamId)?.name)}</div></td><td class="r num">${s.h}/${s.u}</td><td class="r num">${s.pct}%</td></tr>`).join("")}</table></div>`;
+  const unk=ST.bets.filter(b=>b.status==="perdida"&&b.legs.length&&!b.legs.some(l=>l.ok===false)).length;
+  if(unk)h+=`<p class="small muted">Hay ${unk} ${unk===1?"apuesta perdida":"apuestas perdidas"} del Excel sin saber qué pick falló. De aquí en adelante, marca ✓ o ✗ en cada pick y esta lista se vuelve exacta.</p>`;
+  return h}
+
+/* ---- más ---- */
+function viewMas(){return`<h1>Más</h1><div class="menu">
+  <button data-tab="reglas">Reglas <span>${ST.rules.length}</span></button>
+  <button data-tab="dinero">Entradas y salidas de dinero <span>${ST.moves.length}</span></button>
+  <button data-tab="ajustes">Ajustes <span>capital, cuotas, día de pago</span></button>
+  <button data-tab="drive">Google Drive <span>${DRIVE?"conectado":"sin conectar"}</span></button>
+  <button data-tab="respaldo">Respaldo <span>exportar o importar</span></button></div>`}
+function viewDrive(){const bk=ST?back:`<button class="back" data-tab="inicio">‹ Volver</button>`;
+  return bk+`<h1>Google Drive</h1><p class="muted">Tus datos se guardan en tu Drive, en la carpeta “Operación Sueldo extra”, con una copia de respaldo por día. Si pierdes el celular, instalas la app en otro y te conectas con estos mismos datos.</p>
+  <label class="f">Dirección del script (termina en /exec)</label><input class="in" id="durl" autocomplete="off" value="${esc(DRIVE?.url||"")}" placeholder="https://script.google.com/macros/s/…/exec">
+  <label class="f">Clave</label><input class="in" id="dkey" autocomplete="off" value="${esc(DRIVE?.key||"")}">
+  <button class="btn pri full" style="margin-top:14px" data-act="dconnect">${DRIVE?"Guardar y probar":"Conectar"}</button>
+  ${DRIVE?`<div class="row" style="margin-top:10px"><button class="btn" data-act="dpush">Subir ahora</button><button class="link" style="margin-left:auto" data-act="dclear">Desconectar</button></div>`:""}`}
+const back=`<button class="back" data-tab="mas">‹ Más</button>`;
+function viewReglas(){return back+`<h1>Reglas</h1><p class="muted small">Toca una para editarla.</p><ol class="rules">${ST.rules.map(r=>`<li><button class="link" style="color:var(--ink);text-decoration:none;text-align:left;font-size:16px" data-act="editrule" data-id="${r.id}">${esc(r.text)}</button></li>`).join("")}</ol><button class="btn full" style="margin-top:14px" data-act="newrule">+ Agregar regla</button>`}
+function viewDinero(){const c=cuenta();return back+`<h1>Entradas y salidas</h1><p class="muted small">Entrada es dinero que metes; salida es lo que retiras de Bet365. Toca una entrada para marcar si salió de tu bolsa o de ganancias anteriores.</p>
+  <div class="facts"><div class="fact"><small>Metido de tu bolsa</small><span class="num">${money(c.ent)}</span></div><div class="fact"><small>Retirado</small><span class="num">${money(c.sal)}</span></div></div>
+  <div class="card scroll"><table class="t"><tr><th>Fecha</th><th>Método</th><th>Nota</th><th class="r">Monto</th></tr>${ST.moves.slice().reverse().map(m=>`<tr ${m.type==="entrada"?`data-act="togfuente" data-id="${m.id}" style="cursor:pointer"`:""}><td class="small">${esc(fmtDate(m.date))}</td><td class="small">${esc(M[m.method]?.name.split(" ")[0]||(m.method==="previo"?"Antes":m.method))}</td><td class="small">${esc(m.note||"")}${m.type==="entrada"?`<div class="muted" style="font-size:12px">${m.fuente==="previa"?"de ganancias anteriores":"de tu bolsa"}</div>`:""}</td><td class="r num ${m.type==="entrada"?"neg":m.type==="salida"?"pos":"muted"}">${m.type==="entrada"?"−$"+fmt(m.amount):m.type==="salida"?"+$"+fmt(m.amount):"ajuste "+signed(m.amount)}</td></tr>`).join("")}</table></div>`}
+function viewAjustes(){const s=ST.settings;return back+`<h1>Ajustes</h1>
+  <label class="f">Capital inicial de Tommy</label><input class="in" type="number" inputmode="decimal" data-set="capital.tommy" value="${s.capital.tommy}">
+  <label class="f">Capital inicial de Walter</label><input class="in" type="number" inputmode="decimal" data-set="capital.walter" value="${s.capital.walter}">
+  <label class="f">Recarga del fondo de Ragnar</label><input class="in" type="number" inputmode="decimal" data-set="capital.ragnar" value="${s.capital.ragnar}">
+  <label class="f">Cuota diaria de Tommy</label><input class="in" type="number" inputmode="decimal" step="0.01" data-set="tommyCuota" value="${s.tommyCuota}">
+  <label class="f">Máximo de días por intento</label><input class="in" type="number" inputmode="numeric" data-set="maxDias" value="${s.maxDias}">
+  <label class="f">Montos permitidos en Ragnar (separados por coma)</label><input class="in" data-set="ragnarMontos" value="${s.ragnarMontos.join(", ")}">
+  <label class="f">Día de pago del sueldo</label><input class="in" type="number" inputmode="numeric" data-set="payDay" value="${s.payDay}">
+  <label class="f">Si cae fin de semana, te pagan</label><select class="in" data-set="weekendShift"><option value="antes" ${s.weekendShift==="antes"?"selected":""}>El viernes anterior</option><option value="despues" ${s.weekendShift==="despues"?"selected":""}>El lunes siguiente</option></select>`}
+function viewRespaldo(){return back+`<h1>Respaldo</h1><p class="muted">Guarda una copia de todo por si cambias de teléfono o algo falla.</p>
+  <p class="muted small">Con Drive conectado ya tienes respaldo automático. Esto es una copia extra en tu celular.</p><div class="row"><button class="btn pri" data-act="export">Descargar copia</button><button class="btn" data-act="copy">Copiar al portapapeles</button></div>
+  <h2>Restaurar una copia</h2><p class="muted small">Elige el archivo de la copia o pega su contenido. Reemplaza todo lo que hay ahora.</p><input type="file" accept=".json,application/json" id="impfile" class="in"><textarea class="in" id="imp" style="margin-top:8px" placeholder='{"v":1,...}'></textarea>
+  <button class="btn full" style="margin-top:10px" data-act="import">Restaurar</button>`}
+
+/* ---------- hoja modal ---------- */
+function sheet(html){document.getElementById("sheet").innerHTML=`<div class="sheet-bg" data-act="closesheet"><div class="sheet" role="dialog" aria-modal="true">${html}</div></div>`;const i=document.querySelector(".sheet input,.sheet textarea");if(i)i.focus()}
+function closeSheet(){document.getElementById("sheet").innerHTML=""}
+function confirmSheet(title,body,label,fn){sheet(`<h3>${esc(title)}</h3><div style="margin:10px 0 16px">${body}</div><div class="row end"><button class="btn ghost" data-act="closesheet">Cancelar</button><button class="btn pri" id="okbtn">${esc(label)}</button></div>`);document.getElementById("okbtn").onclick=()=>{closeSheet();fn()}}
+function formSheet(title,fields,label,fn,extra){sheet(`<h3>${esc(title)}</h3>${fields}<div class="row end" style="margin-top:16px">${extra||""}<button class="btn ghost" data-act="closesheet">Cancelar</button><button class="btn pri" id="okbtn">${esc(label)}</button></div>`);
+  document.getElementById("okbtn").onclick=()=>{const v={};document.querySelectorAll(".sheet [name]").forEach(e=>v[e.name]=e.type==="checkbox"?e.checked:e.value.trim());if(fn(v)!==false)closeSheet()}}
+
+/* ---------- acciones ---------- */
+function startAttempt(m){const n=ST.attempts.filter(a=>a.method===m).length+1,cap=ST.settings.capital[m];
+  ST.attempts.push({id:m+uid(),method:m,n,start:todayISO(),capital:cap,status:"vivo",end:null});
+  ST.moves.push({id:uid(),date:todayISO(),type:"entrada",method:m,amount:cap,note:`Inicio intento ${n}`});commit();toast(`${M[m].name}: intento ${n} empezado`)}
+const A={
+  fresh(){ST=freshState();commit()},
+  back(){UI.detail=null;render();scrollTo(0,0)},
+  detail(e){UI.detail=e.dataset.id;render();scrollTo(0,0)},
+  restart(e){const m=e.dataset.id,adv=restartAdvice(m);
+    if(adv.ready)return startAttempt(m);
+    confirmSheet("¿Seguro que quieres reiniciar ya?",`<div class="advice">${adv.html}</div>`,"Reiniciar de todos modos",()=>startAttempt(m))},
+  close(e){const a=ST.attempts.find(x=>x.id===e.dataset.id),bal=attemptBal(a);
+    confirmSheet(`Cerrar intento ${a.n}`,`<p>Se registra que retiras ${money(bal)} de ${M[a.method].name}.</p>`,"Cerrar y cobrar",()=>{a.status="cerrado";a.end=todayISO();ST.moves.push({id:uid(),date:todayISO(),type:"salida",method:a.method,amount:bal,note:`Cobro intento ${a.n}`});UI.detail=null;commit();toast("Cobro registrado")})},
+  "ragnar-load"(){formSheet("Recargar fondo de Ragnar",`<label class="f">Monto</label><input class="in" name="a" type="number" inputmode="decimal" value="${ST.settings.capital.ragnar}">`,"Recargar",v=>{const a=parseFloat(v.a);if(!(a>0))return false;
+    ST.moves.push({id:uid(),date:todayISO(),type:"entrada",method:"ragnar",amount:a,note:"Recarga"});commit()})},
+  "ragnar-out"(){formSheet("Retirar de Ragnar",`<label class="f">Monto (libre: ${money(ragnarFree())})</label><input class="in" name="a" type="number" inputmode="decimal">`,"Retirar",v=>{const a=parseFloat(v.a);if(!(a>0)||a>ragnarFree()+1e-9){toast("Monto inválido");return false}
+    ST.moves.push({id:uid(),date:todayISO(),type:"salida",method:"ragnar",amount:a,note:"Retiro"});commit()})},
+  "ragnar-fix"(){formSheet("Corregir saldo de Ragnar",`<p class="small muted">Escribe lo que de verdad tienes en Bet365 para Ragnar. La diferencia queda como ajuste: no cuenta como dinero metido ni retirado.</p><label class="f">Saldo real (la app dice ${money(ragnarFund())})</label><input class="in" name="a" type="text" inputmode="decimal">`,"Corregir",v=>{const a=num(v.a);if(!(a>=0))return false;const d=r2(a-ragnarFund());if(!d)return;
+    ST.moves.push({id:uid(),date:todayISO(),type:"ajuste",method:"ragnar",amount:d,note:"Ajuste al saldo real"});commit();toast("Saldo corregido")})},
+  togfuente(e){const m=ST.moves.find(x=>x.id===e.dataset.id);m.fuente=m.fuente==="previa"?undefined:"previa";if(!m.fuente)delete m.fuente;commit()},
+  leg(e){const b=ST.bets.find(x=>x.id===e.dataset.id),l=b.legs[+e.dataset.i],v=e.dataset.v==="1";l.ok=l.ok===v?null:v;commit()},
+  settle(e){const b=ST.bets.find(x=>x.id===e.dataset.id),v=e.dataset.v;
+    if(v==="ganada"){b.legs.forEach(l=>{if(l.ok==null)l.ok=true});b.ret=r2(num(UI.resolve[b.id]?.ret)||b.stake*b.cuota)}else b.ret=0;
+    if(v==="perdida"&&!b.legs.some(l=>l.ok===false)){toast("Marca con ✗ el pick que falló");return}
+    b.status=v;
+    if(b.attemptId){const a=ST.attempts.find(x=>x.id===b.attemptId);if(v==="perdida"){a.status="caido";a.end=b.date}}
+    delete UI.resolve[b.id];commit();toast(v==="ganada"?"Ganada":"Perdida registrada")},
+  delbet(e){confirmSheet("Borrar apuesta","<p>Se borra esta apuesta pendiente.</p>","Borrar",()=>{ST.bets=ST.bets.filter(x=>x.id!==e.dataset.id);commit()})},
+  dm(e){const m=e.dataset.id;UI.draft.method=m;UI.draft.stake="";render()},
+  amt(e){UI.draft.stake=e.dataset.id;render()},
+  dteam(e){UI.draft.team=UI.draft.team===e.dataset.id?null:e.dataset.id;render()},
+  addleg(e){const p=pick(e.dataset.id);UI.draft.legs.push({pickId:p.id,text:p.text,teamId:p.teamId,ok:null});render()},
+  rmleg(e){UI.draft.legs.splice(+e.dataset.i,1);render()},
+  addcustom(){const d=UI.draft,t=d.custom.trim();if(!t||!d.team)return;
+    const p={id:"p"+uid(),teamId:d.team,text:t,player:false,baseUsed:0,baseHit:0};ST.picks.push(p);d.legs.push({pickId:p.id,text:t,teamId:d.team,ok:null});d.custom="";commit();toast("Pick agregado a tu lista")},
+  savebet(){const d=UI.draft,m=d.method;let stake,attemptId=null,target;
+    if(m!=="ragnar"){const a=liveAttempt(m);stake=attemptBal(a);attemptId=a.id;target=targetFor(m,stake)}else{stake=num(d.stake);target=r2(stake*num(d.cuota))}
+    ST.bets.push({id:"b"+uid(),method:m,attemptId,date:d.date||todayISO(),stake:r2(stake),cuota:num(d.cuota),target,legs:d.legs.map(l=>({...l})),status:"pendiente",ret:0});
+    UI.draft=null;UI.tab="inicio";commit();scrollTo(0,0);toast("Apuesta guardada")},
+  toggleteam(e){const t=e.dataset.id,tier=team(t).tier;UI.open[t]=!(UI.open[t]??(tier==="principal"));render()},
+  editpick(e){const p=pick(e.dataset.id);formSheet("Editar pick",`<label class="f">Pick</label><input class="in" name="text" value="${esc(p.text)}"><label class="row" style="margin-top:12px"><input type="checkbox" name="player" ${p.player?"checked":""}> Es estadística de jugador</label>`,"Guardar",v=>{if(!v.text)return false;p.text=v.text;p.player=v.player;commit()},
+    `<button class="link" style="margin-right:auto;color:var(--loss)" id="delp">Borrar</button>`);
+    document.getElementById("delp").onclick=()=>{ST.picks=ST.picks.filter(x=>x!==p);closeSheet();commit()}},
+  newpick(e){const t=e.dataset.id;formSheet(`Nuevo pick para ${team(t).name}`,`<label class="f">Pick</label><input class="in" name="text"><label class="row" style="margin-top:12px"><input type="checkbox" name="player"> Es estadística de jugador</label>`,"Agregar",v=>{if(!v.text)return false;ST.picks.push({id:"p"+uid(),teamId:t,text:v.text,player:v.player,baseUsed:0,baseHit:0});commit()})},
+  editteam(e){const t=team(e.dataset.id);formSheet("Editar equipo",teamFields(t),"Guardar",v=>{if(!v.name)return false;Object.assign(t,{name:v.name,sport:v.sport,tier:v.tier});commit()},`<button class="link" style="margin-right:auto;color:var(--loss)" id="delt">Borrar</button>`);
+    document.getElementById("delt").onclick=()=>{closeSheet();confirmSheet(`Borrar ${t.name}`,"<p>También se borran sus picks de la lista. Las apuestas ya hechas se quedan.</p>","Borrar",()=>{ST.teams=ST.teams.filter(x=>x!==t);ST.picks=ST.picks.filter(p=>p.teamId!==t.id);commit()})}},
+  newteam(){formSheet("Nuevo equipo",teamFields({name:"",sport:"Fútbol",tier:"auxiliar"}),"Agregar",v=>{if(!v.name)return false;ST.teams.push({id:"t"+uid(),name:v.name,sport:v.sport,tier:v.tier});commit()})},
+  editrule(e){const r=ST.rules.find(x=>x.id===e.dataset.id);formSheet("Editar regla",`<textarea class="in" name="text">${esc(r.text)}</textarea>`,"Guardar",v=>{if(!v.text)return false;r.text=v.text;commit()},`<button class="link" style="margin-right:auto;color:var(--loss)" id="delr">Borrar</button>`);
+    document.getElementById("delr").onclick=()=>{ST.rules=ST.rules.filter(x=>x!==r);closeSheet();commit()}},
+  newrule(){formSheet("Nueva regla",`<textarea class="in" name="text"></textarea>`,"Agregar",v=>{if(!v.text)return false;ST.rules.push({id:"r"+uid(),text:v.text});commit()})},
+  export(){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(ST,null,1)],{type:"application/json"}));a.download=`respaldo-apuestas-${todayISO()}.json`;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500)},
+  async dconnect(){const url=document.getElementById("durl").value.trim(),key=document.getElementById("dkey").value.trim();
+    if(!/^https:\/\/script\.google(usercontent)?\.com\//.test(url)||!key){toast("Revisa la dirección y la clave");return}
+    toast("Probando conexión…");let r;try{r=await driveGet({url,key})}catch(e){toast(e.message==="clave"?"La clave no coincide con la del script":"No se pudo conectar. Revisa la dirección.");return}
+    DRIVE={url,key};try{localStorage.setItem(DKEY,JSON.stringify(DRIVE))}catch(e){}
+    if(r&&(!ST||(r.updatedAt||0)>=(ST.updatedAt||0))){ST=r;saveLocal();setDirty(false);sync="nube";toast("Datos traídos de tu Drive")}
+    else if(ST){await pushNow();toast("Conectado. Tus datos se subieron a Drive")}
+    else{sync="nube";toast("Conectado. Drive está vacío")}
+    UI.tab=ST?"inicio":"drive";render();scrollTo(0,0)},
+  dpush(){pushNow().then(()=>toast(sync==="nube"?"Subido a Drive":"No se pudo subir"))},
+  dclear(){confirmSheet("Desconectar Drive","<p>Tus datos se quedan en el celular y en Drive, pero dejan de sincronizarse.</p>","Desconectar",()=>{DRIVE=null;localStorage.removeItem(DKEY);render()})},
+  async copy(){try{await navigator.clipboard.writeText(JSON.stringify(ST));toast("Copia en el portapapeles")}catch(e){toast("No se pudo copiar")}},
+  import(){const t=document.getElementById("imp").value.trim();let d;try{d=JSON.parse(t)}catch(e){toast("Ese texto no es una copia válida");return}
+    if(!d||!d.settings||!Array.isArray(d.bets)){toast("Ese texto no es una copia válida");return}
+    const go=()=>{ST=d;UI.tab="inicio";commit();toast("Copia restaurada")};if(!ST)return go();
+    confirmSheet("Restaurar copia","<p>Todo lo actual se reemplaza por la copia.</p>","Restaurar",go)},
+  closesheet(e,ev){if(ev.target===e||e.tagName==="BUTTON")closeSheet()}
+};
+function teamFields(t){return`<label class="f">Nombre</label><input class="in" name="name" value="${esc(t.name)}"><label class="f">Deporte o liga</label><input class="in" name="sport" value="${esc(t.sport)}">
+  <label class="f">Tipo</label><select class="in" name="tier"><option value="principal" ${t.tier==="principal"?"selected":""}>Principal</option><option value="auxiliar" ${t.tier==="auxiliar"?"selected":""}>Auxiliar</option></select>`}
+
+document.addEventListener("click",ev=>{
+  const tb=ev.target.closest("[data-tab]");if(tb){UI.tab=tb.dataset.tab;UI.detail=null;if(UI.tab==="apostar"&&!UI.draft)UI.draft=newDraft();render();scrollTo(0,0);return}
+  const e=ev.target.closest("[data-act]");if(!e)return;const f=A[e.dataset.act];if(f)f(e,ev)});
+document.addEventListener("input",ev=>{const e=ev.target;
+  if(e.dataset.bind){if(e.dataset.bind==="ret"){(UI.resolve[e.dataset.id]||(UI.resolve[e.dataset.id]={})).ret=e.value;return}
+    UI.draft[e.dataset.bind]=e.value;if(e.dataset.bind!=="custom")updDyn()}});
+document.addEventListener("change",ev=>{const e=ev.target;
+  if(e.id==="impfile"&&e.files[0]){e.files[0].text().then(t=>{document.getElementById("imp").value=t;toast("Archivo cargado. Toca Restaurar.")});return}
+  if(!e.dataset.set)return;const k=e.dataset.set,s=ST.settings;
+  if(k==="ragnarMontos"){const a=e.value.split(",").map(x=>parseFloat(x)).filter(x=>x>0);if(a.length)s.ragnarMontos=a}
+  else if(k==="weekendShift")s.weekendShift=e.value;
+  else{const n=parseFloat(e.value);if(!(n>0))return;if(k.startsWith("capital."))s.capital[k.split(".")[1]]=n;else s[k]=n}
+  commit();toast("Ajuste guardado")});
+function updDyn(){const d=UI.draft;if(!d)return;const p=document.getElementById("dynpay"),c=document.getElementById("dyncheck");if(p)p.innerHTML=dynPay(d);if(c)c.innerHTML=dynCheck(d)}
+boot();
+</script>
+</body>
+</html>
