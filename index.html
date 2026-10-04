@@ -100,7 +100,7 @@ textarea.in{min-height:90px}
 .seg button{padding:10px 4px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font-family:var(--cond);font-size:18px;font-weight:600}
 .seg button.on{background:var(--c);color:#fff;border-color:var(--c)}
 .chips{display:flex;gap:6px;flex-wrap:wrap}
-.chip{padding:7px 12px;border-radius:99px;border:1px solid var(--line);background:var(--surface);font-size:14px;font-weight:500}
+.chip{display:inline-flex;align-items:center;padding:7px 12px;border-radius:99px;border:1px solid var(--line);background:var(--surface);font-size:14px;font-weight:500}
 .chip.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 .chip.prin{font-weight:600}
 .facts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
@@ -143,6 +143,13 @@ table.t td.r,table.t th.r{text-align:right}
 .rules{margin:0;padding-left:28px}
 .rules li{padding:8px 0;border-bottom:1px solid var(--line)}
 
+.badge{display:inline-flex;align-items:center;justify-content:center;width:30px;height:22px;border-radius:5px 5px 11px 11px;font-family:var(--cond);font-size:11px;font-weight:700;letter-spacing:.02em;vertical-align:middle;margin-right:6px;flex:none;box-shadow:inset 0 0 0 1px rgba(0,0,0,.15)}
+.hoy{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;margin-top:14px}
+.hoy .msg{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--line);font-size:15px}
+.hoy .msg:first-of-type{border-top:0}
+.hist{list-style:none;margin:8px 0 0;padding:0}
+.hist li{display:grid;grid-template-columns:30px 1fr auto;gap:6px;padding:6px 0;border-top:1px solid var(--line);font-size:14px}
+.hist .det{font-size:12px;color:var(--muted)}
 /* barra inferior */
 nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px);z-index:10}
 nav.tabs .in{max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr)}
@@ -172,7 +179,7 @@ nav.tabs .plus span{width:46px;height:46px;border-radius:14px;background:var(--i
 const KEY="operacion-sueldo-extra-v1";
 const M={tommy:{name:"Tommy Shelby",c:"var(--tommy)"},walter:{name:"Walter White",c:"var(--walter)"},ragnar:{name:"Ragnar Lothbrok",c:"var(--ragnar)"}};
 let ST=null, saveT=null, sync="local";
-const UI={tab:"inicio",detail:null,draft:null,open:{},resolve:{}};
+const UI={tab:"inicio",detail:null,draft:null,open:{},resolve:{},hist:{}};
 
 /* ---------- utilidades ---------- */
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -230,12 +237,40 @@ async function boot(){
 }
 function freshState(){return{v:1,updatedAt:0,settings:{capital:{tommy:50,walter:50,ragnar:25},tommyCuota:1.15,maxDias:30,ragnarMontos:[3,5,10],payDay:22,weekendShift:"antes"},teams:[],picks:[],rules:[],attempts:[],bets:[],moves:[]}}
 
+/* ---------- colores de equipos principales ---------- */
+const COLORS={
+ barca:{bg:"linear-gradient(90deg,#004D98 0 33%,#A50044 33% 66%,#004D98 66%)",fg:"#FFED02",t:"FCB"},
+ warriors:{bg:"#1D428A",fg:"#FFC72C",t:"GSW"},
+ dodgers:{bg:"#005A9C",fg:"#FFFFFF",t:"LA"},
+ argentina:{bg:"linear-gradient(90deg,#75AADB 0 33%,#FFFFFF 33% 66%,#75AADB 66%)",fg:"#1C2B4A",t:"ARG"},
+ oilers:{bg:"#041E42",fg:"#FF4C00",t:"EDM"},
+ chiefs:{bg:"#E31837",fg:"#FFB81C",t:"KC"}};
+function badge(id){const c=COLORS[id];return c?`<span class="badge" style="background:${c.bg};color:${c.fg}" aria-hidden="true">${c.t}</span>`:""}
+const tname=id=>{const t=team(id);return t?badge(id)+esc(t.name):""};
+const MSG={
+ barca:["Més que un club… y hoy, más que un pick. ¡Visca el Barça, pa!","Hoy toca tiki-taka con tu saldo: pase corto, paciencia y al fondo de la red.","Blaugrana en las venas y cuota en la mano. Que ruede la pelota.","El rival ya está sudando y todavía no empieza el partido. Força Barça."],
+ warriors:["Strength in Numbers: y tus números van sumando, pa.","Si Curry tira desde media cancha, tú puedes respetar tu sistema.","Hoy llueven triples en San Francisco. Que también llueva en tu saldo.","Dub Nation activada: defensa, transición y a cobrar."],
+ dodgers:["Sangre azul Dodger. Batea con calma, que esto es de nueve innings.","Un hit a la vez, una carrera a la vez, un día a la vez. Así se ganan Series Mundiales.","Los Dodgers esperan su lanzamiento. Igual que tú con tu cuota.","Hoy suena el bate en Los Ángeles. Que suene también la caja registradora."],
+ argentina:["¡Vamos, vamos, Argentina! Que la Scaloneta te lleve en andas.","Tres estrellas en el pecho y una más en tu saldo. Dale, campeón.","Garra, mística y celeste y blanca. Aguante, pa.","Hoy se juega con el corazón… y tú con la cabeza fría. Combinación perfecta."],
+ oilers:["Hoy patina McDavid. Agárrate, que va más rápido que tu saldo.","Hielo, palo y disciplina canadiense. Let's go Oilers.","Que el disco entre y el saldo suba. Edmonton está contigo.","Hasta en el frío de Edmonton se calienta la cuota."],
+ chiefs:["Chiefs Kingdom en casa: que Mahomes lance y tú cobres.","Cuarta y uno: aquí no se patea, aquí se va por todo. Vamos Kansas City.","Ruido en el Arrowhead y calma en tu sistema. Touchdown, pa.","Kansas City corre, lanza y anota. Tú solo respeta tus reglas."]};
+const REST=["Hoy descansamos. La disciplina también se entrena sin apostar.","Día libre. El dinero que no arriesgas hoy también cuenta.","Hoy no hay jugada para nosotros. Café, paciencia y mañana seguimos.","Hasta Tommy Shelby se sienta a pensar antes de mover ficha. Hoy toca pensar.","El sistema dice: quieto. Y quedarse quieto también es una jugada."];
+function pickOf(arr,key){let h=0;for(const c of key)h=(h*31+c.charCodeAt(0))>>>0;return arr[h%arr.length]}
+function viewHoy(){const t=todayISO(),bs=ST.bets.filter(b=>b.date===t);
+  let h=`<div class="hoy"><p class="small muted" style="margin:0 0 6px">${esc(fmtD(new Date()))}</p>`;
+  if(!bs.length)return h+`<div class="msg"><span>😴</span><span>${esc(pickOf(REST,t))}</span></div></div>`;
+  const enJuego=bs.filter(b=>b.status==="pendiente"),ok=bs.filter(b=>b.status==="ganada").length,ko=bs.filter(b=>b.status==="perdida").length;
+  h+=`<p style="margin:0 0 4px;font-size:15px">Hoy llevas <b>${bs.length} ${bs.length===1?"apuesta":"apuestas"}</b>${enJuego.length?`, ${money(enJuego.reduce((s,b)=>s+b.stake,0))} en juego`:""}${ok?`, ${ok} ganada${ok>1?"s":""}`:""}${ko?`, ${ko} perdida${ko>1?"s":""}`:""}.</p>`;
+  const prin=[...new Set(bs.flatMap(b=>b.legs.map(l=>l.teamId)).filter(id=>id&&MSG[id]&&team(id)?.tier==="principal"))];
+  prin.forEach(id=>{h+=`<div class="msg">${badge(id)}<span>${esc(pickOf(MSG[id],t+id))}</span></div>`});
+  return h+`</div>`}
+
 /* ---------- cálculos ---------- */
 const betsOfAttempt=a=>ST.bets.filter(b=>b.attemptId===a.id);
 const settled=b=>b.status==="ganada"||b.status==="perdida";
 function attemptBal(a){let s=a.capital;for(const b of betsOfAttempt(a))if(settled(b))s+=b.ret-b.stake;
   for(const mv of ST.moves)if(mv.type==="traspaso"&&mv.from===a.id)s-=mv.amount;return r2(s)}
-function suggestStake(m,bal){if(m==="walter")return bal<100?Math.floor(bal/10+1e-9)*10:Math.floor(bal/20+1e-9)*20;return Math.floor(bal+1e-9)}
+function suggestStake(m,bal){if(m==="walter")return bal<100?Math.floor(bal/10+1e-9)*10:Math.floor(bal/20+1e-9)*20;return r2(bal)}
 const liveAttempt=m=>ST.attempts.filter(a=>a.method===m&&a.status==="vivo").pop()||null;
 const lastAttempt=m=>ST.attempts.filter(a=>a.method===m).pop()||null;
 const pendingOf=m=>ST.bets.filter(b=>b.method===m&&b.status==="pendiente");
@@ -377,8 +412,8 @@ function ragnarCard(){
 function pendCard(b){
   const r=UI.resolve[b.id]||(UI.resolve[b.id]={ret:r2(b.stake*b.cuota)});
   return`<div class="card pend" style="--c:${M[b.method].c}"><div class="met-h"><h3 style="color:var(--c)">${M[b.method].name}</h3><span class="muted small">${esc(fmtDate(b.date))}</span></div>
-   <p class="small" style="margin:4px 0 0">${money(b.stake)} a cuota ${b.cuota.toFixed(2)} → paga ${money(b.stake*b.cuota)}</p>
-   <ul class="legs">${b.legs.map((l,i)=>`<li><span>${esc(l.text)}${l.teamId?` <span class="muted small">${esc(team(l.teamId)?.name||"")}</span>`:""}</span>
+   <p class="small" style="margin:4px 0 0">${money(b.stake)} a cuota ${b.cuota.toFixed(2)} → paga ${money(b.stake*b.cuota)}</p>${b.attemptId&&b.target?`<p class="small muted" style="margin:2px 0 0">Meta: ${money(b.target)}. Lo que cobres de más pasa a Ragnar.</p>`:""}
+   <ul class="legs">${b.legs.map((l,i)=>`<li><span>${esc(l.text)}${l.teamId?`<br><span class="muted small">${tname(l.teamId)}</span>`:""}</span>
      <button class="tog ${l.ok===true?"on-ok":""}" data-act="leg" data-id="${b.id}" data-i="${i}" data-v="1" aria-label="Se cumplió">✓</button>
      <button class="tog ${l.ok===false?"on-no":""}" data-act="leg" data-id="${b.id}" data-i="${i}" data-v="0" aria-label="Falló">✗</button></li>`).join("")}</ul>
    <label class="f">Cobro real si ganó</label><input class="in" type="text" inputmode="decimal" autocomplete="off" value="${r.ret}" data-bind="ret" data-id="${b.id}">
@@ -396,10 +431,12 @@ function viewDetail(m){
     h+=`</ul><div class="row" style="margin-top:14px"><button class="btn" data-act="close" data-id="${a.id}">Cerrar y cobrar ${money(bal)}</button></div>`}
   const prev=ST.attempts.filter(x=>x.method===m&&x!==a).reverse();
   if(prev.length){h+=`<h2>Intentos anteriores</h2>`;
-    prev.forEach(x=>{const bs=betsOfAttempt(x),lost=bs.find(b=>b.status==="perdida");const peak=Math.max(x.capital,...bs.filter(b=>b.status==="ganada").map(b=>b.ret));
+    prev.forEach(x=>{const bs=betsOfAttempt(x),lost=bs.find(b=>b.status==="perdida");const peak=Math.max(x.capital,...bs.filter(b=>b.status==="ganada").map(b=>b.target?Math.min(b.ret,b.target):b.ret));const open=!!UI.hist[x.id];
       h+=`<div class="card"><div class="met-h"><h3>Intento ${x.n}</h3><span class="pill ${x.status}">${x.status==="cerrado"?"Cobrado":"Caído"}</span></div>
       <p class="small" style="margin:6px 0 0">Del ${esc(fmtDate(x.start))}${x.end?" al "+esc(fmtDate(x.end)):""}. Arrancó con ${money(x.capital)}, llegó a ${money(peak)} en ${bs.filter(b=>b.status==="ganada").length} días ganados.</p>
-      ${lost?`<p class="small" style="margin:6px 0 0"><b>Lo tumbó el día ${bs.indexOf(lost)+1}:</b> ${esc(lost.legs.filter(l=>l.ok!==true).map(l=>l.text).join(" · ")||lost.legs.map(l=>l.text).join(" · "))}</p>`:""}</div>`})}
+      ${open?`<ul class="hist">${bs.map((b,i)=>`<li><span class="num" style="color:${M[m].c}">${i+1}</span><div>${money(b.stake)} → ${money(b.status==="ganada"?(b.target?Math.min(b.ret,b.target):b.ret):b.stake*b.cuota)} <span class="muted">a ${b.cuota.toFixed(2)}</span><div class="det">${esc(b.legs.map(l=>l.text+(l.ok===false?" ✗":"")).join(" · ")||"sin picks")}</div></div><span class="${b.status==="ganada"?"pos":"neg"}">${b.status==="ganada"?"Ganó":"Perdió"}</span></li>`).join("")}</ul>`:
+        lost?`<p class="small" style="margin:6px 0 0"><b>Lo tumbó el día ${bs.indexOf(lost)+1}:</b> ${esc(lost.legs.filter(l=>l.ok!==true).map(l=>l.text).join(" · ")||lost.legs.map(l=>l.text).join(" · "))}</p>`:""}
+      ${bs.length?`<button class="link" style="margin-top:8px" data-act="toghist" data-id="${x.id}">${open?"Ocultar días":"Ver intento completo ("+bs.length+" días)"}</button>`:""}</div>`})}
   return h}
 function ragnarDetail(){
   const rb=ST.bets.filter(b=>b.method==="ragnar");const per={};
@@ -407,7 +444,7 @@ function ragnarDetail(){
   let h=`<p class="muted">Fondo ${money(ragnarFund())}, libre ${money(ragnarFree())}.</p>
    <div class="row"><button class="btn" data-act="ragnar-load">Recargar</button><button class="btn" data-act="ragnar-out">Retirar</button><button class="btn ghost" data-act="ragnar-fix">Corregir saldo</button></div>
    <h2>Por equipo</h2><div class="scroll"><table class="t"><tr><th>Equipo</th><th class="r">Apuestas</th><th class="r">Ganadas</th><th class="r">Te falló</th></tr>`;
-  Object.entries(per).sort((a,b)=>b[1].n-a[1].n).forEach(([t,o])=>{h+=`<tr><td>${esc(team(t)?.name||t)}</td><td class="r">${o.n}</td><td class="r">${o.w}</td><td class="r ${o.f?"neg":""}">${o.f}</td></tr>`});
+  Object.entries(per).sort((a,b)=>b[1].n-a[1].n).forEach(([t,o])=>{h+=`<tr><td>${tname(t)||esc(t)}</td><td class="r">${o.n}</td><td class="r">${o.w}</td><td class="r ${o.f?"neg":""}">${o.f}</td></tr>`});
   h+=`</table></div><h2>Apuestas</h2><ul class="lad" style="--c:var(--ragnar)">`;
   rb.slice().reverse().forEach(b=>{h+=`<li><span class="d small" style="font-size:14px">${esc(b.date?b.date.slice(5).split("-").reverse().join("/"):"")}</span><div>${money(b.stake)} a ${b.cuota.toFixed(2)}<div class="det">${esc(b.legs.map(l=>l.text+(l.ok===false?" ✗":"")).join(" · "))}</div></div><span class="small ${b.status==="ganada"?"pos":b.status==="perdida"?"neg":"muted"}">${b.status==="ganada"?signed(b.ret-b.stake):b.status==="perdida"?signed(-b.stake):"En juego"}</span></li>`});
   return h+`</ul>`}
@@ -416,7 +453,7 @@ function ragnarDetail(){
 function newDraft(m){return{method:m||"tommy",date:todayISO(),cuota:"",stake:"",legs:[],team:null,custom:""}}
 function viewApostar(){
   const d=UI.draft||(UI.draft=newDraft());const m=d.method;
-  let h=`<h1>Nueva apuesta</h1><div class="seg" style="margin-top:14px">${["tommy","walter","ragnar"].map(k=>`<button style="--c:${M[k].c}" class="${m===k?"on":""}" data-act="dm" data-id="${k}">${M[k].name.split(" ")[0]}</button>`).join("")}</div>`;
+  let h=`<h1>Nueva apuesta</h1>${viewHoy()}<div class="seg" style="margin-top:14px">${["tommy","walter","ragnar"].map(k=>`<button style="--c:${M[k].c}" class="${m===k?"on":""}" data-act="dm" data-id="${k}">${M[k].name.split(" ")[0]}</button>`).join("")}</div>`;
   if(m!=="ragnar"){const a=liveAttempt(m);
     if(!a)return h+`<div class="card"><p style="margin:0">${M[m].name} no tiene un intento vivo. Puedes empezar uno desde Inicio.</p></div>`;
     if(pendingOf(m).length)return h+`<div class="card"><p style="margin:0">Ya tienes la apuesta del día en juego. Resuélvela en Inicio antes de meter otra.</p></div>`;
@@ -429,11 +466,11 @@ function viewApostar(){
    <div style="flex:1"><label class="f">Fecha</label><input class="in" type="date" value="${esc(d.date)}" data-bind="date"></div></div>`;
   h+=`<div id="dynpay">${dynPay(d)}</div>`;
   h+=`<label class="f">Picks del parlay (${d.legs.length})</label>`;
-  if(d.legs.length)h+=`<ul class="legs" style="margin:0 0 8px">${d.legs.map((l,i)=>`<li><span>${esc(l.text)} <span class="muted small">${esc(team(l.teamId)?.name||"")}</span></span><button class="tog" data-act="rmleg" data-i="${i}" aria-label="Quitar">−</button></li>`).join("")}</ul>`;
-  const tierChips=tier=>ST.teams.filter(t=>t.tier===tier).map(t=>`<button class="chip ${tier==="principal"?"prin":""} ${d.team===t.id?"on":""}" data-act="dteam" data-id="${t.id}">${esc(t.name)}</button>`).join("");
+  if(d.legs.length)h+=`<ul class="legs" style="margin:0 0 8px">${d.legs.map((l,i)=>`<li><span>${esc(l.text)}<br><span class="muted small">${tname(l.teamId)}</span></span><button class="tog" data-act="rmleg" data-i="${i}" aria-label="Quitar">−</button></li>`).join("")}</ul>`;
+  const tierChips=tier=>ST.teams.filter(t=>t.tier===tier).map(t=>`<button class="chip ${tier==="principal"?"prin":""} ${d.team===t.id?"on":""}" data-act="dteam" data-id="${t.id}">${badge(t.id)}${esc(t.name)}</button>`).join("");
   h+=`<p class="small muted" style="margin:4px 0 6px">Principales</p><div class="chips">${tierChips("principal")}</div><p class="small muted" style="margin:10px 0 6px">Auxiliares</p><div class="chips">${tierChips("auxiliar")}</div>`;
   if(d.team){const ps=ST.picks.filter(p=>p.teamId===d.team).map(p=>({p,s:pickStats(p)})).sort((a,b)=>(b.s.u-a.s.u)||((b.s.pct??-1)-(a.s.pct??-1)));
-    h+=`<div class="team"><div class="team-h"><h3>${esc(team(d.team).name)}</h3><span class="muted small">toca para agregar</span></div>`+
+    h+=`<div class="team"><div class="team-h"><h3>${tname(d.team)}</h3><span class="muted small">toca para agregar</span></div>`+
      ps.map(({p,s})=>{const used=d.legs.some(l=>l.pickId===p.id);return`<button class="pk" data-act="addleg" data-id="${p.id}" ${used?"disabled":""}><span class="tx">${used?"✓ ":""}${esc(p.text)}${p.player?`<span class="tag">jugador</span>`:""}</span><span class="rec small muted">${s.u?s.h+"/"+s.u:"nuevo"}</span></button>`}).join("")+
      `<div style="padding:10px 14px;border-top:1px solid var(--line)" class="row"><input class="in" style="flex:1" placeholder="Pick nuevo para ${esc(team(d.team).name)}" value="${esc(d.custom)}" data-bind="custom"><button class="btn" data-act="addcustom">Agregar</button></div></div>`}
   h+=`<div id="dyncheck">${dynCheck(d)}</div>`;
@@ -457,7 +494,7 @@ function viewPicks(){
   for(const tier of["principal","auxiliar"]){h+=`<p class="tierlbl">${tier==="principal"?"Equipos principales":"Equipos auxiliares"}</p>`;
     ST.teams.filter(t=>t.tier===tier).forEach(t=>{const open=UI.open[t.id]??(tier==="principal");
       const ps=ST.picks.filter(p=>p.teamId===t.id).map(p=>({p,s:pickStats(p)})).sort((a,b)=>(b.s.u-a.s.u)||((b.s.pct??-1)-(a.s.pct??-1)));
-      h+=`<div class="team"><button class="team-h" data-act="toggleteam" data-id="${t.id}" aria-expanded="${open}"><span><h3>${esc(t.name)}</h3><span class="muted small">${esc(t.sport)} · ${ps.length} picks</span></span><span class="muted">${open?"−":"+"}</span></button>`;
+      h+=`<div class="team"><button class="team-h" data-act="toggleteam" data-id="${t.id}" aria-expanded="${open}"><span><h3>${tname(t.id)}</h3><span class="muted small">${esc(t.sport)} · ${ps.length} picks</span></span><span class="muted">${open?"−":"+"}</span></button>`;
       if(open){h+=ps.map(({p,s})=>`<button class="pk" data-act="editpick" data-id="${p.id}"><span class="tx">${esc(p.text)}${p.player?`<span class="tag">jugador</span>`:""}${s.u?`<div class="bar"><i style="width:${s.pct}%"></i></div>`:""}</span><span class="rec num">${s.u?s.h+"/"+s.u:"—"}</span></button>`).join("");
         h+=`<div class="row" style="padding:10px 14px;border-top:1px solid var(--line)"><button class="btn" data-act="newpick" data-id="${t.id}">+ Pick</button><button class="link" data-act="editteam" data-id="${t.id}" style="margin-left:auto">Editar equipo</button></div>`}
       h+=`</div>`})}
@@ -475,9 +512,9 @@ function viewStats(){
   const all=ST.picks.map(p=>({p,s:pickStats(p)})).filter(x=>x.s.u);
   const fails=all.filter(x=>x.s.f).sort((a,b)=>b.s.f-a.s.f).slice(0,6);
   h+=`<h2>Los que te han fallado</h2>`;
-  h+=fails.length?`<div class="card"><table class="t">${fails.map(({p,s})=>`<tr><td>${esc(p.text)}<div class="muted small">${esc(team(p.teamId)?.name)}</div></td><td class="r neg num">${s.f} ${s.f===1?"vez":"veces"}</td></tr>`).join("")}</table></div>`:`<p class="muted">Ningún pick registrado te ha fallado todavía.</p>`;
+  h+=fails.length?`<div class="card"><table class="t">${fails.map(({p,s})=>`<tr><td>${esc(p.text)}<div class="muted small">${tname(p.teamId)}</div></td><td class="r neg num">${s.f} ${s.f===1?"vez":"veces"}</td></tr>`).join("")}</table></div>`:`<p class="muted">Ningún pick registrado te ha fallado todavía.</p>`;
   const top=all.sort((a,b)=>b.s.u-a.s.u).slice(0,10);
-  h+=`<h2>Los que más usas</h2><div class="card"><table class="t">${top.map(({p,s})=>`<tr><td>${esc(p.text)}<div class="muted small">${esc(team(p.teamId)?.name)}</div></td><td class="r num">${s.h}/${s.u}</td><td class="r num">${s.pct}%</td></tr>`).join("")}</table></div>`;
+  h+=`<h2>Los que más usas</h2><div class="card"><table class="t">${top.map(({p,s})=>`<tr><td>${esc(p.text)}<div class="muted small">${tname(p.teamId)}</div></td><td class="r num">${s.h}/${s.u}</td><td class="r num">${s.pct}%</td></tr>`).join("")}</table></div>`;
   const unk=ST.bets.filter(b=>b.status==="perdida"&&b.legs.length&&!b.legs.some(l=>l.ok===false)).length;
   if(unk)h+=`<p class="small muted">Hay ${unk} ${unk===1?"apuesta perdida":"apuestas perdidas"} del Excel sin saber qué pick falló. De aquí en adelante, marca ✓ o ✗ en cada pick y esta lista se vuelve exacta.</p>`;
   return h}
@@ -541,13 +578,15 @@ const A={
   "ragnar-fix"(){formSheet("Corregir saldo de Ragnar",`<p class="small muted">Escribe lo que de verdad tienes en Bet365 para Ragnar. La diferencia queda como ajuste: no cuenta como dinero metido ni retirado.</p><label class="f">Saldo real (la app dice ${money(ragnarFund())})</label><input class="in" name="a" type="text" inputmode="decimal">`,"Corregir",v=>{const a=num(v.a);if(!(a>=0))return false;const d=r2(a-ragnarFund());if(!d)return;
     ST.moves.push({id:uid(),date:todayISO(),type:"ajuste",method:"ragnar",amount:d,note:"Ajuste al saldo real"});commit();toast("Saldo corregido")})},
   togfuente(e){const m=ST.moves.find(x=>x.id===e.dataset.id);m.fuente=m.fuente==="previa"?undefined:"previa";if(!m.fuente)delete m.fuente;commit()},
+  toghist(e){UI.hist[e.dataset.id]=!UI.hist[e.dataset.id];render()},
   leg(e){const b=ST.bets.find(x=>x.id===e.dataset.id),l=b.legs[+e.dataset.i],v=e.dataset.v==="1";l.ok=l.ok===v?null:v;commit()},
   settle(e){const b=ST.bets.find(x=>x.id===e.dataset.id),v=e.dataset.v;
     if(v==="ganada"){b.legs.forEach(l=>{if(l.ok==null)l.ok=true});b.ret=r2(num(UI.resolve[b.id]?.ret)||b.stake*b.cuota)}else b.ret=0;
     if(v==="perdida"&&!b.legs.some(l=>l.ok===false)){toast("Marca con ✗ el pick que falló");return}
     b.status=v;
-    if(b.attemptId){const a=ST.attempts.find(x=>x.id===b.attemptId);if(v==="perdida"){a.status="caido";a.end=b.date}}
-    delete UI.resolve[b.id];commit();toast(v==="ganada"?"Ganada":"Perdida registrada")},
+    if(b.attemptId){const a=ST.attempts.find(x=>x.id===b.attemptId);if(v==="perdida"){a.status="caido";a.end=b.date}
+      if(v==="ganada"&&b.target){const ex=r2(b.ret-b.target);if(ex>0.004){ST.moves.push({id:uid(),date:b.date||todayISO(),type:"traspaso",method:"ragnar",from:a.id,betId:b.id,amount:ex,note:`Excedente de ${M[b.method].name.split(" ")[0]}`});toast(`${money(ex)} de más pasan a Ragnar`)}}}
+    delete UI.resolve[b.id];commit();if(!(v==="ganada"&&b.attemptId&&b.ret-b.target>0.004))toast(v==="ganada"?"Ganada":"Perdida registrada")},
   delbet(e){confirmSheet("Borrar apuesta","<p>Se borra esta apuesta pendiente.</p>","Borrar",()=>{ST.bets=ST.bets.filter(x=>x.id!==e.dataset.id);ST.moves=ST.moves.filter(x=>x.betId!==e.dataset.id);commit()})},
   dm(e){const m=e.dataset.id;UI.draft.method=m;UI.draft.stake="";render()},
   amt(e){UI.draft.stake=e.dataset.id;render()},
