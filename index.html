@@ -230,7 +230,7 @@ async function pull(){if(!DRIVE)return;
   renderSync()}
 async function boot(){
   let local=null;try{local=JSON.parse(localStorage.getItem(KEY))}catch(e){}
-  ST=local;render();await pull();if(!ST)render();
+  ST=local;render();await pull();if(!ST)render();fixExcess();
   addEventListener("online",pull);
   document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")pull()});
   if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
@@ -248,20 +248,27 @@ const COLORS={
 function badge(id){const c=COLORS[id];return c?`<span class="badge" style="background:${c.bg};color:${c.fg}" aria-hidden="true">${c.t}</span>`:""}
 const tname=id=>{const t=team(id);return t?badge(id)+esc(t.name):""};
 const MSG={
- barca:["Més que un club… y hoy, más que un pick. ¡Visca el Barça, pa!","Hoy toca tiki-taka con tu saldo: pase corto, paciencia y al fondo de la red.","Blaugrana en las venas y cuota en la mano. Que ruede la pelota.","El rival ya está sudando y todavía no empieza el partido. Força Barça."],
- warriors:["Strength in Numbers: y tus números van sumando, pa.","Si Curry tira desde media cancha, tú puedes respetar tu sistema.","Hoy llueven triples en San Francisco. Que también llueva en tu saldo.","Dub Nation activada: defensa, transición y a cobrar."],
- dodgers:["Sangre azul Dodger. Batea con calma, que esto es de nueve innings.","Un hit a la vez, una carrera a la vez, un día a la vez. Así se ganan Series Mundiales.","Los Dodgers esperan su lanzamiento. Igual que tú con tu cuota.","Hoy suena el bate en Los Ángeles. Que suene también la caja registradora."],
- argentina:["¡Vamos, vamos, Argentina! Que la Scaloneta te lleve en andas.","Tres estrellas en el pecho y una más en tu saldo. Dale, campeón.","Garra, mística y celeste y blanca. Aguante, pa.","Hoy se juega con el corazón… y tú con la cabeza fría. Combinación perfecta."],
- oilers:["Hoy patina McDavid. Agárrate, que va más rápido que tu saldo.","Hielo, palo y disciplina canadiense. Let's go Oilers.","Que el disco entre y el saldo suba. Edmonton está contigo.","Hasta en el frío de Edmonton se calienta la cuota."],
- chiefs:["Chiefs Kingdom en casa: que Mahomes lance y tú cobres.","Cuarta y uno: aquí no se patea, aquí se va por todo. Vamos Kansas City.","Ruido en el Arrowhead y calma en tu sistema. Touchdown, pa.","Kansas City corre, lanza y anota. Tú solo respeta tus reglas."]};
+ barca:["Lamine Yamal juega como el Messi de 2009 y todavía no tiene edad ni para sacar licencia. Visca el Barça, pa.","Pedri reparte pases como Iniesta en sus mejores tardes. Que hoy reparta goles y te pague la cuota.","Raphinha no es Ronaldinho… pero si hoy sonríe igual que él, cobramos.","Gavi muerde como Puyol y corre como si le debieran plata. Força Barça."],
+ warriors:["Curry tira desde el estacionamiento y la mete. Tú solo respeta tu sistema.","Chef Curry está cocinando: hoy el menú es triples con salsa de cuota.","Strength in Numbers: Curry pone los triples y tú pones los números.","Si Curry falla tres seguidos, igual tira el cuarto. Confianza, pa."],
+ dodgers:["Ohtani batea, lanza y de seguro también te cuadra el saldo. Hoy es día Dodger.","Con Ohtani en el lineup, hasta el pick más conservador se siente jonrón.","Ohtani hace en un juego lo que otros en una temporada. Tú haz lo tuyo: un día a la vez.","Sangre azul Dodger y Ohtani al bate. ¿Qué más quieres, pa?"],
+ argentina:["Messi con la celeste y blanca: ya tiene el Mundial, ahora que te dé la cuota.","¡Vamos, vamos, Argentina! Que la Scaloneta te lleve en andas.","Tres estrellas en el pecho y una más en tu saldo. Dale, campeón.","Garra, mística y Messi. Aguante, pa."],
+ oilers:["McDavid patina más rápido que tu saldo cuando ganas. Let's go Oilers.","Hoy McDavid sale con hambre de puntos. Tú sal con hambre de disciplina.","Hielo, palo y McDavid: el combo que necesitaba tu parlay.","Cuando McDavid agarra el disco, nadie se lo quita. Así cuida tú tu saldo."],
+ chiefs:["Mahomes lanza sin mirar y la pelota llega. Tú mira bien tus picks, por si acaso.","Si Mahomes remonta 10 puntos en dos minutos, tu saldo también puede subir.","Chiefs Kingdom en casa: que Mahomes lance y tú cobres.","Mahomes improvisa; tú no. Por eso hoy los dos ganan."],
+ miami:["Messi en Miami: playa, sol y goles de tiro libre. Hoy el veraneo paga.","Dicen que Messi se fue a Miami a retirarse. Nadie le avisó al portero rival.","Messi en la MLS es como tu cuota 1.15: casi seguro, pero hay que verlo para creerlo.","Hoy juega el mejor de la historia vestido de rosado. Disfruta y cobra, pa."]};
 const REST=["Hoy descansamos. La disciplina también se entrena sin apostar.","Día libre. El dinero que no arriesgas hoy también cuenta.","Hoy no hay jugada para nosotros. Café, paciencia y mañana seguimos.","Hasta Tommy Shelby se sienta a pensar antes de mover ficha. Hoy toca pensar.","El sistema dice: quieto. Y quedarse quieto también es una jugada."];
 function pickOf(arr,key){let h=0;for(const c of key)h=(h*31+c.charCodeAt(0))>>>0;return arr[h%arr.length]}
+function fixExcess(){if(!ST)return false;let ch=false;
+  for(const a of ST.attempts){if(a.status!=="vivo"||pendingOf(a.method).length)continue;
+    const bs=betsOfAttempt(a).filter(settled),last=bs[bs.length-1];
+    if(last&&last.status==="ganada"&&last.target){const ex=r2(attemptBal(a)-last.target);
+      if(ex>0.004){ST.moves.push({id:uid(),date:last.date||todayISO(),type:"traspaso",method:"ragnar",from:a.id,betId:last.id,amount:ex,note:`Excedente de ${M[a.method].name.split(" ")[0]}`});ch=true}}}
+  if(ch)commit();return ch}
 function viewHoy(){const t=todayISO(),bs=ST.bets.filter(b=>b.date===t);
   let h=`<div class="hoy"><p class="small muted" style="margin:0 0 6px">${esc(fmtD(new Date()))}</p>`;
   if(!bs.length)return h+`<div class="msg"><span>😴</span><span>${esc(pickOf(REST,t))}</span></div></div>`;
   const enJuego=bs.filter(b=>b.status==="pendiente"),ok=bs.filter(b=>b.status==="ganada").length,ko=bs.filter(b=>b.status==="perdida").length;
   h+=`<p style="margin:0 0 4px;font-size:15px">Hoy llevas <b>${bs.length} ${bs.length===1?"apuesta":"apuestas"}</b>${enJuego.length?`, ${money(enJuego.reduce((s,b)=>s+b.stake,0))} en juego`:""}${ok?`, ${ok} ganada${ok>1?"s":""}`:""}${ko?`, ${ko} perdida${ko>1?"s":""}`:""}.</p>`;
-  const prin=[...new Set(bs.flatMap(b=>b.legs.map(l=>l.teamId)).filter(id=>id&&MSG[id]&&team(id)?.tier==="principal"))];
+  const prin=[...new Set(bs.flatMap(b=>b.legs.map(l=>l.teamId)).filter(id=>id&&MSG[id]&&(team(id)?.tier==="principal"||id==="miami")))];
   prin.forEach(id=>{h+=`<div class="msg">${badge(id)}<span>${esc(pickOf(MSG[id],t+id))}</span></div>`});
   return h+`</div>`}
 
