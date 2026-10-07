@@ -462,6 +462,7 @@ function viewDetail(m){
   const a0=m==="ragnar"?null:liveAttempt(m),mb=m==="ragnar"?ragnarFund():(a0?attemptBal(a0):0);
   h+=`<div class="facts"><div class="fact"><small>Saldo total</small><span class="num">${money(cuenta().juego)}</span></div><div class="fact"><small>Saldo del método</small><span class="num">${money(mb)}</span></div></div>
    <div class="row" style="margin-top:10px">${m==="ragnar"?`<button class="btn" data-act="retirar" data-id="ragnar">Retirar</button>`:`${a0?`<button class="btn" data-act="retirar" data-id="${m}">Retirar</button>`:""}<button class="btn" data-act="usesaldo" data-id="${m}">Reiniciar con dinero del saldo disponible</button><button class="btn" data-act="restartpocket" data-id="${m}">Solo reiniciar (de mi bolsillo)</button>`}</div>`;
+  if(a0){const sm=startMove(a0);if(sm)h+=`<div class="advice" style="margin-top:12px"><p class="small">Este intento arrancó con ${money(sm.amount)} <b>de tu bolsillo</b>.</p><button class="btn" data-act="fixorigen" data-id="${sm.id}">Corregir: lo tomé del saldo disponible</button></div>`}
   if(m==="ragnar")return h+ragnarDetail();
   const a=liveAttempt(m);
   if(a){const bal=attemptBal(a),bs=betsOfAttempt(a);
@@ -575,9 +576,9 @@ function viewDrive(){const bk=ST?back:`<button class="back" data-tab="inicio">�
   ${DRIVE?`<div class="row" style="margin-top:10px"><button class="btn" data-act="dpush">Subir ahora</button><button class="link" style="margin-left:auto" data-act="dclear">Desconectar</button></div>`:""}`}
 const back=`<button class="back" data-tab="mas">‹ Más</button>`;
 function viewReglas(){return back+`<h1>Reglas</h1><p class="muted small">Toca una para editarla.</p><ol class="rules">${ST.rules.map(r=>`<li><button class="link" style="color:var(--ink);text-decoration:none;text-align:left;font-size:16px" data-act="editrule" data-id="${r.id}">${esc(r.text)}</button></li>`).join("")}</ol><button class="btn full" style="margin-top:14px" data-act="newrule">+ Agregar regla</button>`}
-function viewDinero(){const c=cuenta();return back+`<h1>Entradas y salidas</h1><p class="muted small">Entrada es dinero que metes; salida es lo que retiras de Bet365. Toca una entrada para marcar si salió de tu bolsa o de ganancias anteriores.</p>
-  <div class="facts"><div class="fact"><small>Metido de tu bolsa</small><span class="num">${money(c.ent)}</span></div><div class="fact"><small>Retirado</small><span class="num">${money(c.sal)}</span></div></div>
-  <div class="card scroll"><table class="t"><tr><th>Fecha</th><th>Método</th><th>Nota</th><th class="r">Monto</th></tr>${ST.moves.slice().reverse().map(m=>`<tr ${m.type==="entrada"?`data-act="togfuente" data-id="${m.id}" style="cursor:pointer"`:""}><td class="small">${esc(fmtDate(m.date))}</td><td class="small">${esc(M[m.method]?.name.split(" ")[0]||(m.method==="previo"?"Antes":m.method))}</td><td class="small">${esc(m.note||"")}${m.type==="entrada"?`<div class="muted" style="font-size:12px">${m.fuente==="previa"?"de ganancias anteriores":"de tu bolsa"}</div>`:""}</td><td class="r num ${m.type==="entrada"?"neg":m.type==="salida"?"pos":"muted"}">${m.type==="entrada"?"−$"+fmt(m.amount):m.type==="salida"?"+$"+fmt(m.amount):m.type==="traspaso"?(m.amount>=0?"→ Ragnar $"+fmt(m.amount):"Ragnar → $"+fmt(-m.amount)):m.type==="uso"?"Ragnar → $"+fmt(m.amount):"ajuste "+signed(m.amount)}</td></tr>`).join("")}</table></div>`}
+function viewDinero(){const c=cuenta();return back+`<h1>Entradas y salidas</h1><p class="muted small">Entrada es dinero que metes; salida es lo que retiras de Bet365. Toca una entrada para cambiar de dónde salió el dinero.</p>
+  <div class="facts"><div class="fact"><small>Agregado</small><span class="num">${money(c.ent)}</span></div><div class="fact"><small>Retirado</small><span class="num">${money(c.sal)}</span></div></div>
+  <div class="card scroll"><table class="t"><tr><th>Fecha</th><th>Método</th><th>Nota</th><th class="r">Monto</th></tr>${ST.moves.slice().reverse().map(m=>`<tr ${m.type==="entrada"||(m.type==="uso"&&m.orig)?`data-act="origen" data-id="${m.id}" style="cursor:pointer"`:""}><td class="small">${esc(fmtDate(m.date))}</td><td class="small">${esc(M[m.method]?.name.split(" ")[0]||(m.method==="previo"?"Antes":m.method))}</td><td class="small">${esc(m.note||"")}${m.type==="entrada"?`<div class="muted" style="font-size:12px">${m.fuente==="previa"?"de ganancias anteriores":"de tu bolsa"}</div>`:m.type==="uso"?`<div class="muted" style="font-size:12px">del saldo disponible</div>`:""}</td><td class="r num ${m.type==="entrada"?"neg":m.type==="salida"?"pos":"muted"}">${m.type==="entrada"?"−$"+fmt(m.amount):m.type==="salida"?"+$"+fmt(m.amount):m.type==="traspaso"?(m.amount>=0?"→ Ragnar $"+fmt(m.amount):"Ragnar → $"+fmt(-m.amount)):m.type==="uso"?"Ragnar → $"+fmt(m.amount):"ajuste "+signed(m.amount)}</td></tr>`).join("")}</table></div>`}
 function viewAjustes(){const s=ST.settings;return back+`<h1>Ajustes</h1>
   <label class="f">Capital inicial de Tommy</label><input class="in" type="number" inputmode="decimal" data-set="capital.tommy" value="${s.capital.tommy}">
   <label class="f">Capital inicial de Walter</label><input class="in" type="number" inputmode="decimal" data-set="capital.walter" value="${s.capital.walter}">
@@ -600,6 +601,12 @@ function formSheet(title,fields,label,fn,extra){sheet(`<h3>${esc(title)}</h3>${f
   document.getElementById("okbtn").onclick=()=>{const v={};document.querySelectorAll(".sheet [name]").forEach(e=>v[e.name]=e.type==="checkbox"?e.checked:e.value.trim());if(fn(v)!==false)closeSheet()}}
 
 /* ---------- acciones ---------- */
+function startMove(a){return ST.moves.find(x=>x.type==="entrada"&&x.method===a.method&&x.date===a.start&&x.note===`Inicio intento ${a.n}`)}
+function toSaldo(mv){const meth=mv.method,a=ST.attempts.find(x=>x.method===meth&&x.start===mv.date&&mv.note===`Inicio intento ${x.n}`);
+  mv.orig=meth;mv.type="uso";mv.method="ragnar";if(a){mv.to=a.id;a.fuente="saldo"}delete mv.fuente;
+  mv.note=`${mv.note} de ${M[meth].name.split(" ")[0]} con saldo`}
+function toBolsa(mv){const meth=mv.orig;mv.type="entrada";mv.method=meth;mv.note=mv.note.replace(/ de \S+ con saldo$/,"");
+  const a=ST.attempts.find(x=>x.id===mv.to);if(a)delete a.fuente;delete mv.orig;delete mv.to}
 function closeToRagnar(m){const a=liveAttempt(m);if(!a)return;const q=attemptBal(a);
   if(q>0.004)ST.moves.push({id:uid(),date:todayISO(),type:"traspaso",method:"ragnar",from:a.id,amount:q,note:`Resto de ${M[m].name.split(" ")[0]} al reiniciar`});
   a.status="cerrado";a.end=todayISO()}
@@ -660,6 +667,13 @@ const A={
       ST.attempts.push({id,method:m,n,start:todayISO(),capital:amt,status:"vivo",end:null,fuente:"saldo"});
       ST.moves.push({id:uid(),date:todayISO(),type:"uso",method:"ragnar",to:id,amount:amt,note:`Inicio intento ${n} de ${M[m].name.split(" ")[0]} con saldo`});
       commit();toast(`${M[m].name}: intento ${n} con ${money(amt)} del saldo`)})},
+  fixorigen(e){const mv=ST.moves.find(x=>x.id===e.dataset.id);
+    confirmSheet("Corregir origen",`<p>Los ${money(mv.amount)} se marcan como tomados del saldo disponible (de Ragnar). Se restan de "Agregado" y tu saldo disponible baja ${money(mv.amount)}.</p>`,"Corregir",()=>{toSaldo(mv);commit();toast("Corregido: salió del saldo disponible")})},
+  origen(e){const mv=ST.moves.find(x=>x.id===e.dataset.id);const cur=mv.type==="uso"?"saldo":mv.fuente==="previa"?"previa":"bolsa";
+    const canSaldo=mv.type==="uso"||mv.method==="tommy"||mv.method==="walter";
+    formSheet("¿De dónde salió este dinero?",`<label class="f">${money(mv.amount)} · ${esc(mv.note||"")}</label><select class="in" name="o"><option value="bolsa" ${cur==="bolsa"?"selected":""}>De mi bolsillo (suma en Agregado)</option><option value="previa" ${cur==="previa"?"selected":""}>De ganancias anteriores</option>${canSaldo?`<option value="saldo" ${cur==="saldo"?"selected":""}>Del saldo disponible (sale de Ragnar)</option>`:""}</select>`,"Guardar",v=>{
+      if(v.o===cur)return;if(mv.type==="uso")toBolsa(mv);
+      if(v.o==="saldo")toSaldo(mv);else if(v.o==="previa")mv.fuente="previa";else delete mv.fuente;commit();toast("Origen actualizado")})},
   togfuente(e){const m=ST.moves.find(x=>x.id===e.dataset.id);m.fuente=m.fuente==="previa"?undefined:"previa";if(!m.fuente)delete m.fuente;commit()},
   toghist(e){UI.hist[e.dataset.id]=!UI.hist[e.dataset.id];render()},
   leg(e){const b=ST.bets.find(x=>x.id===e.dataset.id),l=b.legs[+e.dataset.i],v=e.dataset.v==="1";l.ok=l.ok===v?null:v;commit()},
