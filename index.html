@@ -478,7 +478,7 @@ function viewDetail(m){
       <p class="small" style="margin:6px 0 0">Del ${esc(fmtDate(x.start))}${x.end?" al "+esc(fmtDate(x.end)):""}. Arrancó con ${money(x.capital)}, llegó a ${money(peak)} en ${bs.filter(b=>b.status==="ganada").length} días ganados.</p>
       ${open?`<ul class="hist">${bs.map((b,i)=>`<li><span class="num" style="color:${M[m].c}">${i+1}</span><div>${money(b.stake)} → ${money(b.status==="ganada"?(b.target?Math.min(b.ret,b.target):b.ret):b.stake*b.cuota)} <span class="muted">a ${b.cuota.toFixed(2)}</span><div class="det">${esc(b.legs.map(l=>l.text+(l.ok===false?" ✗":"")).join(" · ")||"sin picks")}</div></div><span class="${b.status==="ganada"?"pos":"neg"}">${b.status==="ganada"?"Ganó":"Perdió"}</span></li>`).join("")}</ul>`:
         lost?`<p class="small" style="margin:6px 0 0"><b>Lo tumbó el día ${bs.indexOf(lost)+1}:</b> ${esc(lost.legs.filter(l=>l.ok!==true).map(l=>l.text).join(" · ")||lost.legs.map(l=>l.text).join(" · "))}</p>`:""}
-      ${bs.length?`<button class="link" style="margin-top:8px" data-act="toghist" data-id="${x.id}">${open?"Ocultar días":"Ver intento completo ("+bs.length+" días)"}</button>`:""}</div>`})}
+      ${bs.length?`<button class="link" style="margin-top:8px" data-act="toghist" data-id="${x.id}">${open?"Ocultar días":"Ver intento completo ("+bs.length+" días)"}</button>`:`<button class="link" style="margin-top:8px;color:var(--loss)" data-act="delattempt" data-id="${x.id}">Borrar este intento (no tiene apuestas)</button>`}</div>`})}
   return h}
 function ragnarDetail(){
   const rb=ST.bets.filter(b=>b.method==="ragnar");const per={};
@@ -668,7 +668,21 @@ const A={
       ST.moves.push({id:uid(),date:todayISO(),type:"uso",method:"ragnar",to:id,amount:amt,note:`Inicio intento ${n} de ${M[m].name.split(" ")[0]} con saldo`});
       commit();toast(`${M[m].name}: intento ${n} con ${money(amt)} del saldo`)})},
   fixorigen(e){const mv=ST.moves.find(x=>x.id===e.dataset.id);
-    confirmSheet("Corregir origen",`<p>Los ${money(mv.amount)} se marcan como tomados del saldo disponible (de Ragnar). Se restan de "Agregado" y tu saldo disponible baja ${money(mv.amount)}.</p>`,"Corregir",()=>{toSaldo(mv);commit();toast("Corregido: salió del saldo disponible")})},
+    formSheet("Corregir origen",`<p>Los ${money(mv.amount)} se marcan como tomados del saldo disponible. Se restan de "Agregado".</p>
+      <label class="row" style="margin-top:12px;align-items:flex-start"><input type="checkbox" name="keep" checked style="margin-top:4px"> <span>Mi saldo disponible ya está bien (${money(cuenta().juego)}): no restar ni sumar nada.</span></label>`,"Corregir",v=>{
+      const before=cuenta().juego;toSaldo(mv);
+      if(v.keep){const d=r2(before-cuenta().juego);if(Math.abs(d)>0.004)ST.moves.push({id:uid(),date:todayISO(),type:"ajuste",method:"ragnar",amount:d,note:"Corrección de origen (saldo sin cambios)"})}
+      commit();toast("Corregido: salió del saldo disponible")})},
+  delattempt(e){const a=ST.attempts.find(x=>x.id===e.dataset.id);if(!a||betsOfAttempt(a).length)return;
+    confirmSheet(`Borrar intento ${a.n}`,`<p>Se borra este intento de ${M[a.method].name} y sus movimientos. Tu saldo disponible queda igual y los intentos siguientes se renumeran.</p>`,"Borrar",()=>{
+      const before=cuenta().juego,m=a.method,old=a.n;
+      const linked=x=>x.from===a.id||x.to===a.id||(x.type==="entrada"&&x.method===m&&x.date===a.start&&x.note===`Inicio intento ${old}`);
+      ST.moves=ST.moves.filter(x=>!linked(x));ST.attempts=ST.attempts.filter(x=>x!==a);
+      ST.attempts.filter(x=>x.method===m&&x.n>old).sort((p,q)=>p.n-q.n).forEach(x=>{const o=x.n,nn=o-1;
+        ST.moves.forEach(mv=>{const own=mv.from===x.id||mv.to===x.id||(mv.type==="entrada"&&mv.method===m&&mv.date===x.start&&mv.note===`Inicio intento ${o}`);
+          if(own&&mv.note)mv.note=mv.note.replace(`intento ${o}`,`intento ${nn}`)});x.n=nn});
+      const d=r2(before-cuenta().juego);if(Math.abs(d)>0.004)ST.moves.push({id:uid(),date:todayISO(),type:"ajuste",method:"ragnar",amount:d,note:"Ajuste al borrar intento"});
+      commit();toast("Intento borrado")})},
   origen(e){const mv=ST.moves.find(x=>x.id===e.dataset.id);const cur=mv.type==="uso"?"saldo":mv.fuente==="previa"?"previa":"bolsa";
     const canSaldo=mv.type==="uso"||mv.method==="tommy"||mv.method==="walter";
     formSheet("¿De dónde salió este dinero?",`<label class="f">${money(mv.amount)} · ${esc(mv.note||"")}</label><select class="in" name="o"><option value="bolsa" ${cur==="bolsa"?"selected":""}>De mi bolsillo (suma en Agregado)</option><option value="previa" ${cur==="previa"?"selected":""}>De ganancias anteriores</option>${canSaldo?`<option value="saldo" ${cur==="saldo"?"selected":""}>Del saldo disponible (sale de Ragnar)</option>`:""}</select>`,"Guardar",v=>{
