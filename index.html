@@ -429,7 +429,7 @@ function ladderCard(m){
     h+=`<span class="pill ${last?.status==="cerrado"?"cerrado":"caido"}">${last?.status==="cerrado"?"Cobrado":"Caído"}</span></div>`;
     if(last){const bs=betsOfAttempt(last);h+=`<p class="next">${last.status==="cerrado"?`Intento ${last.n} cerrado en ${money(attemptBal(last))}.`:`Intento ${last.n} cayó en el día ${bs.length}${last.end?" ("+esc(fmtDate(last.end))+")":""}, con ${money(bs[bs.length-1]?.stake||0)} en juego.`}</p>`}
     const adv=restartAdvice(m);
-    h+=`<div class="advice">${adv.html}</div><div class="row" style="margin-top:10px"><button class="btn ${adv.ready?"pri":""}" data-act="restart" data-id="${m}">Recargar ${money(s.capital[m])}</button><button class="btn" data-act="usesaldo" data-id="${m}">Utilizar del saldo disponible</button><button class="btn ghost" data-act="detail" data-id="${m}">Historial</button></div>`}
+    h+=`<div class="advice">${adv.html}</div><div class="row" style="margin-top:10px"><button class="btn" data-act="usesaldo" data-id="${m}">Reiniciar con dinero del saldo disponible</button><button class="btn" data-act="restartpocket" data-id="${m}">Solo reiniciar (de mi bolsillo)</button><button class="btn ghost" data-act="detail" data-id="${m}">Historial</button></div>`}
   return h+`</div>`}
 function strip(a,m){const bs=betsOfAttempt(a);const n=ST.settings.maxDias;let h=`<div class="strip" aria-label="Progreso de ${n} días">`;
   for(let i=1;i<=n;i++){const b=bs[i-1];let cl="",tx=i;
@@ -461,7 +461,7 @@ function viewDetail(m){
   let h=`<button class="back" data-act="back">‹ Inicio</button><h1 style="color:${M[m].c}">${M[m].name}</h1>`;
   const a0=m==="ragnar"?null:liveAttempt(m),mb=m==="ragnar"?ragnarFund():(a0?attemptBal(a0):0);
   h+=`<div class="facts"><div class="fact"><small>Saldo total</small><span class="num">${money(cuenta().juego)}</span></div><div class="fact"><small>Saldo del método</small><span class="num">${money(mb)}</span></div></div>
-   <div class="row" style="margin-top:10px">${m==="ragnar"||a0?`<button class="btn" data-act="retirar" data-id="${m}">Retirar</button>`:`<button class="btn" data-act="restart" data-id="${m}">Recargar ${money(ST.settings.capital[m])}</button><button class="btn" data-act="usesaldo" data-id="${m}">Utilizar del saldo disponible</button>`}</div>`;
+   <div class="row" style="margin-top:10px">${m==="ragnar"?`<button class="btn" data-act="retirar" data-id="ragnar">Retirar</button>`:`${a0?`<button class="btn" data-act="retirar" data-id="${m}">Retirar</button>`:""}<button class="btn" data-act="usesaldo" data-id="${m}">Reiniciar con dinero del saldo disponible</button><button class="btn" data-act="restartpocket" data-id="${m}">Solo reiniciar (de mi bolsillo)</button>`}</div>`;
   if(m==="ragnar")return h+ragnarDetail();
   const a=liveAttempt(m);
   if(a){const bal=attemptBal(a),bs=betsOfAttempt(a);
@@ -600,6 +600,9 @@ function formSheet(title,fields,label,fn,extra){sheet(`<h3>${esc(title)}</h3>${f
   document.getElementById("okbtn").onclick=()=>{const v={};document.querySelectorAll(".sheet [name]").forEach(e=>v[e.name]=e.type==="checkbox"?e.checked:e.value.trim());if(fn(v)!==false)closeSheet()}}
 
 /* ---------- acciones ---------- */
+function closeToRagnar(m){const a=liveAttempt(m);if(!a)return;const q=attemptBal(a);
+  if(q>0.004)ST.moves.push({id:uid(),date:todayISO(),type:"traspaso",method:"ragnar",from:a.id,amount:q,note:`Resto de ${M[m].name.split(" ")[0]} al reiniciar`});
+  a.status="cerrado";a.end=todayISO()}
 function startAttempt(m){const n=ST.attempts.filter(a=>a.method===m).length+1,cap=ST.settings.capital[m];
   ST.attempts.push({id:m+uid(),method:m,n,start:todayISO(),capital:cap,status:"vivo",end:null});
   ST.moves.push({id:uid(),date:todayISO(),type:"entrada",method:m,amount:cap,note:`Inicio intento ${n}`});commit();toast(`${M[m].name}: intento ${n} empezado`)}
@@ -639,11 +642,21 @@ const A={
       const queda=attemptBal(a);
       if(v.fin==="cierra"||queda<0.005){if(queda>0.004)ST.moves.push({id:uid(),date:todayISO(),type:"traspaso",method:"ragnar",from:a.id,amount:queda,note:`Resto de ${M[m].name.split(" ")[0]} al cerrar`});a.status="cerrado";a.end=todayISO()}
       commit();toast(`Retiraste ${money(amt)}`)})},
-  usesaldo(e){const m=e.dataset.id,cap=ST.settings.capital[m];
-    formSheet(`${M[m].name}: usar saldo disponible`,`<p class="small muted">El dinero sale del fondo de Ragnar (libre: ${money(ragnarFree())}). Tu saldo disponible no cambia y no cuenta como agregado.</p><label class="f">Con cuánto arrancas</label><input class="in" name="a" type="text" inputmode="decimal" autocomplete="off" value="${cap}">`,"Empezar",v=>{
+  restartpocket(e){const m=e.dataset.id,cap=ST.settings.capital[m],a=liveAttempt(m);
+    if(pendingOf(m).length){toast("Primero resuelve la apuesta en juego");return}
+    formSheet(`${M[m].name}: solo reiniciar`,`<p class="small muted">Metes dinero de tu bolsillo: se suma en "Agregado".${a?` El intento actual se cierra y sus ${money(attemptBal(a))} pasan a Ragnar.`:""}</p><label class="f">Con cuánto arrancas</label><input class="in" name="a" type="text" inputmode="decimal" autocomplete="off" value="${cap}">`,"Reiniciar",v=>{
       const amt=r2(num(v.a));if(!(amt>0)){toast("Escribe un monto");return false}
-      if(amt>ragnarFree()+1e-9){toast(`Ragnar solo tiene ${money(ragnarFree())} libres`);return false}
-      const n=ST.attempts.filter(a=>a.method===m).length+1,id=m+uid();
+      closeToRagnar(m);const n=ST.attempts.filter(x=>x.method===m).length+1;
+      ST.attempts.push({id:m+uid(),method:m,n,start:todayISO(),capital:amt,status:"vivo",end:null});
+      ST.moves.push({id:uid(),date:todayISO(),type:"entrada",method:m,amount:amt,note:`Inicio intento ${n}`});
+      commit();toast(`${M[m].name}: intento ${n} con ${money(amt)} de tu bolsillo`)})},
+  usesaldo(e){const m=e.dataset.id,cap=ST.settings.capital[m],a=liveAttempt(m);
+    if(pendingOf(m).length){toast("Primero resuelve la apuesta en juego");return}
+    formSheet(`${M[m].name}: usar saldo disponible`,`<p class="small muted">${a?`El intento actual se cierra y sus ${money(attemptBal(a))} pasan a Ragnar. `:""}El dinero sale de Ragnar (libre: ${money(r2(ragnarFree()+(a?attemptBal(a):0)))}). Tu saldo disponible no cambia y no cuenta como agregado.</p><label class="f">Con cuánto arrancas</label><input class="in" name="a" type="text" inputmode="decimal" autocomplete="off" value="${cap}">`,"Empezar",v=>{
+      const amt=r2(num(v.a));if(!(amt>0)){toast("Escribe un monto");return false}
+      const libre=r2(ragnarFree()+(a?attemptBal(a):0));
+      if(amt>libre+1e-9){toast(`Solo hay ${money(libre)} disponibles`);return false}
+      closeToRagnar(m);const n=ST.attempts.filter(a=>a.method===m).length+1,id=m+uid();
       ST.attempts.push({id,method:m,n,start:todayISO(),capital:amt,status:"vivo",end:null,fuente:"saldo"});
       ST.moves.push({id:uid(),date:todayISO(),type:"uso",method:"ragnar",to:id,amount:amt,note:`Inicio intento ${n} de ${M[m].name.split(" ")[0]} con saldo`});
       commit();toast(`${M[m].name}: intento ${n} con ${money(amt)} del saldo`)})},
