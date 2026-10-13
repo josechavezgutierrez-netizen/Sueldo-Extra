@@ -14,15 +14,15 @@
 <style>
 :root{
   --bg:#E6EAEE;--surface:#FFFFFF;--surface2:#F2F4F7;--ink:#17202A;--muted:#5C6875;--line:#D2D8DE;
-  --tommy:#3D5A80;--walter:#13827F;--ragnar:#A0631F;--win:#2B7A4B;--loss:#B4233A;--warn:#9A6A10;--warnbg:#FBF1DC;
+  --tommy:#3D5A80;--walter:#13827F;--ragnar:#A0631F;--rick:#5E6B2F;--win:#2B7A4B;--loss:#B4233A;--warn:#9A6A10;--warnbg:#FBF1DC;
   --cond:"Barlow Condensed","Arial Narrow",Arial,sans-serif;--body:"Barlow","Segoe UI",Roboto,Arial,sans-serif;
   box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --bg:#0F1318;--surface:#192028;--surface2:#212A33;--ink:#E6EBF0;--muted:#97A3AF;--line:#2D3742;
-  --tommy:#86A9D6;--walter:#45C4BF;--ragnar:#DDA05C;--win:#5DC48B;--loss:#F2697F;--warn:#E6B54E;--warnbg:#2E2717;}}
+  --tommy:#86A9D6;--walter:#45C4BF;--ragnar:#DDA05C;--rick:#B5C27A;--win:#5DC48B;--loss:#F2697F;--warn:#E6B54E;--warnbg:#2E2717;}}
 :root[data-theme="dark"]{--bg:#0F1318;--surface:#192028;--surface2:#212A33;--ink:#E6EBF0;--muted:#97A3AF;--line:#2D3742;
-  --tommy:#86A9D6;--walter:#45C4BF;--ragnar:#DDA05C;--win:#5DC48B;--loss:#F2697F;--warn:#E6B54E;--warnbg:#2E2717;}
+  --tommy:#86A9D6;--walter:#45C4BF;--ragnar:#DDA05C;--rick:#B5C27A;--win:#5DC48B;--loss:#F2697F;--warn:#E6B54E;--warnbg:#2E2717;}
 *,*::before,*::after{box-sizing:inherit}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.45;-webkit-tap-highlight-color:transparent}
@@ -99,7 +99,7 @@ h3{font-size:19px}
 label.f{display:block;font-size:14px;color:var(--muted);margin:14px 0 6px}
 input.in,select.in,textarea.in{width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font-size:16px}
 textarea.in{min-height:90px}
-.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.seg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
 .seg button{padding:10px 4px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font-family:var(--cond);font-size:18px;font-weight:600}
 .seg button.on{background:var(--c);color:#fff;border-color:var(--c)}
 .chips{display:flex;gap:6px;flex-wrap:wrap}
@@ -180,7 +180,7 @@ nav.tabs .plus span{width:46px;height:46px;border-radius:14px;background:var(--i
 <script>
 "use strict";
 const KEY="operacion-sueldo-extra-v1";
-const M={tommy:{name:"Tommy Shelby",c:"var(--tommy)"},walter:{name:"Walter White",c:"var(--walter)"},ragnar:{name:"Ragnar Lothbrok",c:"var(--ragnar)"}};
+const M={tommy:{name:"Tommy Shelby",c:"var(--tommy)"},walter:{name:"Walter White",c:"var(--walter)"},ragnar:{name:"Ragnar Lothbrok",c:"var(--ragnar)"},rick:{name:"Rick Grimes",c:"var(--rick)"}};
 let ST=null, saveT=null, sync="local";
 const UI={tab:"inicio",detail:null,draft:null,open:{},resolve:{},hist:{}};
 
@@ -247,17 +247,16 @@ const COLORS={
  dodgers:{bg:"#005A9C",fg:"#FFFFFF",t:"LA"},
  argentina:{bg:"linear-gradient(90deg,#75AADB 0 33%,#FFFFFF 33% 66%,#75AADB 66%)",fg:"#1C2B4A",t:"ARG"},
  oilers:{bg:"#041E42",fg:"#FF4C00",t:"EDM"},
- chiefs:{bg:"#E31837",fg:"#FFB81C",t:"KC"}};
+ chiefs:{bg:"#E31837",fg:"#FFB81C",t:"KC"},
+ redbull:{bg:"linear-gradient(180deg,#121F45 0 70%,#DB0A40 70%)",fg:"#FFCC00",t:"RBR"},
+ glasgow:{bg:"#14213D",fg:"#FFFFFF",t:"GLA"},
+ trentino:{bg:"#0B3C8C",fg:"#FFD200",t:"TRE"},
+ alcaraz:{bg:"linear-gradient(180deg,#AA151B 0 25%,#F1BF00 25% 75%,#AA151B 75%)",fg:"#AA151B",t:"CA"},
+ topuria:{bg:"#FFFFFF",fg:"#E3242B",t:"IT"},
+ joshua:{bg:"linear-gradient(180deg,#012169 0 70%,#C8102E 70%)",fg:"#FFFFFF",t:"AJ"}};
 function badge(id){const c=COLORS[id];return c?`<span class="badge" style="background:${c.bg};color:${c.fg}" aria-hidden="true">${c.t}</span>`:""}
 const tname=id=>{const t=team(id);return t?badge(id)+esc(t.name):""};
-const MSG={
- barca:["Lamine Yamal juega como el Messi de 2009 y todavía no tiene edad ni para sacar licencia. Visca el Barça, pa.","Pedri reparte pases como Iniesta en sus mejores tardes. Que hoy reparta goles y te pague la cuota.","Raphinha no es Ronaldinho… pero si hoy sonríe igual que él, cobramos.","Gavi muerde como Puyol y corre como si le debieran plata. Força Barça."],
- warriors:["Curry tira desde el estacionamiento y la mete. Tú solo respeta tu sistema.","Chef Curry está cocinando: hoy el menú es triples con salsa de cuota.","Strength in Numbers: Curry pone los triples y tú pones los números.","Si Curry falla tres seguidos, igual tira el cuarto. Confianza, pa."],
- dodgers:["Ohtani batea, lanza y de seguro también te cuadra el saldo. Hoy es día Dodger.","Con Ohtani en el lineup, hasta el pick más conservador se siente jonrón.","Ohtani hace en un juego lo que otros en una temporada. Tú haz lo tuyo: un día a la vez.","Sangre azul Dodger y Ohtani al bate. ¿Qué más quieres, pa?"],
- argentina:["Messi con la celeste y blanca: ya tiene el Mundial, ahora que te dé la cuota.","¡Vamos, vamos, Argentina! Que la Scaloneta te lleve en andas.","Tres estrellas en el pecho y una más en tu saldo. Dale, campeón.","Garra, mística y Messi. Aguante, pa."],
- oilers:["McDavid patina más rápido que tu saldo cuando ganas. Let's go Oilers.","Hoy McDavid sale con hambre de puntos. Tú sal con hambre de disciplina.","Hielo, palo y McDavid: el combo que necesitaba tu parlay.","Cuando McDavid agarra el disco, nadie se lo quita. Así cuida tú tu saldo."],
- chiefs:["Mahomes lanza sin mirar y la pelota llega. Tú mira bien tus picks, por si acaso.","Si Mahomes remonta 10 puntos en dos minutos, tu saldo también puede subir.","Chiefs Kingdom en casa: que Mahomes lance y tú cobres.","Mahomes improvisa; tú no. Por eso hoy los dos ganan."],
- miami:["Messi en Miami: playa, sol y goles de tiro libre. Hoy el veraneo paga.","Dicen que Messi se fue a Miami a retirarse. Nadie le avisó al portero rival.","Messi en la MLS es como tu cuota 1.15: casi seguro, pero hay que verlo para creerlo.","Hoy juega el mejor de la historia vestido de rosado. Disfruta y cobra, pa."]};
+const MSG={"barca": ["Lamine Yamal encara como el Messi de 2009 y todavía no tiene edad ni para sacar licencia. El Barça vuelve a tener magia.", "Pedri toca el balón con la pausa de Iniesta: sin prisa, pero siempre un paso adelante. Así juega también tu sistema.", "Cubarsí sale jugando con la elegancia de Piqué y la calma de un veterano. Defensa desde atrás, como tu saldo.", "Raphinha corre la banda con la alegría de Ronaldinho. Si hoy sonríe igual, la cuota es nuestra.", "Gavi muerde cada balón como Puyol defendía cada metro. Corazón blaugrana, pa.", "Lewandowski remata como Eto'o: no necesita dos oportunidades. Tú tampoco necesitas arriesgar de más.", "Frenkie de Jong conduce como lo hacía Busquets: nadie lo ve venir, pero todo pasa por él.", "El Barça de Guardiola enamoró al mundo con el balón. Este Barça joven quiere escribir su propia historia, y hoy firmas con él.", "Xavi decía que el fútbol se juega con la cabeza. Tu parlay también: cabeza fría y corazón blaugrana.", "Més que un club. Hoy también es más que una apuesta: es fe en La Masia. Visca el Barça."], "warriors": ["Curry cambió el baloncesto desde la línea de tres. Hoy solo le pedimos que cambie tu saldo.", "Cuando Curry se calienta, ninguna defensa alcanza. Que hoy ande con la mano caliente.", "Cuatro anillos y ninguna prisa. Curry sabe ganar con paciencia, igual que tú.", "Steph tira desde donde otros ni se atreven a pararse, y la mete. Confianza en el que sabe.", "Night night: cuando Curry hace ese gesto, el partido se terminó. Que hoy lo haga temprano.", "Curry no es el más alto ni el más fuerte, pero sí el más preciso. Precisión es lo que pide tu sistema.", "Chef Curry entra a la cocina y el rival se queda sin menú. Hoy se sirve victoria.", "Strength in Numbers: Curry pone los triples, el equipo pone el corazón y tú pones la disciplina.", "Hay jugadores que miran el aro. Curry mira la red, porque ya sabe que va a entrar.", "La Bahía se enciende cuando Curry agarra ritmo. Que hoy la noche sea dorada."], "dodgers": ["Ohtani batea como cuarto bate y lanza como as. Hoy apuestas por el jugador más completo del planeta.", "50 jonrones y 50 bases robadas en una misma temporada: Ohtani hizo lo que nadie. Hoy solo le pedimos un buen juego.", "Cuando Ohtani conecta, el sonido del bate ya te dice que la bola se va. Que hoy suene así.", "Ohtani entrena con la disciplina de un monje. Tu sistema pide lo mismo: rutina y paciencia.", "Sangre azul Dodger y Ohtani en el lineup: hay días en que la fe se apoya en algo muy sólido.", "Un hit, una carrera, un out a la vez. Así se ganan Series Mundiales, y así se construye tu saldo.", "Ohtani no busca el jonrón: busca el contacto perfecto. El jonrón llega solo. Igual tus ganancias.", "Los Dodgers juegan como dinastía. Que hoy Ohtani recuerde por qué Los Ángeles es azul.", "Dicen que Ohtani es de otro planeta. Hoy aprovechemos que juega en el nuestro.", "Ohtani al bate con corredores en base: pocas cosas en el béisbol dan más confianza."], "argentina": ["Messi levantó la Copa del Mundo en Qatar y cerró el círculo. Hoy la Albiceleste sigue escribiendo.", "Ocho Balones de Oro y todavía juega con hambre de potrero. Así se respeta un sistema.", "Cuando Messi agarra el balón, el estadio contiene la respiración. Hoy la tuya también.", "La Scaloneta aprendió a sufrir y a ganar. Garra, orden y Messi: combinación campeona.", "Messi no corre más que nadie: piensa más rápido que todos. Juega tu parlay igual, con la cabeza.", "Tres estrellas en el pecho y una historia que no se cansa de crecer. Vamos, Argentina.", "De Rosario al mundo: Messi demostró que la paciencia termina en gloria.", "Dibu ataja, De Paul corre, Messi decide. Cada uno hace lo suyo, como tus picks.", "Muchachos, ahora nos volvimos a ilusionar: hoy la cancha canta y tu apuesta también.", "Messi con la celeste y blanca juega distinto: juega por su gente. Que hoy también juegue por ti."], "oilers": ["McDavid patina a una velocidad que el rival solo ve de espaldas. Que hoy deje a todos atrás.", "El 97 de Edmonton ve jugadas que nadie más ve. Visión es justo lo que pide tu sistema.", "Cuando McDavid acelera por el centro, el portero rival ya sabe lo que viene.", "McDavid y Draisaitl: la dupla que convierte el hielo en fiesta. Let's go Oilers.", "En el frío de Edmonton nace el hockey más caliente de la NHL. Hoy patinas con ellos.", "McDavid no fuerza la jugada: espera el momento exacto. Paciencia de campeón.", "Un disco, un palo y el mejor jugador del mundo. Pocas apuestas tienen mejor respaldo.", "El hielo no perdona errores, y McDavid casi no los comete. Que hoy sea perfecto.", "Cuando el 97 toca el disco, Edmonton entero se pone de pie. Hoy te pones de pie tú también.", "Velocidad, manos y cabeza fría: McDavid juega como tú quieres apostar."], "chiefs": ["Mahomes lanza sin mirar y el balón llega exacto. Hoy no hace falta mirar: hace falta confiar.", "Con Mahomes no hay ventaja segura para el rival. Dos minutos le bastan para darle vuelta.", "Arrowhead ruge cuando el 15 sale al campo. Que hoy ruja por tu apuesta también.", "Mahomes y Kelce llevan años leyéndose la mente. Química así no se compra.", "Varios anillos y la misma hambre del primer día. Así se construye una dinastía.", "Mahomes improvisa cuando la jugada se rompe; tú no improvisas con tu sistema. Por eso ganan los dos.", "Cuarta y largo con Mahomes en el campo: ni el rival se atreve a celebrar antes de tiempo.", "Andy Reid diseña, Mahomes ejecuta. Plan y talento: igual que tu método.", "Chiefs Kingdom no conoce el miedo. Hoy marchas con ellos.", "El brazo de Mahomes cubre todo el campo. Que hoy cubra también tu parlay."], "miami": ["Messi llegó a Miami y cambió el fútbol de Estados Unidos. Hoy le pedimos que cambie tu noche.", "Rosado, palmeras y el mejor de la historia. Inter Miami es otra cosa desde que llegó el 10.", "Dicen que Messi se fue a Miami a descansar. Nadie les avisó a los porteros de la MLS.", "Un tiro libre de Messi en Florida vale lo mismo que uno en el Camp Nou: magia pura.", "Messi y Suárez otra vez juntos, como en los viejos tiempos. Hay amistades que sí meten goles.", "En Miami, Messi juega con una sonrisa. Cuando él disfruta, el rival sufre.", "Hasta en la MLS, cada balón que toca Messi parece una clase magistral.", "Inter Miami con Messi es como tu cuota segura: casi siempre cumple, pero hay que verlo para creerlo.", "El mejor de todos los tiempos todavía regala jugadas. Hoy recibe la tuya.", "Messi no vino a Miami a retirarse: vino a seguir ganando. Tú también."], "redbull": ["Max Verstappen no conoce la palabra conformarse. Sale a ganar desde la primera curva.", "Cuando Verstappen toma la punta, la carrera se vuelve un monólogo. Que hoy hable fuerte.", "Lluvia, presión o pista mojada: Max maneja mejor cuando todo se complica.", "Verstappen cuida las gomas como tú cuidas tu saldo: sin desperdiciar nada.", "Max adelanta donde otros ni lo intentan. Valentía, pero con cálculo.", "Red Bull da alas, pero Max pone la velocidad. Hoy vuela tu parlay.", "Una vuelta rápida tras otra, sin errores: la consistencia de Verstappen es tu mejor pick.", "Max no mira el retrovisor: mira la bandera a cuadros.", "En la salida, Verstappen ya está pensando en la última vuelta. Visión de campeón.", "Cuando Max dice simply lovely por la radio, alguien acaba de cobrar. Que seas tú."], "glasgow": ["Sione Tuipulotu rompe líneas como si el rival fuera de papel. Hoy Scotstoun ruge.", "Tuipulotu entra al contacto y siempre sale con metros de ventaja. Así avanza tu saldo.", "En el rugby no hay atajos: se gana metro a metro. Glasgow lo sabe, y tú también.", "Cuando Tuipulotu agarra el balón en el centro, el ingoal ya se ve cerca.", "Glasgow Warriors juega con el orgullo de Escocia en el pecho. Hoy ese orgullo es tuyo.", "Tuipulotu combina fuerza y cabeza: sabe cuándo chocar y cuándo soltar. Igual que un buen apostador.", "Lluvia escocesa, barro y un try al final. Así se ganan los partidos grandes.", "Ochenta minutos de batalla y un equipo que no se rinde. Glasgow es disciplina pura.", "El scrum empuja, la línea corre y Tuipulotu decide. Cada pieza en su lugar, como tus picks.", "En Scotstoun el rugby se vive con el alma. Que hoy el marcador acompañe."], "trentino": ["Alessandro Michieletto ataca desde el cielo y la pelota cae como sentencia. Forza Trento.", "Michieletto salta, el estadio se calla y luego explota. Que hoy explote por ti.", "En el voleibol, un punto a la vez gana el set. En tus apuestas, un día a la vez gana el mes.", "Trentino juega con precisión italiana: recepción, armado y remate perfecto.", "Michieletto recibe, defiende y remata. Un jugador completo para una apuesta completa.", "Cuando Trento llega al tie-break, sabe ganar. Sangre fría en el momento justo.", "Un saque potente de Michieletto puede cambiar un set entero. Hoy cambia tu día.", "La red separa a los equipos; la disciplina separa a los campeones. Trentino la tiene.", "Michieletto juega con la calma de un veterano y la potencia de un joven. Combinación ganadora.", "Bloqueo, defensa y contraataque: Trentino no regala nada. Tú tampoco."], "alcaraz": ["Carlos Alcaraz juega con la sonrisa de quien sabe que lo imposible es solo un punto más.", "Una dejada de Alcaraz y el rival se queda mirando. Magia murciana en estado puro.", "Alcaraz corre cada bola como si fuera la última. Así se defiende también un saldo.", "Derecha, revés, volea y corazón: Carlitos tiene todos los golpes del tenis.", "Cuando Alcaraz entra en racha, no hay pista que le quede grande.", "Ferrero lo formó con disciplina; Carlitos le puso el arte. Método y talento, como tu sistema.", "Alcaraz convierte puntos perdidos en jugadas para el recuerdo. Nunca des una bola por perdida.", "Arcilla, hierba o pista dura: el chico de El Palmar gana en todas.", "Cabeza fría en el tie-break y fuego en la derecha. Vamos, Carlitos.", "Alcaraz no espera que el partido llegue a él: sale a buscarlo. Hoy sales tú también."], "topuria": ["Ilia Topuria avisa cómo va a ganar y luego lo cumple. Hoy El Matador sale a cerrar.", "Topuria entra a la jaula con una calma que asusta. La seguridad también gana peleas.", "Mano de piedra y cabeza de ajedrecista: Topuria estudia al rival antes de derribarlo.", "El Matador no persigue el golpe: espera el error y no perdona. Así se apuesta.", "De Georgia a España y de España al mundo. Topuria pelea con dos banderas en el corazón.", "Cuando Topuria conecta limpio, el árbitro ya sabe lo que viene.", "Topuria pelea con hambre de leyenda, como si todavía tuviera todo por demostrar.", "Presión constante, golpes precisos y cero dudas. El Matador no regala asaltos.", "Topuria dice que es el mejor del mundo y lo demuestra dentro de la jaula. Confianza con respaldo.", "Una combinación de Topuria vale más que mil palabras. Hoy que hablen sus puños."], "joshua": ["Anthony Joshua sube al ring con la presencia de un campeón de dos reinados. Hoy AJ manda.", "El jab de Joshua marca la distancia y la derecha termina la historia.", "AJ ha caído y se ha levantado. Los grandes se miden por cómo regresan.", "Cuando Joshua encuentra el ángulo, el combate cambia en un segundo.", "Oro olímpico en Londres y cinturones mundiales. Joshua sabe lo que es ganar en grande.", "Paciencia en los primeros asaltos y potencia al final: la receta de AJ, y la tuya.", "Joshua pega con la fuerza de un peso pesado y piensa como un estratega.", "Wembley se llenó para verlo pelear. Hoy lo acompañas tú.", "Un gancho de AJ puede apagar las luces del estadio. Que hoy las apague temprano.", "Disciplina, gimnasio y fe: Joshua se construyó golpe a golpe, como tu saldo."]};
 const WIN={
  barca:["¡Ganamos con el Barça! Lamine celebró como Messi en el Bernabéu 2009. Tú celebra con la cuota cobrada.","Pedri tocó, el saldo subió. Iniesta estaría orgulloso, pa. Visca el Barça.","Hoy el Barça jugó como el de Guardiola y tu parlay como el de un campeón. Cobrado.","Raphinha sonrió a lo Ronaldinho y tu apuesta también. ¡Força Barça!"],
  warriors:["¡Curry lo hizo otra vez! Night night para el rival y buenos días para tu saldo.","Chef Curry sirvió el plato y tú te lo comiste completo. Ganada, pa.","Triple de Curry, parlay cobrado. Así se celebra en la Bahía.","Strength in Numbers: y tus números hoy salieron verdes."],
@@ -266,6 +265,7 @@ const WIN={
  oilers:["¡McDavid voló sobre el hielo y tu apuesta voló a ganada! Let's go Oilers.","Gol de Edmonton, cuota cobrada. McDavid hace magia y tú cobras.","Hielo frío, saldo caliente. ¡Ganada con los Oilers!","McDavid no perdona y tu parlay tampoco. Ganamos, pa."],
  chiefs:["¡Mahomes lanzó y tú cobraste! Touchdown para tu saldo.","Chiefs Kingdom celebra: Mahomes ganó y tu apuesta también.","Pase de Mahomes, recepción en tu bolsillo. Ganada, pa.","Kansas City ganó en el Arrowhead y tú en Bet365. Doble victoria."],
  miami:["¡Messi ganó en Miami! Rosado, sol y cuota cobrada.","El mejor de la historia lo hizo de nuevo. Tú cobraste, pa.","Messi en Miami no está de vacaciones: está pagando tus apuestas.","Gol de Messi, ganada para ti. Qué bonito es el fútbol."]};
+Object.assign(WIN,{"redbull": ["¡Verstappen cruzó primero y tú cobraste! Simply lovely.", "Bandera a cuadros para Max y verde para tu saldo.", "Red Bull dio alas y tu apuesta voló. Ganada, pa.", "Max manejó perfecto y tú apostaste perfecto."], "glasgow": ["¡Try de Glasgow y cuota cobrada! Scotstoun celebra contigo.", "Tuipulotu rompió la línea y tú cobraste. Ganada.", "Ochenta minutos de guerra y victoria escocesa. Cobrado, pa.", "Glasgow ganó a lo guerrero. Así se cobra."], "trentino": ["¡Remate de Michieletto y punto para tu saldo! Forza Trento.", "Set, partido y apuesta: Trentino lo cerró.", "Trento ganó con precisión italiana. Cobrado, pa.", "Michieletto saltó más alto que todos y tu saldo también."], "alcaraz": ["¡Juego, set y partido para Carlitos! Y cuota cobrada para ti.", "Alcaraz sonrió al final y tú también. Vamos, Carlitos.", "Otra exhibición de Alcaraz, otra apuesta ganada.", "El chico de El Palmar lo hizo de nuevo. Cobrado, pa."], "topuria": ["¡El Matador cumplió! Topuria ganó y tú cobraste.", "Topuria dijo cómo iba a ganar y lo hizo. Igual que tu apuesta.", "Mano de piedra, cuota cobrada. Ganada con Topuria.", "Otra noche de El Matador. Victoria para él y para ti."], "joshua": ["¡AJ ganó y tu apuesta también! Campeón es campeón.", "El jab marcó, la derecha cerró y tú cobraste.", "Joshua levantó los brazos y tu saldo subió. Ganada.", "Noche de peso pesado: victoria de AJ y cuota cobrada."]});
 const WIN_GEN=["¡Ganada! Disciplina que paga, pa.","Hoy el sistema funcionó. Cobrado y a seguir.","Victoria limpia. Así se hace, paso a paso."];
 const LOSS=["Hoy no se dio. Mañana el sistema sigue, la cabeza fría también.","Una caída no tumba el plan. Respira y respeta tus reglas.","Hasta Walter White tuvo días malos. Mañana volvemos."];
 const REST=["Hoy descansamos. La disciplina también se entrena sin apostar.","Día libre. El dinero que no arriesgas hoy también cuenta.","Hoy no hay jugada para nosotros. Café, paciencia y mañana seguimos.","Hasta Tommy Shelby se sienta a pensar antes de mover ficha. Hoy toca pensar.","El sistema dice: quieto. Y quedarse quieto también es una jugada."];
@@ -293,7 +293,7 @@ function viewHoy(){const t=todayISO(),bs=ST.bets.filter(b=>b.date===t);
   const teamsOf=arr=>[...new Set(arr.flatMap(b=>b.legs.map(l=>l.teamId)).filter(id=>id&&MSG[id]&&(team(id)?.tier==="principal"||id==="miami")))];
   const won=bs.filter(b=>b.status==="ganada"),wt=teamsOf(won);
   if(won.length){h+=`<p style="margin:10px 0 0;font-family:var(--cond);font-size:20px;font-weight:700;color:var(--win)">🏆 ¡Hoy ganamos!</p>`;
-    if(wt.length)wt.forEach(id=>{h+=`<div class="msg">${badge(id)}<span>${esc(pickOf(WIN[id],t+id+"w"))}</span></div>`});
+    if(wt.length)wt.forEach(id=>{h+=`<div class="msg">${badge(id)}<span>${esc(pickOf(WIN[id]||WIN_GEN,t+id+"w"))}</span></div>`});
     else h+=`<div class="msg"><span>✅</span><span>${esc(pickOf(WIN_GEN,t))}</span></div>`}
   const pt=teamsOf(enJuego).filter(id=>!wt.includes(id));
   pt.forEach(id=>{h+=`<div class="msg">${badge(id)}<span>${esc(pickOf(MSG[id],t+id))}</span></div>`});
@@ -314,8 +314,8 @@ function walterTarget(bal){return bal<100?(Math.floor(bal/10+1e-9)+1)*10:(Math.f
 function targetFor(m,bal){return m==="tommy"?r2(bal*ST.settings.tommyCuota):walterTarget(bal)}
 function minCuota(m,bal){return m==="tommy"?ST.settings.tommyCuota:ceil2(walterTarget(bal)/bal)}
 function ragnarFund(){let s=0;for(const mv of ST.moves)if(mv.method==="ragnar")s+=(mv.type==="entrada"||mv.type==="ajuste"||mv.type==="traspaso")?mv.amount:-mv.amount;
-  for(const b of ST.bets)if(b.method==="ragnar"&&settled(b))s+=b.ret-b.stake;return r2(s)}
-function ragnarFree(){return r2(ragnarFund()-pendingOf("ragnar").reduce((s,b)=>s+b.stake,0))}
+  for(const b of ST.bets)if((b.method==="ragnar"||b.method==="rick")&&settled(b))s+=b.ret-b.stake;return r2(s)}
+function ragnarFree(){return r2(ragnarFund()-pendingOf("ragnar").concat(pendingOf("rick")).reduce((s,b)=>s+b.stake,0))}
 function ragnarAlive(){return ragnarFund()>=Math.min(...ST.settings.ragnarMontos)}
 function cuenta(){let ent=0,sal=0;for(const mv of ST.moves){if(mv.type==="entrada"&&mv.fuente!=="previa")ent+=mv.amount;else if(mv.type==="salida")sal+=mv.amount}
   let juego=0;for(const a of ST.attempts)if(a.status==="vivo")juego+=attemptBal(a);juego+=Math.max(0,ragnarFund());
@@ -352,7 +352,7 @@ function checks(d){
   if(!legs.length)w.push({e:1,t:"Agrega al menos un pick."});
   const c=num(d.cuota);
   if(!(c>1))w.push({e:1,t:"Escribe la cuota del parlay."});
-  if(d.method!=="ragnar"){
+  if(d.method==="tommy"||d.method==="walter"){
     const a=liveAttempt(d.method);
     if(a){const bal=attemptBal(a),st=num(d.stake);
       if(!(st>0))w.push({e:1,t:"Escribe cuánto vas a meter."});
@@ -361,6 +361,10 @@ function checks(d){
       if(c>1&&c<need-1e-9)w.push({t:`La cuota ${c.toFixed(2)} no llega a la meta. Necesitas al menos ${need.toFixed(2)}.`});
       if(dayNum(a)>s.maxDias)w.push({t:`Ya pasaste los ${s.maxDias} días de este intento.`});}
     legs.filter(l=>l.pickId&&pick(l.pickId)?.player).forEach(l=>w.push({t:`“${l.text}” es estadística de jugador. En Tommy y Walter no se permite.`}));
+  }else if(d.method==="rick"){
+    const amt=num(d.stake);
+    if(!(amt>0))w.push({e:1,t:"Escribe cuánto vas a apostar."});
+    else if(amt>ragnarFree()+1e-9)w.push({e:1,t:`Tu saldo disponible libre es ${money(ragnarFree())}.`});
   }else{
     const amt=num(d.stake);
     if(!(amt>0))w.push({e:1,t:"Escribe cuánto vas a apostar."});
@@ -384,7 +388,18 @@ const ICON={
 function renderTabs(){
   const t=(id,l)=>`<button class="${UI.tab===id?"on":""}" data-tab="${id}" aria-label="${l}">${ICON[id]}${l}</button>`;
   document.getElementById("tabs").innerHTML=ST?`<div class="in">${t("inicio","Inicio")}${t("picks","Picks")}<button class="plus" data-tab="apostar" aria-label="Nueva apuesta"><span>+</span>Apostar</button>${t("stats","Números")}${t("mas","Más")}</div>`:""}
+const NEW_TEAMS=[["redbull","Red Bull Racing","F1",["Victoria de Verstappen","Verstappen en el podio","Verstappen termina en el top 5","Red Bull suma puntos"]],
+ ["glasgow","Glasgow Warriors","Rugby",["Victoria de Glasgow","Glasgow con hándicap a favor","Más de 2.5 tries de Glasgow"]],
+ ["trentino","Itas Trentino","Voleibol",["Victoria de Trentino","Trentino gana al menos un set","Más de 3.5 sets en el partido"]],
+ ["alcaraz","Carlos Alcaraz","Tenis",["Victoria de Alcaraz","Alcaraz gana al menos un set","Más de 20.5 juegos en el partido"]],
+ ["topuria","Ilia Topuria","UFC",["Victoria de Topuria","Topuria gana por KO/TKO","La pelea no llega a la decisión"]],
+ ["joshua","Anthony Joshua","Boxeo",["Victoria de Joshua","Joshua gana por KO","Más de 3.5 asaltos"]]];
+function migrate(){if(!ST||ST.settings.seedTeams2)return false;
+  for(const [id,name,sport,picks] of NEW_TEAMS){if(ST.teams.some(t=>t.id===id||t.name.toLowerCase()===name.toLowerCase()))continue;
+    ST.teams.push({id,name,tier:"principal",sport});picks.forEach(tx=>ST.picks.push({id:"p"+uid(),teamId:id,text:tx,player:false,baseUsed:0,baseHit:0}))}
+  ST.settings.seedTeams2=true;return true}
 function render(){
+  if(migrate()){commit();return}
   renderTabs();const v=document.getElementById("view");
   if(!ST){if(UI.tab==="drive"){v.innerHTML=viewDrive();return}
     v.innerHTML=`<div class="empty"><h1>Operación Sueldo extra</h1><p class="muted">Todavía no hay datos en este celular.</p>
@@ -397,7 +412,7 @@ function render(){
   else h={inicio:viewInicio,apostar:viewApostar,picks:viewPicks,stats:viewStats,mas:viewMas,reglas:viewReglas,drive:viewDrive,dinero:viewDinero,ajustes:viewAjustes,respaldo:viewRespaldo}[UI.tab]();
   v.innerHTML=h+`<p class="sync" id="sync">${syncText()}</p>`}
 
-const IC={pen:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>',
+const IC={add:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>',pen:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>',
  out:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="12" rx="2"/><circle cx="12" cy="13" r="2.5"/><path d="M12 2v4M9.5 4.5 12 2l2.5 2.5"/></svg>'};
 function viewInicio(){
   const c=cuenta();const np=nextPayday();const d=daysTo(np);
@@ -408,10 +423,10 @@ function viewInicio(){
     <span class="op">−</span><span>Agregado</span><span class="v">${money(c.ent)}</span>
     <span class="rule"></span>
     <span class="op">=</span><span><b>Diferencia total</b></span><span class="v res ${c.neto>=0?"pos":"neg"}">${signed(c.neto)}</span></div>
-    <div class="ledger-act"><button class="ibtn" data-act="editsaldo" aria-label="Editar saldo disponible">${IC.pen}Editar saldo</button><button class="ibtn" data-act="retirar" aria-label="Retirar dinero">${IC.out}Retirar</button></div></div>`;
+    <div class="ledger-act" style="flex-wrap:wrap"><button class="ibtn" data-act="agregar" aria-label="Agregar dinero">${IC.add}Agregar</button><button class="ibtn" data-act="editsaldo" aria-label="Editar saldo disponible">${IC.pen}Editar saldo</button><button class="ibtn" data-act="retirar" aria-label="Retirar dinero">${IC.out}Retirar</button></div></div>`;
   const pend=ST.bets.filter(b=>b.status==="pendiente");
   if(pend.length){h+=`<h2>Por resolver</h2>`+pend.map(pendCard).join("")}
-  h+=`<h2>Métodos</h2>`+["tommy","walter"].map(ladderCard).join("")+ragnarCard();
+  h+=`<h2>Métodos</h2>`+["tommy","walter"].map(ladderCard).join("")+ragnarCard()+rickCard();
   return h}
 
 function ladderCard(m){
@@ -437,6 +452,21 @@ function strip(a,m){const bs=betsOfAttempt(a);const n=ST.settings.maxDias;let h=
     else if(i===bs.length+1&&a.status==="vivo"&&!bs.some(x=>x.status==="pendiente"))cl="now";
     h+=`<span class="cell ${cl}">${tx}</span>`}
   return h+`</div>`}
+function rickStats(){const rb=ST.bets.filter(b=>b.method==="rick"),st=rb.filter(settled),w=st.filter(b=>b.status==="ganada").length;
+  return{rb,n:st.length,w,l:st.length-w,net:r2(st.reduce((x,b)=>x+b.ret-b.stake,0)),pend:rb.filter(b=>b.status==="pendiente")}}
+function rickCard(){const r=rickStats();
+  return`<div class="met" style="--c:var(--rick)"><div class="met-h"><span class="met-name">Rick Grimes</span><span class="pill">Método libre</span></div>
+   <div class="met-bal"><span class="num ${r.net>=0?"pos":"neg"}">${signed(r.net)}</span><span class="muted small">resultado total</span></div>
+   <p class="next">${r.w} ${r.w===1?"ganada":"ganadas"}, ${r.l} ${r.l===1?"perdida":"perdidas"}${r.pend.length?`, ${r.pend.length} en juego`:""}. Sin fondo propio: apuesta con tu saldo disponible (libre ${money(ragnarFree())}).</p>
+   <div class="row" style="margin-top:10px"><button class="btn" data-act="detail" data-id="rick">Ver apuestas</button><button class="btn pri" data-act="rickbet">Apostar con Rick</button></div></div>`}
+function rickDetail(){const r=rickStats();
+  let h=`<div class="facts"><div class="fact"><small>Saldo disponible</small><span class="num">${money(cuenta().juego)}</span></div><div class="fact"><small>Resultado de Rick</small><span class="num ${r.net>=0?"pos":"neg"}">${signed(r.net)}</span></div></div>
+   <p class="muted small" style="margin:10px 0 0">Rick no tiene fondo: cada apuesta sale de tu saldo disponible y lo que ganes regresa ahí. Sin meta ni cuota fija.</p>
+   <div class="row" style="margin-top:10px"><button class="btn pri" data-act="rickbet">Apostar con Rick</button></div><h2>Apuestas</h2>`;
+  if(!r.rb.length)return h+`<p class="muted">Todavía no hay apuestas con Rick.</p>`;
+  h+=`<ul class="lad" style="--c:var(--rick)">`;
+  r.rb.slice().reverse().forEach(b=>{h+=`<li><span class="d small" style="font-size:14px">${esc(b.date?b.date.slice(5).split("-").reverse().join("/"):"")}</span><div>${money(b.stake)} a ${b.cuota.toFixed(2)}<div class="det">${esc(b.legs.map(l=>l.text+(l.ok===false?" ✗":"")).join(" · "))}</div></div><span class="small ${b.status==="ganada"?"pos":b.status==="perdida"?"neg":"muted"}">${b.status==="ganada"?signed(b.ret-b.stake):b.status==="perdida"?signed(-b.stake):"En juego"}</span></li>`});
+  return h+`</ul>`}
 function ragnarCard(){
   const f=ragnarFund(),rb=ST.bets.filter(b=>b.method==="ragnar"&&settled(b));
   const w=rb.filter(b=>b.status==="ganada").length,l=rb.length-w;
@@ -459,6 +489,7 @@ function pendCard(b){
 
 function viewDetail(m){
   let h=`<button class="back" data-act="back">‹ Inicio</button><h1 style="color:${M[m].c}">${M[m].name}</h1>`;
+  if(m==="rick")return h+rickDetail();
   const a0=m==="ragnar"?null:liveAttempt(m),mb=m==="ragnar"?ragnarFund():(a0?attemptBal(a0):0);
   h+=`<div class="facts"><div class="fact"><small>Saldo total</small><span class="num">${money(cuenta().juego)}</span></div><div class="fact"><small>Saldo del método</small><span class="num">${money(mb)}</span></div></div>
    <div class="row" style="margin-top:10px">${m==="ragnar"?`<button class="btn" data-act="retirar" data-id="ragnar">Retirar</button>`:`${a0?`<button class="btn" data-act="retirar" data-id="${m}">Retirar</button>`:""}<button class="btn" data-act="usesaldo" data-id="${m}">Reiniciar con dinero del saldo disponible</button><button class="btn" data-act="restartpocket" data-id="${m}">Solo reiniciar (de mi bolsillo)</button>`}</div>`;
@@ -495,8 +526,10 @@ function ragnarDetail(){
 function newDraft(m){return{method:m||"tommy",date:todayISO(),cuota:"",stake:"",legs:[],team:null,custom:""}}
 function viewApostar(){
   const d=UI.draft||(UI.draft=newDraft());const m=d.method;
-  let h=`<h1>Nueva apuesta</h1>${viewHoy()}<div class="seg" style="margin-top:14px">${["tommy","walter","ragnar"].map(k=>`<button style="--c:${M[k].c}" class="${m===k?"on":""}" data-act="dm" data-id="${k}">${M[k].name.split(" ")[0]}</button>`).join("")}</div>`;
-  if(m!=="ragnar"){const a=liveAttempt(m);
+  let h=`<h1>Nueva apuesta</h1>${viewHoy()}<div class="seg" style="margin-top:14px">${["tommy","walter","ragnar","rick"].map(k=>`<button style="--c:${M[k].c}" class="${m===k?"on":""}" data-act="dm" data-id="${k}">${M[k].name.split(" ")[0]}</button>`).join("")}</div>`;
+  if(m==="rick")h+=`<p class="muted small" style="margin:12px 0 0">Método libre: sin meta ni cuota fija. El dinero sale de tu saldo disponible (libre: <b style="color:var(--ink)">${money(ragnarFree())}</b>) y lo que ganes vuelve ahí.</p>
+     <label class="f">Cuánto vas a meter</label><input class="in" type="text" inputmode="decimal" autocomplete="off" value="${esc(d.stake)}" data-bind="stake">`;
+  else if(m!=="ragnar"){const a=liveAttempt(m);
     if(!a)return h+`<div class="card"><p style="margin:0">${M[m].name} no tiene un intento vivo. Puedes empezar uno desde Inicio.</p></div>`;
     if(pendingOf(m).length)return h+`<div class="card"><p style="margin:0">Ya tienes la apuesta del día en juego. Resuélvela en Inicio antes de meter otra.</p></div>`;
     const bal=attemptBal(a);if(d.stake==="")d.stake=String(suggestStake(m,bal)||bal);
@@ -546,7 +579,7 @@ function viewPicks(){
 function viewStats(){
   const by=m=>{const b=ST.bets.filter(x=>x.method===m&&settled(x));const w=b.filter(x=>x.status==="ganada").length;return{n:b.length,w,l:b.length-w}};
   let h=`<h1>Números</h1><h2>Por método</h2><div class="card"><table class="t"><tr><th>Método</th><th class="r">Apuestas</th><th class="r">Ganó</th><th class="r">Perdió</th><th class="r">Acierto</th></tr>`;
-  for(const m of["tommy","walter","ragnar"]){const s=by(m);h+=`<tr><td style="color:${M[m].c};font-weight:600">${M[m].name.split(" ")[0]}</td><td class="r">${s.n}</td><td class="r">${s.w}</td><td class="r">${s.l}</td><td class="r num">${s.n?Math.round(s.w/s.n*100)+"%":"—"}</td></tr>`}
+  for(const m of["tommy","walter","ragnar","rick"]){const s=by(m);h+=`<tr><td style="color:${M[m].c};font-weight:600">${M[m].name.split(" ")[0]}</td><td class="r">${s.n}</td><td class="r">${s.w}</td><td class="r">${s.l}</td><td class="r num">${s.n?Math.round(s.w/s.n*100)+"%":"—"}</td></tr>`}
   h+=`</table></div>`;
   const att=ST.attempts.filter(a=>a.method!=="ragnar"&&a.status!=="vivo");
   if(att.length){const avg=att.reduce((s,a)=>s+betsOfAttempt(a).length,0)/att.length;
@@ -628,6 +661,12 @@ const A={
     ST.moves.push({id:uid(),date:todayISO(),type:"salida",method:"ragnar",amount:a,note:"Retiro"});commit()})},
   "ragnar-fix"(){formSheet("Corregir saldo de Ragnar",`<p class="small muted">Escribe lo que de verdad tienes en Bet365 para Ragnar. La diferencia queda como ajuste: no cuenta como dinero metido ni retirado.</p><label class="f">Saldo real (la app dice ${money(ragnarFund())})</label><input class="in" name="a" type="text" inputmode="decimal">`,"Corregir",v=>{const a=num(v.a);if(!(a>=0))return false;const d=r2(a-ragnarFund());if(!d)return;
     ST.moves.push({id:uid(),date:todayISO(),type:"ajuste",method:"ragnar",amount:d,note:"Ajuste al saldo real"});commit();toast("Saldo corregido")})},
+  agregar(){formSheet("Agregar dinero",`<p class="small muted">Lo que agregas va directo a Ragnar y suma en "Agregado". La diferencia total no cambia al agregar: solo cambia cuando ganas o pierdes.</p><label class="f">Monto</label><input class="in" name="a" type="text" inputmode="decimal" autocomplete="off">
+      <label class="f">¿De dónde sale?</label><select class="in" name="o"><option value="bolsa">De mi bolsillo</option><option value="previa">De ganancias anteriores</option></select>`,"Agregar",v=>{
+      const a=r2(num(v.a));if(!(a>0)){toast("Escribe un monto");return false}
+      const mv={id:uid(),date:todayISO(),type:"entrada",method:"ragnar",amount:a,note:"Dinero agregado"};if(v.o==="previa")mv.fuente="previa";
+      ST.moves.push(mv);commit();toast(`Agregaste ${money(a)} a Ragnar`)})},
+  rickbet(){UI.draft=newDraft("rick");UI.detail=null;UI.tab="apostar";render();scrollTo(0,0)},
   editsaldo(){const c=cuenta();formSheet("Editar saldo disponible",`<p class="small muted">Escribe lo que de verdad tienes en Bet365. La diferencia se pone en Ragnar; no cuenta como agregado ni retirado.</p><label class="f">Saldo real (la app dice ${money(c.juego)})</label><input class="in" name="a" type="text" inputmode="decimal" autocomplete="off">`,"Guardar",v=>{const a=num(v.a);if(!(a>=0)){toast("Escribe un monto");return false}
     const d=r2(a-c.juego);if(!d){toast("Ya cuadra");return}
     ST.moves.push({id:uid(),date:todayISO(),type:"ajuste",method:"ragnar",amount:d,note:"Ajuste del saldo disponible"});commit();toast(`Ajuste de ${signed(d)} en Ragnar`)})},
@@ -707,7 +746,7 @@ const A={
   addcustom(){const d=UI.draft,t=d.custom.trim();if(!t||!d.team)return;
     const p={id:"p"+uid(),teamId:d.team,text:t,player:false,baseUsed:0,baseHit:0};ST.picks.push(p);d.legs.push({pickId:p.id,text:t,teamId:d.team,ok:null});d.custom="";commit();toast("Pick agregado a tu lista")},
   savebet(){const d=UI.draft,m=d.method;let stake,attemptId=null,target;
-    if(m!=="ragnar"){const a=liveAttempt(m),bal=attemptBal(a);stake=num(d.stake);attemptId=a.id;target=targetFor(m,stake);
+    if(m==="tommy"||m==="walter"){const a=liveAttempt(m),bal=attemptBal(a);stake=num(d.stake);attemptId=a.id;target=targetFor(m,stake);
       const sob=r2(bal-stake);var bid="b"+uid();if(sob>0.004)ST.moves.push({id:uid(),date:d.date||todayISO(),type:"traspaso",method:"ragnar",from:a.id,betId:bid,amount:sob,note:`Sobrante de ${M[m].name.split(" ")[0]}`})}else{stake=num(d.stake);target=r2(stake*num(d.cuota))}
     ST.bets.push({id:(typeof bid!=="undefined"&&bid)||"b"+uid(),method:m,attemptId,date:d.date||todayISO(),stake:r2(stake),cuota:num(d.cuota),target,legs:d.legs.map(l=>({...l})),status:"pendiente",ret:0});
     UI.draft=null;UI.tab="inicio";commit();scrollTo(0,0);toast("Apuesta guardada")},
