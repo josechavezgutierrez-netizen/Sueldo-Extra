@@ -372,15 +372,21 @@ function gText(g){const t=ttype(g.teamId),n=team(g.teamId)?.name||"",r=gRes(g);
   if(t==="f1")return `${g.rival}${g.pos?" · P"+g.pos:""}`;
   const v={G:"Ganó",P:"Perdió",E:"Empató"}[r];
   return v?`${v} vs ${g.rival}${g.how?" · "+g.how:""}${g.score?" · "+g.score:""}`:`vs ${g.rival}${g.how&&t==="tennis"?" · "+g.how:""}`}
-function recCalc(id){const t=ttype(id),b=(ST.base&&ST.base[id])||{},gs=gamesOf(id);
+const COMPS={barca:["LaLiga","Champions League","Copa del Rey","Supercopa"],argentina:["Amistosos","Eliminatorias","Copa América","Mundial"],
+ miami:["MLS","Leagues Cup","Concacaf Champions Cup"],warriors:["NBA","NBA Cup","Playoffs"],dodgers:["MLB","Playoffs"],oilers:["NHL","Playoffs"],chiefs:["NFL","Playoffs"],
+ redbull:["Fórmula 1"],glasgow:["URC","Champions Cup"],trentino:["Superlega","Champions League CEV","Coppa Italia","Mundial de Clubes"],
+ alcaraz:["ATP","Grand Slam","Copa Davis"],topuria:["UFC"],joshua:["Boxeo"]};
+function compsOf(id){ST.comps=ST.comps||{};return ST.comps[id]||(COMPS[tkey(id)]||["Liga"]).slice()}
+function gComp(g){return g.comp||compsOf(g.teamId)[0]}
+function baseOf(id,c){const b=ST.base&&ST.base[id];if(!b)return{};if("w" in b||"d" in b||"l" in b||"p" in b||"n" in b)return c===compsOf(id)[0]?b:{};return b[c]||{}}
+function posOf(id,c){const p=ST.pos&&ST.pos[id]&&ST.pos[id][c];if(p)return p;if(c===compsOf(id)[0]&&ST.records&&ST.records[id])return ST.records[id].txt;return ""}
+function recCalc(id,c){c=c||compsOf(id)[0];const t=ttype(id),b=baseOf(id,c),gs=gamesOf(id).filter(g=>gComp(g)===c);
   if(t==="f1"){let w=+b.w||0,p=+b.p||0,n=+b.n||0;gs.forEach(g=>{if(!g.pos)return;n++;if(+g.pos===1)w++;if(+g.pos<=3)p++});
-    return{txt:`${w} ${w===1?"victoria":"victorias"} · ${p} podios`,sub:`en ${n} carreras`}}
+    return{txt:`${w}V · ${p} podios`,sub:`en ${n} carreras`,has:n>0||w>0}}
   let w=+b.w||0,d=+b.d||0,l=+b.l||0;gs.forEach(g=>{const r=gRes(g);if(r==="G")w++;else if(r==="P")l++;else if(r==="E")d++});
   const fut=/fútbol|futbol|rugby/.test((team(id)?.sport||"").toLowerCase());
-  return{txt:fut||d?`${w}-${d}-${l}`:`${w}-${l}`,sub:fut||d?"ganados-empates-perdidos":"ganados-perdidos"}}
-function recordOf(id){const r=recCalc(id),note=ST.records&&ST.records[id]&&ST.records[id].txt;
-  const any=gamesOf(id).some(g=>gRes(g))||(ST.base&&ST.base[id]);
-  if(!any&&!note)return null;return{txt:any?r.txt:note,sub:any?(note?note+" · ":"")+r.sub:""}}
+  return{txt:fut||d?`${w}-${d}-${l}`:`${w}-${l}`,sub:fut||d?"G-E-P":"G-P",has:w+d+l>0}}
+function recordOf(id){const cs=compsOf(id);for(const c of cs){const r=recCalc(id,c),p=posOf(id,c);if(r.has||p)return{txt:r.has?r.txt+(p?" · "+p:""):p,sub:c}}return null}
 function attachGame(g){const txt=gText(g);if(!gRes(g))return;
   for(const b of ST.bets)if(b.date===g.date&&b.legs.some(l=>l.teamId===g.teamId)){b.scores=b.scores||{};b.scores[g.teamId]=txt}}
 
@@ -671,13 +677,13 @@ function viewPicks(){if(UI.team&&team(UI.team))return viewTeam(UI.team);
   return h+`<button class="btn full" style="margin-top:16px" data-act="newteam">+ Agregar equipo</button>`}
 function viewGamesToday(){const t=todayISO(),gs=(ST.games||[]).filter(g=>!g.arch&&(g.date===t||(!gRes(g)&&g.date<t)));
   return`<div class="card"><div class="met-h"><h3>Partidos de hoy</h3><button class="btn" style="padding:6px 12px" data-act="addgame">+ Partido</button></div>
-   ${gs.length?gs.map(g=>{const rr=gRes(g);return`<div class="ev"><span>${badge(g.teamId)}</span><span>${esc(gText(g))}<div class="muted" style="font-size:12px">${g.date===t?"Hoy":esc(fmtDate(g.date))}${ttype(g.teamId)==="team"?" · "+(g.home?"Casa":"Visita"):""}</div></span><button class="btn" style="padding:6px 10px" data-act="editgame" data-id="${g.id}">${rr?rr:"Resultado"}</button></div>`}).join(""):`<p class="small muted" style="margin:8px 0 0">Anota quién juega hoy, aunque no le apuestes. El resultado suma a su récord.</p>`}</div>`}
+   ${gs.length?gs.map(g=>{const rr=gRes(g);return`<div class="ev"><span>${badge(g.teamId)}</span><span>${esc(gText(g))}<div class="muted" style="font-size:12px">${g.date===t?"Hoy":esc(fmtDate(g.date))} · ${esc(gComp(g))}${ttype(g.teamId)==="team"?" · "+(g.home?"Casa":"Visita"):""}</div></span><button class="btn" style="padding:6px 10px" data-act="editgame" data-id="${g.id}">${rr?rr:"Resultado"}</button></div>`}).join(""):`<p class="small muted" style="margin:8px 0 0">Anota quién juega hoy, aunque no le apuestes. El resultado suma a su récord.</p>`}</div>`}
 function viewTeam(id){const t=team(id),r=recCalc(id),note=ST.records&&ST.records[id]&&ST.records[id].txt,gs=gamesOf(id).slice().sort((x,y)=>y.date.localeCompare(x.date));
   let h=`<button class="back" data-act="teamback">‹ Tus equipos</button><h1 style="display:flex;align-items:center;gap:6px">${badge(id)}${esc(t.name)}</h1><p class="muted small" style="margin:4px 0 0">${esc(t.sport)} · ${t.tier==="principal"?"Principal":"Auxiliar"}</p>`;
-  h+=`<div class="card"><div class="met-h"><h3>Récord de la temporada</h3><button class="link" data-act="editrec" data-id="${id}">Editar</button></div>
-    <p class="num" style="font-size:26px;margin:6px 0 0">${esc(r.txt)}</p><p class="small muted" style="margin:2px 0 0">${esc(r.sub)}${note?" · "+esc(note):""}</p>
+  h+=`<div class="card"><div class="met-h"><h3>Temporada</h3><button class="link" data-act="addcomp" data-id="${id}">+ Competición</button></div>
+    ${compsOf(id).map(c=>{const rr=recCalc(id,c),p=posOf(id,c);return`<button class="trow" style="margin-top:8px" data-act="editrec" data-id="${id}" data-c="${esc(c)}"><span class="nm">${esc(c)}<div class="muted small" style="font-weight:400">${rr.sub}</div></span><span class="num" style="font-size:20px">${esc(rr.txt)}</span>${p?`<span class="pill" style="margin-left:6px">${esc(p)}</span>`:""}</button>`}).join("")}
     <div class="row" style="margin-top:10px"><button class="btn" data-act="addgame2" data-id="${id}">+ Partido</button><button class="link" style="margin-left:auto" data-act="newseason" data-id="${id}">Nueva temporada</button></div></div>`;
-  h+=`<h2>Partidos de la temporada</h2>`+(gs.length?`<div class="card">${gs.map(g=>{const rr=gRes(g);return`<div class="ev"><span class="muted">${esc(g.date.slice(5).split("-").reverse().join("/"))}</span><span>${esc(gText(g))}${ttype(id)==="team"?`<div class="muted" style="font-size:12px">${g.home?"Casa":"Visita"}</div>`:""}</span><button class="link ${rr==="G"||rr==="P1"?"pos":rr==="P"?"neg":""}" style="text-decoration:none;font-weight:700" data-act="editgame" data-id="${g.id}">${rr||"Poner"}</button></div>`}).join("")}</div>`:`<p class="muted">Todavía no registras partidos esta temporada.</p>`);
+  h+=`<h2>Partidos de la temporada</h2>`+(gs.length?`<div class="card">${gs.map(g=>{const rr=gRes(g);return`<div class="ev"><span class="muted">${esc(g.date.slice(5).split("-").reverse().join("/"))}</span><span>${esc(gText(g))}<div class="muted" style="font-size:12px">${esc(gComp(g))}${ttype(id)==="team"?" · "+(g.home?"Casa":"Visita"):""}</div></span><button class="link ${rr==="G"||rr==="P1"?"pos":rr==="P"?"neg":""}" style="text-decoration:none;font-weight:700" data-act="editgame" data-id="${g.id}">${rr||"Poner"}</button></div>`}).join("")}</div>`:`<p class="muted">Todavía no registras partidos esta temporada.</p>`);
   const ss=(ST.seasons&&ST.seasons[id])||[];
   if(ss.length)h+=`<h2>Temporadas anteriores</h2><div class="card">${ss.slice().reverse().map(x=>`<div class="ev"><span class="muted">${esc(x.label)}</span><span>${esc(x.rec)}</span><span class="muted small">${x.n} partidos</span></div>`).join("")}</div>`;
   const bs=ST.bets.filter(b=>b.legs.some(l=>l.teamId===id)).slice(-12).reverse();
@@ -758,17 +764,21 @@ function formSheet(title,fields,label,fn,extra){sheet(`<h3>${esc(title)}</h3>${f
 /* ---------- acciones ---------- */
 function gameSheet(g){const t=ttype(g.teamId),nm=team(g.teamId).name;
   const sel=(n,opts,v)=>`<select class="in" name="${n}">${opts.map(([k,l])=>`<option value="${k}" ${String(v)===k?"selected":""}>${l}</option>`).join("")}</select>`;
-  let f=`<label class="f">Fecha</label><input class="in" type="date" name="date" value="${g.date}">`;
+  const cs=compsOf(g.teamId);
+  let f=`<label class="f">Fecha</label><input class="in" type="date" name="date" value="${g.date}">
+    <label class="f">Competición</label>${sel("comp",cs.map(c=>[c,c]).concat([["__new","+ Otra competición…"]]),g.comp||cs[0])}<input class="in" name="newcomp" autocomplete="off" placeholder="Nombre de la competición nueva" style="margin-top:8px;display:none">`;
   if(t==="team")f+=`<label class="f">¿Dónde juega?</label>${sel("home",[["1","En casa"],["0","De visita"]],g.home?"1":"0")}<label class="f">Rival</label><input class="in" name="rival" autocomplete="off" value="${esc(g.rival)}">
     <div class="row" style="gap:8px"><div style="flex:1"><label class="f">Goles/puntos de ${esc(nm)}</label><input class="in" name="gf" inputmode="numeric" value="${g.gf??""}"></div><div style="flex:1"><label class="f">Del rival</label><input class="in" name="ga" inputmode="numeric" value="${g.ga??""}"></div></div><p class="small muted">Deja el marcador vacío si todavía no termina.</p>`;
   else if(t==="f1")f+=`<label class="f">Gran Premio</label><input class="in" name="rival" autocomplete="off" value="${esc(g.rival)}" placeholder="GP de México"><label class="f">Posición de Verstappen</label><input class="in" name="pos" inputmode="numeric" value="${g.pos??""}">`;
   else f+=`<label class="f">Rival</label><input class="in" name="rival" autocomplete="off" value="${esc(g.rival)}"><label class="f">Resultado</label>${sel("res",[["","Todavía no"],["G","Ganó"],["P","Perdió"],["E","Empate"]],g.res)}`+
     (t==="fight"?`<label class="f">¿Cómo terminó?</label>${sel("how",[["",""],["KO/TKO","KO/TKO"],["Sumisión","Sumisión"],["Decisión","Decisión"],["Otro","Otro"]],g.how)}`:`<label class="f">Torneo</label><input class="in" name="how" autocomplete="off" value="${esc(g.how||"")}"><label class="f">Marcador</label><input class="in" name="score" autocomplete="off" value="${esc(g.score||"")}" placeholder="6-4 6-3">`);
   formSheet(`${g.id?"Partido":"Nuevo partido"} · ${nm}`,f,"Guardar",v=>{if(!v.rival){toast("Escribe el rival");return false}
-    const o=g.id?g:{id:"g"+uid(),teamId:g.teamId};Object.assign(o,{date:v.date||todayISO(),rival:v.rival});
+    let comp=v.comp;if(comp==="__new"){if(!v.newcomp){toast("Escribe la competición");return false}comp=v.newcomp;const cl=compsOf(g.teamId);if(!cl.includes(comp))cl.push(comp);ST.comps[g.teamId]=cl}
+    const o=g.id?g:{id:"g"+uid(),teamId:g.teamId};Object.assign(o,{date:v.date||todayISO(),rival:v.rival,comp});
     if(t==="team")Object.assign(o,{home:v.home==="1",gf:v.gf,ga:v.ga});else if(t==="f1")o.pos=v.pos;else Object.assign(o,{res:v.res,how:v.how||"",score:v.score||""});
     ST.games=ST.games||[];if(!g.id)ST.games.push(o);attachGame(o);commit();toast(gRes(o)?"Resultado guardado":"Partido guardado")},
     g.id?`<button class="link" style="margin-right:auto;color:var(--loss)" id="delg">Borrar</button>`:"");
+  const cmp=document.querySelector(".sheet [name=comp]"),nc=document.querySelector(".sheet [name=newcomp]");if(cmp)cmp.onchange=()=>{nc.style.display=cmp.value==="__new"?"block":"none";if(cmp.value==="__new")nc.focus()};
   const d=document.getElementById("delg");if(d)d.onclick=()=>{ST.games=ST.games.filter(x=>x!==g);closeSheet();commit()}}
 
 function startMove(a){return ST.moves.find(x=>x.type==="entrada"&&x.method===a.method&&x.date===a.start&&x.note===`Inicio intento ${a.n}`)}
@@ -822,17 +832,22 @@ const A={
     sheet(`<h3>¿Quién juega?</h3><div class="chips" style="margin-top:12px">${ts.map(t=>`<button class="chip" data-act="addgame2" data-id="${t.id}">${badge(t.id)}${esc(t.name)}</button>`).join("")}</div><div class="row end" style="margin-top:16px"><button class="btn ghost" data-act="closesheet">Cancelar</button></div>`)},
   addgame2(e){gameSheet({id:null,teamId:e.dataset.id,date:todayISO(),home:true,rival:"",gf:"",ga:"",pos:"",res:"",how:"",score:""})},
   editgame(e){const g=(ST.games||[]).find(x=>x.id===e.dataset.id);if(g)gameSheet(g)},
-  newseason(e){const id=e.dataset.id,r=recCalc(id);
+  newseason(e){const id=e.dataset.id,r={txt:compsOf(id).map(c=>{const x=recCalc(id,c),p=posOf(id,c);return x.has||p?`${c} ${x.txt}${p?" ("+p+")":""}`:""}).filter(Boolean).join(" · ")||"sin registros",sub:""};
     formSheet(`Nueva temporada · ${team(id).name}`,`<p class="small muted">La temporada actual (${esc(r.txt)}, ${gamesOf(id).length} partidos) se guarda en el historial y el récord vuelve a cero.</p><label class="f">Nombre de la temporada que termina</label><input class="in" name="l" value="${new Date().getFullYear()}">`,"Empezar nueva",v=>{
-      ST.seasons=ST.seasons||{};(ST.seasons[id]=ST.seasons[id]||[]).push({label:v.l||String(new Date().getFullYear()),rec:r.txt+" · "+r.sub,n:gamesOf(id).length});
-      (ST.games||[]).forEach(g=>{if(g.teamId===id)g.arch=true});ST.base=ST.base||{};delete ST.base[id];if(ST.records)delete ST.records[id];commit();toast("Temporada nueva")})},
-  editrec(e){const id=e.dataset.id,cur=ST.records&&ST.records[id],b=(ST.base&&ST.base[id])||{},t=ttype(id);
-    const num=(n,l,v)=>`<div style="flex:1"><label class="f">${l}</label><input class="in" name="${n}" type="text" inputmode="numeric" value="${v??""}"></div>`;
-    formSheet(`Récord de ${team(id).name}`,`<p class="small muted">Pon con cuánto arranca. Los partidos que registres se suman solos.</p>
-      <div class="row" style="gap:8px">${t==="f1"?num("w","Victorias",b.w)+num("p","Podios",b.p)+num("n","Carreras",b.n):num("w","Ganados",b.w)+num("d","Empates",b.d)+num("l","Perdidos",b.l)}</div>
-      <label class="f">Nota (opcional)</label><input class="in" name="t" autocomplete="off" placeholder="Ej.: 2º en LaLiga, #2 ATP, 17-0 en su carrera" value="${esc(cur?.txt||"")}">`,"Guardar",v=>{
-      ST.base=ST.base||{};const o={};["w","d","l","p","n"].forEach(k=>{if(v[k]!==undefined&&v[k]!=="")o[k]=+v[k]});if(Object.keys(o).length)ST.base[id]=o;else delete ST.base[id];
-      ST.records=ST.records||{};if(v.t)ST.records[id]={txt:v.t,at:todayISO()};else delete ST.records[id];commit()})},
+      ST.seasons=ST.seasons||{};(ST.seasons[id]=ST.seasons[id]||[]).push({label:v.l||String(new Date().getFullYear()),rec:r.txt,n:gamesOf(id).length});
+      (ST.games||[]).forEach(g=>{if(g.teamId===id)g.arch=true});ST.base=ST.base||{};delete ST.base[id];if(ST.records)delete ST.records[id];if(ST.pos)delete ST.pos[id];commit();toast("Temporada nueva")})},
+  editrec(e){const id=e.dataset.id,c=e.dataset.c||compsOf(id)[0],b=baseOf(id,c),t=ttype(id);
+    const nf=(n,l,v)=>`<div style="flex:1"><label class="f">${l}</label><input class="in" name="${n}" type="text" inputmode="numeric" value="${v??""}"></div>`;
+    formSheet(`${team(id).name} · ${c}`,`<p class="small muted">Pon con cuánto arranca en esta competición. Los partidos que registres se suman solos.</p>
+      <div class="row" style="gap:8px">${t==="f1"?nf("w","Victorias",b.w)+nf("p","Podios",b.p)+nf("n","Carreras",b.n):nf("w","Ganados",b.w)+nf("d","Empates",b.d)+nf("l","Perdidos",b.l)}</div>
+      <label class="f">Lugar en la tabla (opcional)</label><input class="in" name="pos" autocomplete="off" placeholder="Ej.: 1º, 3º grupo B, #2 ATP" value="${esc(posOf(id,c))}">`,"Guardar",v=>{
+      ST.base=ST.base||{};let all=ST.base[id];if(all&&("w" in all||"d" in all||"l" in all||"p" in all||"n" in all)){const old=all;all={};all[compsOf(id)[0]]=old}all=all||{};
+      const o={};["w","d","l","p","n"].forEach(k=>{if(v[k]!==undefined&&v[k]!=="")o[k]=+v[k]});if(Object.keys(o).length)all[c]=o;else delete all[c];ST.base[id]=all;
+      ST.pos=ST.pos||{};(ST.pos[id]=ST.pos[id]||{})[c]=v.pos;if(!v.pos)delete ST.pos[id][c];if(ST.records&&c===compsOf(id)[0])delete ST.records[id];commit()},
+      compsOf(id).length>1?`<button class="link" style="margin-right:auto;color:var(--loss)" id="delc">Quitar competición</button>`:"");
+    const dc=document.getElementById("delc");if(dc)dc.onclick=()=>{if(gamesOf(id).some(g=>gComp(g)===c)){toast("Tiene partidos registrados");return}ST.comps[id]=compsOf(id).filter(x=>x!==c);closeSheet();commit()}},
+  addcomp(e){const id=e.dataset.id;formSheet(`Nueva competición · ${team(id).name}`,`<label class="f">Nombre</label><input class="in" name="c" autocomplete="off" placeholder="Ej.: Mundial de Clubes">`,"Agregar",v=>{if(!v.c)return false;
+    const cs=compsOf(id);if(!cs.includes(v.c))cs.push(v.c);ST.comps[id]=cs;commit()})},
   _old_editrec(e){const id=e.dataset.id,cur=ST.records&&ST.records[id];
     formSheet(`Récord de ${team(id).name}`,`<p class="small muted">Escríbelo como lo veas en tu otra app. Ej.: "17-0, 9 KO", "#2 ATP · 45-8 en el año", "3º en la URC". Déjalo vacío para usar el automático.</p><input class="in" name="t" autocomplete="off" value="${esc(cur?.txt||"")}">`,"Guardar",v=>{
       ST.records=ST.records||{};if(v.t)ST.records[id]={txt:v.t,at:todayISO()};else delete ST.records[id];commit()})},
