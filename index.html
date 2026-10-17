@@ -154,6 +154,22 @@ table.t td.r,table.t th.r{text-align:right}
 .hist{list-style:none;margin:8px 0 0;padding:0}
 .hist li{display:grid;grid-template-columns:30px 1fr auto;gap:6px;padding:6px 0;border-top:1px solid var(--line);font-size:14px}
 .hist .det{font-size:12px;color:var(--muted)}
+.met{cursor:pointer}
+.met .one{font-size:15px;margin:4px 0 0}
+.daybar{height:6px;border-radius:3px;margin:-4px 0 12px}
+.enjuego{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin:0 0 12px}
+.seg2{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:12px 0 4px}
+.seg2 button{padding:9px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font-weight:600}
+.seg2 button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.trow{display:flex;align-items:center;gap:10px;width:100%;padding:12px 14px;background:var(--surface);border:1px solid var(--line);border-radius:12px;margin-top:8px;text-align:left}
+.trow .nm{flex:1;font-weight:600}
+.trow .rc{font-size:13px;color:var(--muted);text-align:right}
+.ev{display:grid;grid-template-columns:62px 1fr auto;gap:8px;padding:8px 0;border-top:1px solid var(--line);font-size:14px}
+.ev:first-child{border-top:0}
+.combo{padding:12px 0;border-top:1px solid var(--line)}
+.combo:first-child{border-top:0}
+.combo .hd{display:flex;align-items:center;gap:4px;font-weight:600}
+.tagw{font-size:11px;padding:1px 6px;border-radius:5px;background:var(--warnbg);color:var(--warn);margin-left:6px}
 /* barra inferior */
 nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px);z-index:10}
 nav.tabs .in{max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr)}
@@ -181,7 +197,7 @@ nav.tabs .plus span{width:46px;height:46px;border-radius:14px;background:var(--i
 <script>
 "use strict";
 const KEY="operacion-sueldo-extra-v1";
-const M={tommy:{name:"Tommy Shelby",c:"var(--tommy)"},walter:{name:"Walter White",c:"var(--walter)"},ragnar:{name:"Ragnar Lothbrok",c:"var(--ragnar)"},rick:{name:"Rick Grimes",c:"var(--rick)"}};
+const M={tommy:{name:"Skipper",c:"var(--tommy)"},walter:{name:"Kowalski",c:"var(--walter)"},ragnar:{name:"Rico",c:"var(--ragnar)"},rick:{name:"Cabo",c:"var(--rick)"}};
 let ST=null, saveT=null, sync="local";
 const UI={tab:"inicio",detail:null,draft:null,open:{},resolve:{},hist:{}};
 
@@ -234,7 +250,7 @@ async function pull(){if(!DRIVE)return;
   renderSync()}
 async function boot(){
   let local=null;try{local=JSON.parse(localStorage.getItem(KEY))}catch(e){}
-  ST=local;render();await pull();if(!ST)render();fixExcess();
+  ST=local;render();await pull();if(!ST)render();fixExcess();fetchSports();
   addEventListener("online",pull);
   document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")pull()});
   if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
@@ -254,14 +270,18 @@ const COLORS={
  trentino:{bg:"#0B3C8C",fg:"#FFD200",t:"TRE"},
  alcaraz:{bg:"linear-gradient(180deg,#AA151B 0 25%,#F1BF00 25% 75%,#AA151B 75%)",fg:"#AA151B",t:"CA"},
  topuria:{bg:"#FFFFFF",fg:"#E3242B",t:"IT"},
- joshua:{bg:"linear-gradient(180deg,#012169 0 70%,#C8102E 70%)",fg:"#FFFFFF",t:"AJ"}};
+ joshua:{bg:"linear-gradient(180deg,#012169 0 70%,#C8102E 70%)",fg:"#FFFFFF",t:"AJ"},
+ miami:{bg:"#F7B5CD",fg:"#231F20",t:"MIA"}};
 const NAMEKEY=[[/glasgow/,"glasgow"],[/barcel|barça|barca/,"barca"],[/warriors/,"warriors"],[/dodgers/,"dodgers"],[/argentin/,"argentina"],[/oilers/,"oilers"],[/chiefs/,"chiefs"],[/miami/,"miami"],[/red ?bull|verstappen/,"redbull"],[/trentino|trento/,"trentino"],[/alcaraz/,"alcaraz"],[/topuria/,"topuria"],[/joshua/,"joshua"]];
 function tkey(id){if(!id)return id;if(COLORS[id]||MSG[id])return id;const n=(team(id)?.name||"").toLowerCase();for(const [re,k] of NAMEKEY)if(re.test(n))return k;return id}
 function badge(id){const c=COLORS[tkey(id)];return c?`<span class="badge" style="background:${c.bg};color:${c.fg}" aria-hidden="true">${c.t}</span>`:""}
+const MAINC={barca:["#A50044","#004D98"],warriors:["#1D428A","#FFC72C"],dodgers:["#005A9C"],argentina:["#75AADB","#FFFFFF"],oilers:["#FF4C00","#041E42"],chiefs:["#E31837","#FFB81C"],redbull:["#121F45","#DB0A40"],glasgow:["#14213D"],trentino:["#FFD200","#0B3C8C"],alcaraz:["#AA151B","#F1BF00"],topuria:["#E3242B"],joshua:["#012169","#C8102E"],miami:["#F7B5CD","#231F20"]};
+function dayTeams(){const ids=[];for(const b of ST.bets)if(b.status==="pendiente")for(const l of b.legs){const k=tkey(l.teamId);if(k&&MAINC[k]&&!ids.includes(k))ids.push(k)}return ids}
+function dayColors(){const c=[];dayTeams().forEach(k=>MAINC[k].forEach(x=>{if(!c.includes(x))c.push(x)}));return c}
 const tname=id=>{const t=team(id);return t?badge(id)+esc(t.name):""};
-const MSG={"barca": ["Lamine Yamal encara como el Messi de 2009 y todavía no tiene edad ni para sacar licencia. El Barça vuelve a tener magia.", "Pedri toca el balón con la pausa de Iniesta: sin prisa, pero siempre un paso adelante. Así juega también tu sistema.", "Cubarsí sale jugando con la elegancia de Piqué y la calma de un veterano. Defensa desde atrás, como tu saldo.", "Raphinha corre la banda con la alegría de Ronaldinho. Si hoy sonríe igual, la cuota es nuestra.", "Gavi muerde cada balón como Puyol defendía cada metro. Corazón blaugrana, pa.", "Lewandowski remata como Eto'o: no necesita dos oportunidades. Tú tampoco necesitas arriesgar de más.", "Frenkie de Jong conduce como lo hacía Busquets: nadie lo ve venir, pero todo pasa por él.", "El Barça de Guardiola enamoró al mundo con el balón. Este Barça joven quiere escribir su propia historia, y hoy firmas con él.", "Xavi decía que el fútbol se juega con la cabeza. Tu parlay también: cabeza fría y corazón blaugrana.", "Més que un club. Hoy también es más que una apuesta: es fe en La Masia. Visca el Barça."], "warriors": ["Curry cambió el baloncesto desde la línea de tres. Hoy solo le pedimos que cambie tu saldo.", "Cuando Curry se calienta, ninguna defensa alcanza. Que hoy ande con la mano caliente.", "Cuatro anillos y ninguna prisa. Curry sabe ganar con paciencia, igual que tú.", "Steph tira desde donde otros ni se atreven a pararse, y la mete. Confianza en el que sabe.", "Night night: cuando Curry hace ese gesto, el partido se terminó. Que hoy lo haga temprano.", "Curry no es el más alto ni el más fuerte, pero sí el más preciso. Precisión es lo que pide tu sistema.", "Chef Curry entra a la cocina y el rival se queda sin menú. Hoy se sirve victoria.", "Strength in Numbers: Curry pone los triples, el equipo pone el corazón y tú pones la disciplina.", "Hay jugadores que miran el aro. Curry mira la red, porque ya sabe que va a entrar.", "La Bahía se enciende cuando Curry agarra ritmo. Que hoy la noche sea dorada."], "dodgers": ["Ohtani batea como cuarto bate y lanza como as. Hoy apuestas por el jugador más completo del planeta.", "50 jonrones y 50 bases robadas en una misma temporada: Ohtani hizo lo que nadie. Hoy solo le pedimos un buen juego.", "Cuando Ohtani conecta, el sonido del bate ya te dice que la bola se va. Que hoy suene así.", "Ohtani entrena con la disciplina de un monje. Tu sistema pide lo mismo: rutina y paciencia.", "Sangre azul Dodger y Ohtani en el lineup: hay días en que la fe se apoya en algo muy sólido.", "Un hit, una carrera, un out a la vez. Así se ganan Series Mundiales, y así se construye tu saldo.", "Ohtani no busca el jonrón: busca el contacto perfecto. El jonrón llega solo. Igual tus ganancias.", "Los Dodgers juegan como dinastía. Que hoy Ohtani recuerde por qué Los Ángeles es azul.", "Dicen que Ohtani es de otro planeta. Hoy aprovechemos que juega en el nuestro.", "Ohtani al bate con corredores en base: pocas cosas en el béisbol dan más confianza."], "argentina": ["Messi levantó la Copa del Mundo en Qatar y cerró el círculo. Hoy la Albiceleste sigue escribiendo.", "Ocho Balones de Oro y todavía juega con hambre de potrero. Así se respeta un sistema.", "Cuando Messi agarra el balón, el estadio contiene la respiración. Hoy la tuya también.", "La Scaloneta aprendió a sufrir y a ganar. Garra, orden y Messi: combinación campeona.", "Messi no corre más que nadie: piensa más rápido que todos. Juega tu parlay igual, con la cabeza.", "Tres estrellas en el pecho y una historia que no se cansa de crecer. Vamos, Argentina.", "De Rosario al mundo: Messi demostró que la paciencia termina en gloria.", "Dibu ataja, De Paul corre, Messi decide. Cada uno hace lo suyo, como tus picks.", "Muchachos, ahora nos volvimos a ilusionar: hoy la cancha canta y tu apuesta también.", "Messi con la celeste y blanca juega distinto: juega por su gente. Que hoy también juegue por ti."], "oilers": ["McDavid patina a una velocidad que el rival solo ve de espaldas. Que hoy deje a todos atrás.", "El 97 de Edmonton ve jugadas que nadie más ve. Visión es justo lo que pide tu sistema.", "Cuando McDavid acelera por el centro, el portero rival ya sabe lo que viene.", "McDavid y Draisaitl: la dupla que convierte el hielo en fiesta. Let's go Oilers.", "En el frío de Edmonton nace el hockey más caliente de la NHL. Hoy patinas con ellos.", "McDavid no fuerza la jugada: espera el momento exacto. Paciencia de campeón.", "Un disco, un palo y el mejor jugador del mundo. Pocas apuestas tienen mejor respaldo.", "El hielo no perdona errores, y McDavid casi no los comete. Que hoy sea perfecto.", "Cuando el 97 toca el disco, Edmonton entero se pone de pie. Hoy te pones de pie tú también.", "Velocidad, manos y cabeza fría: McDavid juega como tú quieres apostar."], "chiefs": ["Mahomes lanza sin mirar y el balón llega exacto. Hoy no hace falta mirar: hace falta confiar.", "Con Mahomes no hay ventaja segura para el rival. Dos minutos le bastan para darle vuelta.", "Arrowhead ruge cuando el 15 sale al campo. Que hoy ruja por tu apuesta también.", "Mahomes y Kelce llevan años leyéndose la mente. Química así no se compra.", "Varios anillos y la misma hambre del primer día. Así se construye una dinastía.", "Mahomes improvisa cuando la jugada se rompe; tú no improvisas con tu sistema. Por eso ganan los dos.", "Cuarta y largo con Mahomes en el campo: ni el rival se atreve a celebrar antes de tiempo.", "Andy Reid diseña, Mahomes ejecuta. Plan y talento: igual que tu método.", "Chiefs Kingdom no conoce el miedo. Hoy marchas con ellos.", "El brazo de Mahomes cubre todo el campo. Que hoy cubra también tu parlay."], "miami": ["Messi llegó a Miami y cambió el fútbol de Estados Unidos. Hoy le pedimos que cambie tu noche.", "Rosado, palmeras y el mejor de la historia. Inter Miami es otra cosa desde que llegó el 10.", "Dicen que Messi se fue a Miami a descansar. Nadie les avisó a los porteros de la MLS.", "Un tiro libre de Messi en Florida vale lo mismo que uno en el Camp Nou: magia pura.", "Messi y Suárez otra vez juntos, como en los viejos tiempos. Hay amistades que sí meten goles.", "En Miami, Messi juega con una sonrisa. Cuando él disfruta, el rival sufre.", "Hasta en la MLS, cada balón que toca Messi parece una clase magistral.", "Inter Miami con Messi es como tu cuota segura: casi siempre cumple, pero hay que verlo para creerlo.", "El mejor de todos los tiempos todavía regala jugadas. Hoy recibe la tuya.", "Messi no vino a Miami a retirarse: vino a seguir ganando. Tú también."], "redbull": ["Max Verstappen no conoce la palabra conformarse. Sale a ganar desde la primera curva.", "Cuando Verstappen toma la punta, la carrera se vuelve un monólogo. Que hoy hable fuerte.", "Lluvia, presión o pista mojada: Max maneja mejor cuando todo se complica.", "Verstappen cuida las gomas como tú cuidas tu saldo: sin desperdiciar nada.", "Max adelanta donde otros ni lo intentan. Valentía, pero con cálculo.", "Red Bull da alas, pero Max pone la velocidad. Hoy vuela tu parlay.", "Una vuelta rápida tras otra, sin errores: la consistencia de Verstappen es tu mejor pick.", "Max no mira el retrovisor: mira la bandera a cuadros.", "En la salida, Verstappen ya está pensando en la última vuelta. Visión de campeón.", "Cuando Max dice simply lovely por la radio, alguien acaba de cobrar. Que seas tú."], "glasgow": ["Sione Tuipulotu rompe líneas como si el rival fuera de papel. Hoy Scotstoun ruge.", "Tuipulotu entra al contacto y siempre sale con metros de ventaja. Así avanza tu saldo.", "En el rugby no hay atajos: se gana metro a metro. Glasgow lo sabe, y tú también.", "Cuando Tuipulotu agarra el balón en el centro, el ingoal ya se ve cerca.", "Glasgow Warriors juega con el orgullo de Escocia en el pecho. Hoy ese orgullo es tuyo.", "Tuipulotu combina fuerza y cabeza: sabe cuándo chocar y cuándo soltar. Igual que un buen apostador.", "Lluvia escocesa, barro y un try al final. Así se ganan los partidos grandes.", "Ochenta minutos de batalla y un equipo que no se rinde. Glasgow es disciplina pura.", "El scrum empuja, la línea corre y Tuipulotu decide. Cada pieza en su lugar, como tus picks.", "En Scotstoun el rugby se vive con el alma. Que hoy el marcador acompañe."], "trentino": ["Alessandro Michieletto ataca desde el cielo y la pelota cae como sentencia. Forza Trento.", "Michieletto salta, el estadio se calla y luego explota. Que hoy explote por ti.", "En el voleibol, un punto a la vez gana el set. En tus apuestas, un día a la vez gana el mes.", "Trentino juega con precisión italiana: recepción, armado y remate perfecto.", "Michieletto recibe, defiende y remata. Un jugador completo para una apuesta completa.", "Cuando Trento llega al tie-break, sabe ganar. Sangre fría en el momento justo.", "Un saque potente de Michieletto puede cambiar un set entero. Hoy cambia tu día.", "La red separa a los equipos; la disciplina separa a los campeones. Trentino la tiene.", "Michieletto juega con la calma de un veterano y la potencia de un joven. Combinación ganadora.", "Bloqueo, defensa y contraataque: Trentino no regala nada. Tú tampoco."], "alcaraz": ["Carlos Alcaraz juega con la sonrisa de quien sabe que lo imposible es solo un punto más.", "Una dejada de Alcaraz y el rival se queda mirando. Magia murciana en estado puro.", "Alcaraz corre cada bola como si fuera la última. Así se defiende también un saldo.", "Derecha, revés, volea y corazón: Carlitos tiene todos los golpes del tenis.", "Cuando Alcaraz entra en racha, no hay pista que le quede grande.", "Ferrero lo formó con disciplina; Carlitos le puso el arte. Método y talento, como tu sistema.", "Alcaraz convierte puntos perdidos en jugadas para el recuerdo. Nunca des una bola por perdida.", "Arcilla, hierba o pista dura: el chico de El Palmar gana en todas.", "Cabeza fría en el tie-break y fuego en la derecha. Vamos, Carlitos.", "Alcaraz no espera que el partido llegue a él: sale a buscarlo. Hoy sales tú también."], "topuria": ["Ilia Topuria avisa cómo va a ganar y luego lo cumple. Hoy El Matador sale a cerrar.", "Topuria entra a la jaula con una calma que asusta. La seguridad también gana peleas.", "Mano de piedra y cabeza de ajedrecista: Topuria estudia al rival antes de derribarlo.", "El Matador no persigue el golpe: espera el error y no perdona. Así se apuesta.", "De Georgia a España y de España al mundo. Topuria pelea con dos banderas en el corazón.", "Cuando Topuria conecta limpio, el árbitro ya sabe lo que viene.", "Topuria pelea con hambre de leyenda, como si todavía tuviera todo por demostrar.", "Presión constante, golpes precisos y cero dudas. El Matador no regala asaltos.", "Topuria dice que es el mejor del mundo y lo demuestra dentro de la jaula. Confianza con respaldo.", "Una combinación de Topuria vale más que mil palabras. Hoy que hablen sus puños."], "joshua": ["Anthony Joshua sube al ring con la presencia de un campeón de dos reinados. Hoy AJ manda.", "El jab de Joshua marca la distancia y la derecha termina la historia.", "AJ ha caído y se ha levantado. Los grandes se miden por cómo regresan.", "Cuando Joshua encuentra el ángulo, el combate cambia en un segundo.", "Oro olímpico en Londres y cinturones mundiales. Joshua sabe lo que es ganar en grande.", "Paciencia en los primeros asaltos y potencia al final: la receta de AJ, y la tuya.", "Joshua pega con la fuerza de un peso pesado y piensa como un estratega.", "Wembley se llenó para verlo pelear. Hoy lo acompañas tú.", "Un gancho de AJ puede apagar las luces del estadio. Que hoy las apague temprano.", "Disciplina, gimnasio y fe: Joshua se construyó golpe a golpe, como tu saldo."]};
+const MSG={"barca":["Més que un club: hoy el escudo pesa, y en tu parlay también.", "El Camp Nou ha visto noches de leyenda. Que hoy se escriba otra con tu apuesta.", "La Masia forma futbolistas con una idea: el balón es nuestro. Hoy también la cuota.", "El ADN culé es tocar, presionar y no rendirse nunca. Así juega tu sistema.", "Desde Cruyff el Barça juega con una idea clara. Tú también tienes la tuya: disciplina.", "Champions en las vitrinas y hambre por la siguiente. Visca el Barça.", "Cuando el Barça tiene el balón, el rival corre detrás. Hoy que corra detrás de tu saldo.", "Blaugrana en el corazón y cabeza fría en la apuesta. Combinación culé.", "Cuando suena el himno en el Camp Nou, el equipo sale distinto. Hoy sales tú también.", "Fútbol de toque, paciencia y gol. Así gana el Barça, así ganas tú."], "warriors": ["Curry cambió el baloncesto desde la línea de tres. Hoy solo le pedimos que cambie tu saldo.", "Cuando Curry se calienta, ninguna defensa alcanza. Que hoy ande con la mano caliente.", "Cuatro anillos y ninguna prisa. Curry sabe ganar con paciencia, igual que tú.", "Steph tira desde donde otros ni se atreven a pararse, y la mete. Confianza en el que sabe.", "Night night: cuando Curry hace ese gesto, el partido se terminó. Que hoy lo haga temprano.", "Curry no es el más alto ni el más fuerte, pero sí el más preciso. Precisión es lo que pide tu sistema.", "Chef Curry entra a la cocina y el rival se queda sin menú. Hoy se sirve victoria.", "Strength in Numbers: Curry pone los triples, el equipo pone el corazón y tú pones la disciplina.", "Hay jugadores que miran el aro. Curry mira la red, porque ya sabe que va a entrar.", "La Bahía se enciende cuando Curry agarra ritmo. Que hoy la noche sea dorada."], "dodgers": ["Ohtani batea como cuarto bate y lanza como as. Hoy apuestas por el jugador más completo del planeta.", "50 jonrones y 50 bases robadas en una misma temporada: Ohtani hizo lo que nadie. Hoy solo le pedimos un buen juego.", "Cuando Ohtani conecta, el sonido del bate ya te dice que la bola se va. Que hoy suene así.", "Ohtani entrena con la disciplina de un monje. Tu sistema pide lo mismo: rutina y paciencia.", "Sangre azul Dodger y Ohtani en el lineup: hay días en que la fe se apoya en algo muy sólido.", "Un hit, una carrera, un out a la vez. Así se ganan Series Mundiales, y así se construye tu saldo.", "Ohtani no busca el jonrón: busca el contacto perfecto. El jonrón llega solo. Igual tus ganancias.", "Los Dodgers juegan como dinastía. Que hoy Ohtani recuerde por qué Los Ángeles es azul.", "Dicen que Ohtani es de otro planeta. Hoy aprovechemos que juega en el nuestro.", "Ohtani al bate con corredores en base: pocas cosas en el béisbol dan más confianza."], "argentina": ["Messi levantó la Copa del Mundo en Qatar y cerró el círculo. Hoy la Albiceleste sigue escribiendo.", "Ocho Balones de Oro y todavía juega con hambre de potrero. Así se respeta un sistema.", "Cuando Messi agarra el balón, el estadio contiene la respiración. Hoy la tuya también.", "La Scaloneta aprendió a sufrir y a ganar. Garra, orden y Messi: combinación campeona.", "Messi no corre más que nadie: piensa más rápido que todos. Juega tu parlay igual, con la cabeza.", "Tres estrellas en el pecho y una historia que no se cansa de crecer. Vamos, Argentina.", "De Rosario al mundo: Messi demostró que la paciencia termina en gloria.", "Dibu ataja, De Paul corre, Messi decide. Cada uno hace lo suyo, como tus picks.", "Muchachos, ahora nos volvimos a ilusionar: hoy la cancha canta y tu apuesta también.", "Messi con la celeste y blanca juega distinto: juega por su gente. Que hoy también juegue por ti."], "oilers": ["McDavid patina a una velocidad que el rival solo ve de espaldas. Que hoy deje a todos atrás.", "El 97 de Edmonton ve jugadas que nadie más ve. Visión es justo lo que pide tu sistema.", "Cuando McDavid acelera por el centro, el portero rival ya sabe lo que viene.", "McDavid y Draisaitl: la dupla que convierte el hielo en fiesta. Let's go Oilers.", "En el frío de Edmonton nace el hockey más caliente de la NHL. Hoy patinas con ellos.", "McDavid no fuerza la jugada: espera el momento exacto. Paciencia de campeón.", "Un disco, un palo y el mejor jugador del mundo. Pocas apuestas tienen mejor respaldo.", "El hielo no perdona errores, y McDavid casi no los comete. Que hoy sea perfecto.", "Cuando el 97 toca el disco, Edmonton entero se pone de pie. Hoy te pones de pie tú también.", "Velocidad, manos y cabeza fría: McDavid juega como tú quieres apostar."], "chiefs": ["Mahomes lanza sin mirar y el balón llega exacto. Hoy no hace falta mirar: hace falta confiar.", "Con Mahomes no hay ventaja segura para el rival. Dos minutos le bastan para darle vuelta.", "Arrowhead ruge cuando el 15 sale al campo. Que hoy ruja por tu apuesta también.", "Mahomes y Kelce llevan años leyéndose la mente. Química así no se compra.", "Varios anillos y la misma hambre del primer día. Así se construye una dinastía.", "Mahomes improvisa cuando la jugada se rompe; tú no improvisas con tu sistema. Por eso ganan los dos.", "Cuarta y largo con Mahomes en el campo: ni el rival se atreve a celebrar antes de tiempo.", "Andy Reid diseña, Mahomes ejecuta. Plan y talento: igual que tu método.", "Chiefs Kingdom no conoce el miedo. Hoy marchas con ellos.", "El brazo de Mahomes cubre todo el campo. Que hoy cubra también tu parlay."], "miami": ["Messi llegó a Miami y cambió el fútbol de Estados Unidos. Hoy le pedimos que cambie tu noche.", "Rosado, palmeras y el mejor de la historia. Inter Miami es otra cosa desde que llegó el 10.", "Dicen que Messi se fue a Miami a descansar. Nadie les avisó a los porteros de la MLS.", "Un tiro libre de Messi en Florida vale lo mismo que uno en el Camp Nou: magia pura.", "Messi y Suárez otra vez juntos, como en los viejos tiempos. Hay amistades que sí meten goles.", "En Miami, Messi juega con una sonrisa. Cuando él disfruta, el rival sufre.", "Hasta en la MLS, cada balón que toca Messi parece una clase magistral.", "Inter Miami con Messi es como tu cuota segura: casi siempre cumple, pero hay que verlo para creerlo.", "El mejor de todos los tiempos todavía regala jugadas. Hoy recibe la tuya.", "Messi no vino a Miami a retirarse: vino a seguir ganando. Tú también."], "redbull": ["Max Verstappen no conoce la palabra conformarse. Sale a ganar desde la primera curva.", "Cuando Verstappen toma la punta, la carrera se vuelve un monólogo. Que hoy hable fuerte.", "Lluvia, presión o pista mojada: Max maneja mejor cuando todo se complica.", "Verstappen cuida las gomas como tú cuidas tu saldo: sin desperdiciar nada.", "Max adelanta donde otros ni lo intentan. Valentía, pero con cálculo.", "Red Bull da alas, pero Max pone la velocidad. Hoy vuela tu parlay.", "Una vuelta rápida tras otra, sin errores: la consistencia de Verstappen es tu mejor pick.", "Max no mira el retrovisor: mira la bandera a cuadros.", "En la salida, Verstappen ya está pensando en la última vuelta. Visión de campeón.", "Cuando Max dice simply lovely por la radio, alguien acaba de cobrar. Que seas tú."], "glasgow": ["Sione Tuipulotu rompe líneas como si el rival fuera de papel. Hoy Scotstoun ruge.", "Tuipulotu entra al contacto y siempre sale con metros de ventaja. Así avanza tu saldo.", "En el rugby no hay atajos: se gana metro a metro. Glasgow lo sabe, y tú también.", "Cuando Tuipulotu agarra el balón en el centro, el ingoal ya se ve cerca.", "Glasgow Warriors juega con el orgullo de Escocia en el pecho. Hoy ese orgullo es tuyo.", "Tuipulotu combina fuerza y cabeza: sabe cuándo chocar y cuándo soltar. Igual que un buen apostador.", "Lluvia escocesa, barro y un try al final. Así se ganan los partidos grandes.", "Ochenta minutos de batalla y un equipo que no se rinde. Glasgow es disciplina pura.", "El scrum empuja, la línea corre y Tuipulotu decide. Cada pieza en su lugar, como tus picks.", "En Scotstoun el rugby se vive con el alma. Que hoy el marcador acompañe."], "trentino": ["Alessandro Michieletto ataca desde el cielo y la pelota cae como sentencia. Forza Trento.", "Michieletto salta, el estadio se calla y luego explota. Que hoy explote por ti.", "En el voleibol, un punto a la vez gana el set. En tus apuestas, un día a la vez gana el mes.", "Trentino juega con precisión italiana: recepción, armado y remate perfecto.", "Michieletto recibe, defiende y remata. Un jugador completo para una apuesta completa.", "Cuando Trento llega al tie-break, sabe ganar. Sangre fría en el momento justo.", "Un saque potente de Michieletto puede cambiar un set entero. Hoy cambia tu día.", "La red separa a los equipos; la disciplina separa a los campeones. Trentino la tiene.", "Michieletto juega con la calma de un veterano y la potencia de un joven. Combinación ganadora.", "Bloqueo, defensa y contraataque: Trentino no regala nada. Tú tampoco."], "alcaraz": ["Carlos Alcaraz juega con la sonrisa de quien sabe que lo imposible es solo un punto más.", "Una dejada de Alcaraz y el rival se queda mirando. Magia murciana en estado puro.", "Alcaraz corre cada bola como si fuera la última. Así se defiende también un saldo.", "Derecha, revés, volea y corazón: Carlitos tiene todos los golpes del tenis.", "Cuando Alcaraz entra en racha, no hay pista que le quede grande.", "Ferrero lo formó con disciplina; Carlitos le puso el arte. Método y talento, como tu sistema.", "Alcaraz convierte puntos perdidos en jugadas para el recuerdo. Nunca des una bola por perdida.", "Arcilla, hierba o pista dura: el chico de El Palmar gana en todas.", "Cabeza fría en el tie-break y fuego en la derecha. Vamos, Carlitos.", "Alcaraz no espera que el partido llegue a él: sale a buscarlo. Hoy sales tú también."], "topuria": ["Ilia Topuria avisa cómo va a ganar y luego lo cumple. Hoy El Matador sale a cerrar.", "Topuria entra a la jaula con una calma que asusta. La seguridad también gana peleas.", "Mano de piedra y cabeza de ajedrecista: Topuria estudia al rival antes de derribarlo.", "El Matador no persigue el golpe: espera el error y no perdona. Así se apuesta.", "De Georgia a España y de España al mundo. Topuria pelea con dos banderas en el corazón.", "Cuando Topuria conecta limpio, el árbitro ya sabe lo que viene.", "Topuria pelea con hambre de leyenda, como si todavía tuviera todo por demostrar.", "Presión constante, golpes precisos y cero dudas. El Matador no regala asaltos.", "Topuria dice que es el mejor del mundo y lo demuestra dentro de la jaula. Confianza con respaldo.", "Una combinación de Topuria vale más que mil palabras. Hoy que hablen sus puños."], "joshua": ["Anthony Joshua sube al ring con la presencia de un campeón de dos reinados. Hoy AJ manda.", "El jab de Joshua marca la distancia y la derecha termina la historia.", "AJ ha caído y se ha levantado. Los grandes se miden por cómo regresan.", "Cuando Joshua encuentra el ángulo, el combate cambia en un segundo.", "Oro olímpico en Londres y cinturones mundiales. Joshua sabe lo que es ganar en grande.", "Paciencia en los primeros asaltos y potencia al final: la receta de AJ, y la tuya.", "Joshua pega con la fuerza de un peso pesado y piensa como un estratega.", "Wembley se llenó para verlo pelear. Hoy lo acompañas tú.", "Un gancho de AJ puede apagar las luces del estadio. Que hoy las apague temprano.", "Disciplina, gimnasio y fe: Joshua se construyó golpe a golpe, como tu saldo."]};
 const WIN={
- barca:["¡Ganamos con el Barça! Lamine celebró como Messi en el Bernabéu 2009. Tú celebra con la cuota cobrada.","Pedri tocó, el saldo subió. Iniesta estaría orgulloso, pa. Visca el Barça.","Hoy el Barça jugó como el de Guardiola y tu parlay como el de un campeón. Cobrado.","Raphinha sonrió a lo Ronaldinho y tu apuesta también. ¡Força Barça!"],
+ barca:["¡Ganó el Barça! El Camp Nou celebra y tu saldo también.", "Victoria culé, cuota cobrada. Visca el Barça, pa.", "El Barça jugó a lo Barça y tú cobraste a lo campeón.", "Més que un club, y hoy más que una victoria: apuesta ganada."],
  warriors:["¡Curry lo hizo otra vez! Night night para el rival y buenos días para tu saldo.","Chef Curry sirvió el plato y tú te lo comiste completo. Ganada, pa.","Triple de Curry, parlay cobrado. Así se celebra en la Bahía.","Strength in Numbers: y tus números hoy salieron verdes."],
  dodgers:["¡Ohtani la sacó del parque y tu apuesta también! Hoy es noche azul.","Ohtani bateó, lanzó y te pagó. Ese hombre hace de todo, pa.","Jonrón de los Dodgers, carrera para tu saldo. Ganada.","Sangre azul y bolsillo verde. ¡Vamos Dodgers!"],
  argentina:["¡Messi y la Scaloneta no fallan! Dale campeón, ganamos.","Celeste y blanca, saldo en verde. ¡Muchachos, ahora nos volvimos a ilusionar!","Argentina ganó y tú también. Tres estrellas y una cuota más.","Ganó la Albiceleste. Esto merece un mate y una sonrisa, pa."],
@@ -270,13 +290,13 @@ const WIN={
  miami:["¡Messi ganó en Miami! Rosado, sol y cuota cobrada.","El mejor de la historia lo hizo de nuevo. Tú cobraste, pa.","Messi en Miami no está de vacaciones: está pagando tus apuestas.","Gol de Messi, ganada para ti. Qué bonito es el fútbol."]};
 Object.assign(WIN,{"redbull": ["¡Verstappen cruzó primero y tú cobraste! Simply lovely.", "Bandera a cuadros para Max y verde para tu saldo.", "Red Bull dio alas y tu apuesta voló. Ganada, pa.", "Max manejó perfecto y tú apostaste perfecto."], "glasgow": ["¡Try de Glasgow y cuota cobrada! Scotstoun celebra contigo.", "Tuipulotu rompió la línea y tú cobraste. Ganada.", "Ochenta minutos de guerra y victoria escocesa. Cobrado, pa.", "Glasgow ganó a lo guerrero. Así se cobra."], "trentino": ["¡Remate de Michieletto y punto para tu saldo! Forza Trento.", "Set, partido y apuesta: Trentino lo cerró.", "Trento ganó con precisión italiana. Cobrado, pa.", "Michieletto saltó más alto que todos y tu saldo también."], "alcaraz": ["¡Juego, set y partido para Carlitos! Y cuota cobrada para ti.", "Alcaraz sonrió al final y tú también. Vamos, Carlitos.", "Otra exhibición de Alcaraz, otra apuesta ganada.", "El chico de El Palmar lo hizo de nuevo. Cobrado, pa."], "topuria": ["¡El Matador cumplió! Topuria ganó y tú cobraste.", "Topuria dijo cómo iba a ganar y lo hizo. Igual que tu apuesta.", "Mano de piedra, cuota cobrada. Ganada con Topuria.", "Otra noche de El Matador. Victoria para él y para ti."], "joshua": ["¡AJ ganó y tu apuesta también! Campeón es campeón.", "El jab marcó, la derecha cerró y tú cobraste.", "Joshua levantó los brazos y tu saldo subió. Ganada.", "Noche de peso pesado: victoria de AJ y cuota cobrada."]});
 const WIN_GEN=["¡Ganada! Disciplina que paga, pa.","Hoy el sistema funcionó. Cobrado y a seguir.","Victoria limpia. Así se hace, paso a paso."];
-const LOSS=["Hoy no se dio. Mañana el sistema sigue, la cabeza fría también.","Una caída no tumba el plan. Respira y respeta tus reglas.","Hasta Walter White tuvo días malos. Mañana volvemos."];
-const REST=["Hoy descansamos. La disciplina también se entrena sin apostar.","Día libre. El dinero que no arriesgas hoy también cuenta.","Hoy no hay jugada para nosotros. Café, paciencia y mañana seguimos.","Hasta Tommy Shelby se sienta a pensar antes de mover ficha. Hoy toca pensar.","El sistema dice: quieto. Y quedarse quieto también es una jugada."];
+const LOSS=["Hoy no se dio. Mañana el sistema sigue, la cabeza fría también.","Una caída no tumba el plan. Respira y respeta tus reglas.","Kowalski, análisis: hoy no se dio. Mañana el plan sigue."];
+const REST=["Hoy descansamos. La disciplina también se entrena sin apostar.","Día libre. El dinero que no arriesgas hoy también cuenta.","Hoy no hay jugada para nosotros. Café, paciencia y mañana seguimos.","Hasta Skipper se toma un día para planear. Hoy toca planear.","El sistema dice: quieto. Y quedarse quieto también es una jugada."];
 function pickOf(arr,key){let h=0;for(const c of key)h=(h*31+c.charCodeAt(0))>>>0;return arr[h%arr.length]}
 function roundToTarget(a,b){b.adj=true;const nm=M[b.method].name.split(" ")[0];const d=r2(b.ret-b.target);
-  if(d>0.004){ST.moves.push({id:uid(),date:b.date||todayISO(),type:"traspaso",method:"ragnar",from:a.id,betId:b.id,amount:d,note:`Excedente de ${nm}`});return `Ganada. ${money(d)} de más pasan a Ragnar`}
-  if(d<-0.004){const f=-d;if(ragnarFree()>=f-1e-9){ST.moves.push({id:uid(),date:b.date||todayISO(),type:"traspaso",method:"ragnar",from:a.id,betId:b.id,amount:-f,note:`Ragnar completa la meta de ${nm}`});return `Ganada. Ragnar puso ${money(f)} para llegar a ${money(b.target)}`}
-    return `Ganada. Ragnar no alcanza para completar los ${money(f)}`}
+  if(d>0.004){ST.moves.push({id:uid(),date:b.date||todayISO(),type:"traspaso",method:"ragnar",from:a.id,betId:b.id,amount:d,note:`Excedente de ${nm}`});return `Ganada. ${money(d)} de más pasan a Rico`}
+  if(d<-0.004){const f=-d;if(ragnarFree()>=f-1e-9){ST.moves.push({id:uid(),date:b.date||todayISO(),type:"traspaso",method:"ragnar",from:a.id,betId:b.id,amount:-f,note:`Rico completa la meta de ${nm}`});return `Ganada. Rico puso ${money(f)} para llegar a ${money(b.target)}`}
+    return `Ganada. Rico no alcanza para completar los ${money(f)}`}
   return null}
 function fixExcess(){if(!ST)return false;let ch=false;
   for(const a of ST.attempts){if(a.status!=="vivo"||pendingOf(a.method).length)continue;
@@ -286,7 +306,7 @@ function fixExcess(){if(!ST)return false;let ch=false;
     if(ST.moves.some(m=>m.betId===last.id&&m.from===a.id&&m.type==="traspaso"&&m.note&&m.note.startsWith("Excedente")))continue;
     const ex=r2(attemptBal(a)-last.target);
     if(ex>0.004)ST.moves.push({id:uid(),date:last.date||todayISO(),type:"traspaso",method:"ragnar",from:a.id,betId:last.id,amount:ex,note:`Excedente de ${M[a.method].name.split(" ")[0]}`});
-    else if(ex<-0.004&&ragnarFree()>=-ex-1e-9)ST.moves.push({id:uid(),date:last.date||todayISO(),type:"traspaso",method:"ragnar",from:a.id,betId:last.id,amount:ex,note:`Ragnar completa la meta de ${M[a.method].name.split(" ")[0]}`})}
+    else if(ex<-0.004&&ragnarFree()>=-ex-1e-9)ST.moves.push({id:uid(),date:last.date||todayISO(),type:"traspaso",method:"ragnar",from:a.id,betId:last.id,amount:ex,note:`Rico completa la meta de ${M[a.method].name.split(" ")[0]}`})}
   if(ch)commit();return ch}
 function viewHoy(){const t=todayISO(),bs=ST.bets.filter(b=>b.date===t);
   let h=`<div class="hoy"><p class="small muted" style="margin:0 0 6px">${esc(fmtD(new Date()))}</p>`;
@@ -302,6 +322,45 @@ function viewHoy(){const t=todayISO(),bs=ST.bets.filter(b=>b.date===t);
   pt.forEach(id=>{h+=`<div class="msg">${badge(id)}<span>${esc(pickOf(MSG[id],t+id))}</span></div>`});
   if(!won.length&&!enJuego.length&&ko)h+=`<div class="msg"><span>🧊</span><span>${esc(pickOf(LOSS,t))}</span></div>`;
   return h+`</div>`}
+
+/* ---------- deportes (resultados y récords) ---------- */
+const SKEY="ose-sports";let SP=null;try{SP=JSON.parse(localStorage.getItem(SKEY))}catch(e){}
+let spState="";
+const AUTO=["barca","argentina","miami","warriors","dodgers","oilers","chiefs","redbull"];
+async function fetchSports(force){if(!DRIVE)return;if(!force&&SP&&Date.now()-SP.at<30*60e3){attachScores();return}
+  try{const r=await fetch(DRIVE.url+(DRIVE.url.includes("?")?"&":"?")+"clave="+encodeURIComponent(DRIVE.key)+"&accion=deportes&t="+Date.now());
+    const j=await r.json();if(!j.deportes){spState="viejo";return}
+    SP={at:Date.now(),teams:j.deportes};spState="";try{localStorage.setItem(SKEY,JSON.stringify(SP))}catch(e){}
+    attachScores();if(UI.tab==="picks"||UI.tab==="inicio")render()}catch(e){spState="error"}}
+const locDate=iso=>toISO(new Date(iso));
+function evText(e,k){const c=e.comps||[];if(c.length<2)return e.name+(e.res?" · "+e.res:"");
+  const h=c.find(x=>x.home)||c[0],a=c.find(x=>!x.home)||c[1];return `${h.name} ${h.score??""}-${a.score??""} ${a.name}`.replace(/ -  /," vs ")}
+function evMine(e,k){const c=(e.comps||[]).find(x=>x.mine);return c?c.winner===true?"G":c.winner===false&&(e.comps||[]).some(x=>x.winner)?"P":"E":""}
+function attachScores(){if(!SP||!ST)return;let ch=false;
+  for(const b of ST.bets){if(!b.date)continue;for(const l of b.legs){const k=tkey(l.teamId);const T=SP.teams[k];if(!T||!T.events)continue;
+    if(b.scores&&b.scores[l.teamId])continue;
+    const nx=toISO(new Date(parseISO(b.date).getTime()+864e5));
+    const ev=T.events.filter(e=>e.completed).find(e=>locDate(e.date)===b.date)||T.events.filter(e=>e.completed).find(e=>locDate(e.date)===nx);
+    if(ev){b.scores=b.scores||{};b.scores[l.teamId]=evText(ev,k);ch=true}}}
+  if(ch)commit()}
+function recordOf(id){const k=tkey(id),man=ST.records&&ST.records[id],T=SP&&SP.teams[k];
+  if(man&&man.txt)return{txt:man.txt,sub:"actualizado "+fmtDate(man.at)};
+  if(T&&(T.record||T.standing))return{txt:[T.record,T.standing].filter(Boolean).join(" · "),sub:"automático"};
+  return null}
+
+/* ---------- combinaciones ---------- */
+function combos(){const map={};
+  for(const b of ST.bets){if(!settled(b))continue;const ts=[...new Set(b.legs.map(l=>l.teamId).filter(Boolean))].filter(t=>team(t));
+    for(let i=0;i<ts.length;i++)for(let j=i+1;j<ts.length;j++){const [x,y]=[ts[i],ts[j]].sort();const k=x+"|"+y;
+      const o=map[k]||(map[k]={a:x,b:y,n:0,w:0,pa:[0,0],pb:[0,0]});o.n++;if(b.status==="ganada")o.w++;
+      for(const l of b.legs){if(l.ok==null)continue;if(l.teamId===x){o.pa[1]++;if(l.ok)o.pa[0]++}if(l.teamId===y){o.pb[1]++;if(l.ok)o.pb[0]++}}}}
+  return Object.values(map).sort((p,q)=>(q.n-p.n)||(q.w/q.n-p.w/p.n))}
+function comboRow(o){const pct=Math.round(o.w/o.n*100),ra=o.pa[1]?o.pa[0]/o.pa[1]:null,rb=o.pb[1]?o.pb[0]/o.pb[1]:null;
+  const worst=ra!=null&&rb!=null&&ra!==rb?(ra<rb?"a":"b"):null;
+  const line=(id,pr,w)=>`<div class="small" style="margin-top:3px">${tname(id)}: ${pr[1]?`${pr[0]} de ${pr[1]} picks`:"sin detalle"}${w?` <span class="neg">← falla más</span>`:""}</div>`;
+  return`<div class="combo"><div class="hd">${badge(o.a)}${badge(o.b)}<span>${esc(team(o.a).name)} + ${esc(team(o.b).name)}</span></div>
+   <div class="small" style="margin-top:4px"><b class="${pct>=60?"pos":pct<40?"neg":""}">${o.w} de ${o.n} parlays (${pct}%)</b>${o.n<5?'<span class="tagw">pocos datos</span>':""}</div>
+   ${line(o.a,o.pa,worst==="a")}${line(o.b,o.pb,worst==="b")}</div>`}
 
 /* ---------- cálculos ---------- */
 const betsOfAttempt=a=>ST.bets.filter(b=>b.attemptId===a.id);
@@ -344,7 +403,7 @@ function restartAdvice(m){
   if(o.length)out.push(`<p class="small">Tu regla 1 dice no meter más dinero mientras otro método siga vivo. Ahora mismo sigue vivo: ${esc(o.join(" y "))}.</p>`);
   const allDead=!liveAttempt("tommy")&&!liveAttempt("walter")&&!ragnarAlive();
   if(allDead){const ends=ST.attempts.map(x=>x.end).filter(Boolean).sort();const last=ends[ends.length-1];
-    if(last&&parseISO(last).getDate()>20)out.push(`<p class="small">Los tres cayeron después del día 20: según tus reglas, el próximo mes arrancan solo Tommy y Walter con $50.</p>`)}
+    if(last&&parseISO(last).getDate()>20)out.push(`<p class="small">Los tres cayeron después del día 20: según tus reglas, el próximo mes arrancan solo Skipper y Kowalski con $50.</p>`)}
   return{html:out.join(""),ready:paidSince&&!o.length}}
 
 /* ---------- reglas automáticas ---------- */
@@ -363,7 +422,7 @@ function checks(d){
       const need=minCuota(d.method,st>0?st:bal);
       if(c>1&&c<need-1e-9)w.push({t:`La cuota ${c.toFixed(2)} no llega a la meta. Necesitas al menos ${need.toFixed(2)}.`});
       if(dayNum(a)>s.maxDias)w.push({t:`Ya pasaste los ${s.maxDias} días de este intento.`});}
-    legs.filter(l=>l.pickId&&pick(l.pickId)?.player).forEach(l=>w.push({t:`“${l.text}” es estadística de jugador. En Tommy y Walter no se permite.`}));
+    legs.filter(l=>l.pickId&&pick(l.pickId)?.player).forEach(l=>w.push({t:`“${l.text}” es estadística de jugador. En Skipper y Kowalski no se permite.`}));
   }else if(d.method==="rick"){
     const amt=num(d.stake);
     if(c>15)w.push({t:`La cuota ${c.toFixed(2)} es muy alta. ¿No la escribiste en el lugar del monto?`});
@@ -373,8 +432,8 @@ function checks(d){
     const amt=num(d.stake);
     if(c>15)w.push({t:`La cuota ${c.toFixed(2)} es muy alta. ¿No la escribiste en el lugar del monto?`});
     if(!(amt>0))w.push({e:1,t:"Escribe cuánto vas a apostar."});
-    else{if(!s.ragnarMontos.includes(amt))w.push({t:`En Ragnar tus montos son ${s.ragnarMontos.map(x=>"$"+x).join(", ")}. Vas con $${fmt(amt)}.`});
-      if(amt>ragnarFree()+1e-9)w.push({e:1,t:`El fondo de Ragnar solo tiene ${money(ragnarFree())} libres.`});
+    else{if(!s.ragnarMontos.includes(amt))w.push({t:`En Rico tus montos son ${s.ragnarMontos.map(x=>"$"+x).join(", ")}. Vas con $${fmt(amt)}.`});
+      if(amt>ragnarFree()+1e-9)w.push({e:1,t:`El fondo de Rico solo tiene ${money(ragnarFree())} libres.`});
       const prev=ST.bets.filter(b=>b.method==="ragnar"&&settled(b)).pop();
       if(prev&&prev.status==="perdida"&&amt>prev.stake)w.push({t:`Vienes de perder $${fmt(prev.stake)} y estás subiendo el monto. Regla 18: nunca aumentar para recuperar.`});}
   }
@@ -387,12 +446,12 @@ function checks(d){
 /* ---------- vistas ---------- */
 const ICON={
  inicio:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>',
- picks:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>',
+ picks:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3l7 3v5c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V6z"/></svg>',
  stats:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>',
  mas:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>'};
 function renderTabs(){
-  const t=(id,l)=>`<button class="${UI.tab===id?"on":""}" data-tab="${id}" aria-label="${l}">${ICON[id]}${l}</button>`;
-  document.getElementById("tabs").innerHTML=ST?`<div class="in">${t("inicio","Inicio")}${t("picks","Picks")}<button class="plus" data-tab="apostar" aria-label="Nueva apuesta"><span>+</span>Apostar</button>${t("stats","Números")}${t("mas","Más")}</div>`:""}
+  const t=(id,l)=>`<button class="${UI.tab===id?"on":""}" data-tab="${id}" aria-label="${l}">${ICON[id]}${l}</button>`;const dc=ST?dayColors():[];
+  document.getElementById("tabs").innerHTML=ST?`<div class="in">${t("inicio","Inicio")}${t("picks","Equipos")}<button class="plus" data-tab="apostar" aria-label="Nueva apuesta"><span style="${dc.length?`background:${dc[0]};color:#fff`:""}">+</span>Apostar</button>${t("stats","Números")}${t("mas","Más")}</div>`:""}
 const NEW_TEAMS=[["redbull","Red Bull Racing","F1",["Victoria de Verstappen","Verstappen en el podio","Verstappen termina en el top 5","Red Bull suma puntos"]],
  ["glasgow","Glasgow Warriors","Rugby",["Victoria de Glasgow","Glasgow con hándicap a favor","Más de 2.5 tries de Glasgow"]],
  ["trentino","Itas Trentino","Voleibol",["Victoria de Trentino","Trentino gana al menos un set","Más de 3.5 sets en el partido"]],
@@ -427,6 +486,7 @@ const IC={add:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke
 function viewInicio(){
   const c=cuenta();const np=nextPayday();const d=daysTo(np);
   let h=`<div class="top"><h1>Operación<br>Sueldo extra</h1><div class="pay">Próximo pago<br><b>${esc(np.toLocaleDateString("es-SV",{weekday:"short",day:"numeric",month:"short"}))}</b> · ${d===0?"hoy":d+" d"}</div></div>`;
+  const dc=dayColors();if(dc.length){h+=`<div class="daybar" style="background:linear-gradient(90deg,${dc.length>1?dc.join(","):dc[0]+","+dc[0]})"></div><div class="enjuego">En juego: ${dayTeams().map(k=>badge(k)).join("")}</div>`}
   h+=`<div class="cuenta"><div class="ledger">
     <span class="op"></span><span>Retirado de Bet365</span><span class="v">${money(c.sal)}</span>
     <span class="op">+</span><span>Saldo disponible</span><span class="v">${money(c.juego)}</span>
@@ -441,20 +501,16 @@ function viewInicio(){
 
 function ladderCard(m){
   const a=liveAttempt(m),last=lastAttempt(m),s=ST.settings;
-  let h=`<div class="met" style="--c:${M[m].c}"><div class="met-h"><span class="met-name">${M[m].name}</span>`;
+  let h=`<div class="met" style="--c:${M[m].c}" data-act="detail" data-id="${m}" role="button" tabindex="0"><div class="met-h"><span class="met-name">${M[m].name}</span>`;
   if(a){const bal=attemptBal(a),day=dayNum(a),p=pendingOf(m)[0];
-    h+=`<span class="pill vivo">Vivo · intento ${a.n}</span></div>
-     <div class="met-bal"><span class="num">${money(bal)}</span><span class="muted small">arrancó con ${money(a.capital)}</span></div>`;
-    if(day>s.maxDias)h+=`<div class="advice"><p><b>Completaste los ${s.maxDias} días.</b> Toca cobrar.</p><button class="btn pri" data-act="retirar" data-id="${m}">Retirar</button></div>`;
-    else if(p)h+=`<p class="next">Día ${day}: apuesta en juego a cuota ${p.cuota.toFixed(2)}. Resuélvela arriba.</p>`;
-    else{const st=suggestStake(m,bal)||bal,tg=targetFor(m,st),sob=r2(bal-st);h+=`<p class="next">Día ${day}: mete <b>${money(st)}</b> buscando <b>${money(tg)}</b> → cuota mínima <b class="num">${minCuota(m,st).toFixed(2)}</b>${sob>0.004?`<br><span class="muted small">Sobran ${money(sob)} que pasan a Ragnar.</span>`:""}</p>`}
+    h+=`<span class="pill vivo">Día ${Math.min(day,s.maxDias)} de ${s.maxDias}</span></div><div class="met-bal"><span class="num">${money(bal)}</span></div>`;
+    if(day>s.maxDias)h+=`<p class="one"><b>¡30 días completos!</b> Toca retirar.</p>`;
+    else if(p)h+=`<p class="one">En juego: ${money(p.stake)} a ${p.cuota.toFixed(2)}</p>`;
+    else{const st=suggestStake(m,bal)||bal;h+=`<p class="one">Mete <b>${money(st)}</b> → <b>${money(targetFor(m,st))}</b> · cuota ≥ ${minCuota(m,st).toFixed(2)}</p>`}
     h+=strip(a,m);
-    h+=`<div class="row" style="margin-top:12px"><button class="btn" data-act="detail" data-id="${m}">Ver escalera</button></div>`;
-  }else{
-    h+=`<span class="pill ${last?.status==="cerrado"?"cerrado":"caido"}">${last?.status==="cerrado"?"Cobrado":"Caído"}</span></div>`;
-    if(last){const bs=betsOfAttempt(last);h+=`<p class="next">${last.status==="cerrado"?`Intento ${last.n} cerrado en ${money(attemptBal(last))}.`:`Intento ${last.n} cayó en el día ${bs.length}${last.end?" ("+esc(fmtDate(last.end))+")":""}, con ${money(bs[bs.length-1]?.stake||0)} en juego.`}</p>`}
-    const adv=restartAdvice(m);
-    h+=`<div class="advice">${adv.html}</div><div class="row" style="margin-top:10px"><button class="btn" data-act="usesaldo" data-id="${m}">Reiniciar con dinero del saldo disponible</button><button class="btn" data-act="restartpocket" data-id="${m}">Solo reiniciar (de mi bolsillo)</button><button class="btn ghost" data-act="detail" data-id="${m}">Historial</button></div>`}
+  }else{const np=nextPayday();
+    h+=`<span class="pill ${last?.status==="cerrado"?"cerrado":"caido"}">${last?.status==="cerrado"?"Cobrado":"Caído"}</span></div>
+     <p class="one">Listo para reiniciar · próximo pago ${esc(np.toLocaleDateString("es-SV",{day:"numeric",month:"short"}))}</p>`}
   return h+`</div>`}
 function strip(a,m){const bs=betsOfAttempt(a);const n=ST.settings.maxDias;let h=`<div class="strip" aria-label="Progreso de ${n} días">`;
   for(let i=1;i<=n;i++){const b=bs[i-1];let cl="",tx=i;
@@ -465,45 +521,40 @@ function strip(a,m){const bs=betsOfAttempt(a);const n=ST.settings.maxDias;let h=
 function rickStats(){const rb=ST.bets.filter(b=>b.method==="rick"),st=rb.filter(settled),w=st.filter(b=>b.status==="ganada").length;
   return{rb,n:st.length,w,l:st.length-w,net:r2(st.reduce((x,b)=>x+b.ret-b.stake,0)),pend:rb.filter(b=>b.status==="pendiente")}}
 function rickCard(){const r=rickStats();
-  return`<div class="met" style="--c:var(--rick)"><div class="met-h"><span class="met-name">Rick Grimes</span><span class="pill">Método libre</span></div>
-   <div class="met-bal"><span class="num ${r.net>=0?"pos":"neg"}">${signed(r.net)}</span><span class="muted small">resultado total</span></div>
-   <p class="next">${r.w} ${r.w===1?"ganada":"ganadas"}, ${r.l} ${r.l===1?"perdida":"perdidas"}${r.pend.length?`, ${r.pend.length} en juego`:""}. Sin fondo propio: apuesta con tu saldo disponible (libre ${money(ragnarFree())}).</p>
-   <div class="row" style="margin-top:10px"><button class="btn" data-act="detail" data-id="rick">Ver apuestas</button><button class="btn pri" data-act="rickbet">Apostar con Rick</button></div></div>`}
+  return`<div class="met" style="--c:var(--rick)" data-act="detail" data-id="rick" role="button" tabindex="0"><div class="met-h"><span class="met-name">Cabo</span><span class="pill">Libre</span></div>
+   <div class="met-bal"><span class="num ${r.net>=0?"pos":"neg"}">${signed(r.net)}</span></div>
+   <p class="one">${r.pend.length?`${r.pend.length} en juego · `:""}${r.w} ganadas, ${r.l} perdidas</p></div>`}
 function rickDetail(){const r=rickStats();
-  let h=`<div class="facts"><div class="fact"><small>Saldo disponible</small><span class="num">${money(cuenta().juego)}</span></div><div class="fact"><small>Resultado de Rick</small><span class="num ${r.net>=0?"pos":"neg"}">${signed(r.net)}</span></div></div>
-   <p class="muted small" style="margin:10px 0 0">Rick no tiene fondo: cada apuesta sale de tu saldo disponible y lo que ganes regresa ahí. Sin meta ni cuota fija.</p>
-   <div class="row" style="margin-top:10px"><button class="btn pri" data-act="rickbet">Apostar con Rick</button><button class="btn" data-act="editsaldo">${IC.pen} Editar saldo</button></div><h2>Apuestas</h2>`;
-  if(!r.rb.length)return h+`<p class="muted">Todavía no hay apuestas con Rick.</p>`;
+  let h=`<div class="facts"><div class="fact"><small>Saldo disponible</small><span class="num">${money(cuenta().juego)}</span></div><div class="fact"><small>Resultado de Cabo</small><span class="num ${r.net>=0?"pos":"neg"}">${signed(r.net)}</span></div></div>
+   <div class="row" style="margin-top:10px"><button class="btn pri" data-act="rickbet">Apostar con Cabo</button><button class="btn" data-act="editsaldo">${IC.pen} Editar saldo</button></div><h2>Apuestas</h2>`;
+  if(!r.rb.length)return h+`<p class="muted">Todavía no hay apuestas con Cabo.</p>`;
   h+=`<ul class="lad" style="--c:var(--rick)">`;
   r.rb.slice().reverse().forEach(b=>{h+=`<li><span class="d small" style="font-size:14px">${esc(b.date?b.date.slice(5).split("-").reverse().join("/"):"")}</span><div>${money(b.stake)} a ${b.cuota.toFixed(2)}<div class="det">${esc(b.legs.map(l=>l.text+(l.ok===false?" ✗":"")).join(" · "))}</div>${settled(b)?`<button class="link" style="font-size:13px;margin-top:4px" data-act="editbet" data-id="${b.id}">Editar</button>`:""}</div><span class="small ${b.status==="ganada"?"pos":b.status==="perdida"?"neg":"muted"}">${b.status==="ganada"?signed(b.ret-b.stake):b.status==="perdida"?signed(-b.stake):"En juego"}</span></li>`});
   return h+`</ul>`}
-function ragnarCard(){
-  const f=ragnarFund(),rb=ST.bets.filter(b=>b.method==="ragnar"&&settled(b));
-  const w=rb.filter(b=>b.status==="ganada").length,l=rb.length-w;
-  const ent=ST.moves.filter(m=>m.method==="ragnar"&&m.type!=="ajuste").reduce((s,m)=>s+((m.type==="salida"||m.type==="uso")?-m.amount:m.amount),0);
-  const alive=ragnarAlive();
-  return`<div class="met" style="--c:var(--ragnar)"><div class="met-h"><span class="met-name">Ragnar Lothbrok</span><span class="pill ${alive?"vivo":"caido"}">${alive?"Fondo activo":"Sin fondo"}</span></div>
-   <div class="met-bal"><span class="num">${money(f)}</span><span class="muted small">metiste ${money(ent)} · ${signed(r2(f-ent))}</span></div>
-   <p class="next">${w} ganadas, ${l} perdidas. Montos permitidos: ${ST.settings.ragnarMontos.map(x=>"$"+x).join(", ")}.</p>
-   <div class="row" style="margin-top:10px"><button class="btn" data-act="detail" data-id="ragnar">Ver equipos y apuestas</button>${alive?"":`<button class="btn pri" data-act="ragnar-load">Recargar ${money(ST.settings.capital.ragnar)}</button>`}</div></div>`}
+function ragnarCard(){const f=ragnarFund(),alive=ragnarAlive();
+  return`<div class="met" style="--c:var(--ragnar)" data-act="detail" data-id="ragnar" role="button" tabindex="0"><div class="met-h"><span class="met-name">Rico</span><span class="pill ${alive?"vivo":"caido"}">La caja</span></div>
+   <div class="met-bal"><span class="num">${money(f)}</span></div>
+   <p class="one">Libre para apostar: ${money(ragnarFree())}</p></div>`}
 
 function pendCard(b){
   const r=UI.resolve[b.id]||(UI.resolve[b.id]={ret:r2(b.stake*b.cuota)});
   return`<div class="card pend" style="--c:${M[b.method].c}"><div class="met-h"><h3 style="color:var(--c)">${M[b.method].name}</h3><span class="muted small">${esc(fmtDate(b.date))}</span></div>
-   <p class="small" style="margin:4px 0 0">${money(b.stake)} a cuota ${b.cuota.toFixed(2)} → paga ${money(b.stake*b.cuota)}</p>${b.attemptId&&b.target?`<p class="small muted" style="margin:2px 0 0">Meta: ${money(b.target)}. Lo que cobres de más pasa a Ragnar.</p>`:""}
+   <p class="small" style="margin:4px 0 0">${money(b.stake)} a cuota ${b.cuota.toFixed(2)} → paga ${money(b.stake*b.cuota)}</p>${b.attemptId&&b.target?`<p class="small muted" style="margin:2px 0 0">Meta: ${money(b.target)}. Lo que cobres de más pasa a Rico.</p>`:""}
    <ul class="legs">${b.legs.map((l,i)=>`<li><span>${esc(l.text)}${l.teamId?`<br><span class="muted small">${tname(l.teamId)}</span>`:""}</span>
      <button class="tog ${l.ok===true?"on-ok":""}" data-act="leg" data-id="${b.id}" data-i="${i}" data-v="1" aria-label="Se cumplió">✓</button>
      <button class="tog ${l.ok===false?"on-no":""}" data-act="leg" data-id="${b.id}" data-i="${i}" data-v="0" aria-label="Falló">✗</button></li>`).join("")}</ul>
    <label class="f">Cobro real si ganó</label><input class="in" type="text" inputmode="decimal" autocomplete="off" value="${r.ret}" data-bind="ret" data-id="${b.id}">
    <div class="row" style="margin-top:12px"><button class="btn win" data-act="settle" data-id="${b.id}" data-v="ganada">Ganó</button><button class="btn loss" data-act="settle" data-id="${b.id}" data-v="perdida">Perdió</button><button class="link" data-act="delbet" data-id="${b.id}" style="margin-left:auto">Borrar</button></div></div>`}
 
+const INFO={"tommy": "Parlay diario a cuota 1.15 metiendo todo. Máximo 30 días; si pierdes, el intento termina.", "walter": "De $50 a $100 subes de $10 en $10; desde $100, de $20 en $20. Lo que sobra va a Rico.", "ragnar": "La caja: aquí llega lo que sobra de Skipper y Kowalski. Apuestas a tus equipos con $3, $5 o $10.", "rick": "Libre: sin meta ni cuota. Apuesta con el saldo disponible y lo ganado regresa ahí."};
 function viewDetail(m){
-  let h=`<button class="back" data-act="back">‹ Inicio</button><h1 style="color:${M[m].c}">${M[m].name}</h1>`;
+  let h=`<button class="back" data-act="back">‹ Inicio</button><h1 style="color:${M[m].c}">${M[m].name}</h1><p class="muted small" style="margin:6px 0 12px">${INFO[m]}</p>`;
   if(m==="rick")return h+rickDetail();
   const a0=m==="ragnar"?null:liveAttempt(m),mb=m==="ragnar"?ragnarFund():(a0?attemptBal(a0):0);
   h+=`<div class="facts"><div class="fact"><small>Saldo total</small><span class="num">${money(cuenta().juego)}</span></div><div class="fact"><small>Saldo del método</small><span class="num">${money(mb)}</span></div></div>
    <div class="row" style="margin-top:10px">${m==="ragnar"?`<button class="btn" data-act="retirar" data-id="ragnar">Retirar</button>`:`${a0?`<button class="btn" data-act="retirar" data-id="${m}">Retirar</button>`:""}<button class="btn" data-act="usesaldo" data-id="${m}">Reiniciar con dinero del saldo disponible</button><button class="btn" data-act="restartpocket" data-id="${m}">Solo reiniciar (de mi bolsillo)</button>`}</div>`;
   if(a0){const sm=startMove(a0);if(sm)h+=`<div class="advice" style="margin-top:12px"><p class="small">Este intento arrancó con ${money(sm.amount)} <b>de tu bolsillo</b>.</p><button class="btn" data-act="fixorigen" data-id="${sm.id}">Corregir: lo tomé del saldo disponible</button></div>`}
+  if(m!=="ragnar"&&!a0){const adv=restartAdvice(m);h+=`<div class="advice" style="margin-top:12px">${adv.html}</div>`}
   if(m==="ragnar")return h+ragnarDetail();
   const a=liveAttempt(m);
   if(a){const bal=attemptBal(a),bs=betsOfAttempt(a);
@@ -564,7 +615,7 @@ function viewApostar(){
 function dynPay(d){const m=d.method;const stake=num(d.stake);const c=num(d.cuota);let h="";
   if(m!=="ragnar"&&liveAttempt(m)&&stake>0){const bal=attemptBal(liveAttempt(m)),sob=r2(bal-stake);
     h+=`<div class="facts"><div class="fact"><small>Meta</small><span class="num">${money(targetFor(m,stake))}</span></div><div class="fact"><small>Cuota mínima</small><span class="num">${minCuota(m,stake).toFixed(2)}</span></div></div>`;
-    if(sob>0.004)h+=`<p class="small muted" style="margin:6px 0 0">Sobran ${money(sob)}: pasan al fondo de Ragnar al guardar.</p>`}
+    if(sob>0.004)h+=`<p class="small muted" style="margin:6px 0 0">Sobran ${money(sob)}: pasan al fondo de Rico al guardar.</p>`}
   return h+(stake>0&&c>1?`<p class="small muted" style="margin:6px 0 0">Si gana te paga <b class="num" style="color:var(--ink);font-size:17px">${money(stake*c)}</b></p>`:"")}
 function dynCheck(d){const c=num(d.cuota);let h="";const w=checks(d);const real=w.filter(x=>!x.e);
   if(real.length)h+=`<div class="checks"><h3>Ojo con tus reglas</h3><ul>${real.map(x=>`<li>${esc(x.t)}</li>`).join("")}</ul></div>`;
@@ -574,26 +625,48 @@ function dynCheck(d){const c=num(d.cuota);let h="";const w=checks(d);const real=
   if(blocking.length)h+=`<p class="small muted" style="text-align:center">${esc(blocking[0].t)}</p>`;
   return h}
 /* ---- picks ---- */
-function viewPicks(){
-  let h=`<h1>Picks</h1><p class="muted small" style="margin:6px 0 0">Ordenados por los que más usas. El número es cumplidos / usados.</p>`;
-  for(const tier of["principal","auxiliar"]){h+=`<p class="tierlbl">${tier==="principal"?"Equipos principales":"Equipos auxiliares"}</p>`;
-    ST.teams.filter(t=>t.tier===tier).forEach(t=>{const open=UI.open[t.id]??(tier==="principal");
-      const ps=ST.picks.filter(p=>p.teamId===t.id).map(p=>({p,s:pickStats(p)})).sort((a,b)=>(b.s.u-a.s.u)||((b.s.pct??-1)-(a.s.pct??-1)));
-      h+=`<div class="team"><button class="team-h" data-act="toggleteam" data-id="${t.id}" aria-expanded="${open}"><span><h3>${tname(t.id)}</h3><span class="muted small">${esc(t.sport)} · ${ps.length} picks</span></span><span class="muted">${open?"−":"+"}</span></button>`;
-      if(open){h+=ps.map(({p,s})=>`<button class="pk" data-act="editpick" data-id="${p.id}"><span class="tx">${esc(p.text)}${p.player?`<span class="tag">jugador</span>`:""}${s.u?`<div class="bar"><i style="width:${s.pct}%"></i></div>`:""}</span><span class="rec num">${s.u?s.h+"/"+s.u:"—"}</span></button>`).join("");
-        h+=`<div class="row" style="padding:10px 14px;border-top:1px solid var(--line)"><button class="btn" data-act="newpick" data-id="${t.id}">+ Pick</button><button class="link" data-act="editteam" data-id="${t.id}" style="margin-left:auto">Editar equipo</button></div>`}
-      h+=`</div>`})}
+function viewPicks(){if(UI.team&&team(UI.team))return viewTeam(UI.team);
+  let h=`<h1>Tus equipos</h1>`;
+  if(spState==="viejo")h+=`<div class="checks"><h3>Falta un paso</h3><ul><li>Para ver resultados y récords automáticos, actualiza el script de Google Drive.</li></ul></div>`;
+  for(const tier of["principal","auxiliar"]){const ts=ST.teams.filter(t=>t.tier===tier);if(!ts.length)continue;
+    h+=`<p class="tierlbl">${tier==="principal"?"Principales":"Auxiliares"}</p>`;
+    ts.forEach(t=>{const r=recordOf(t.id);h+=`<button class="trow" data-act="team" data-id="${t.id}">${badge(t.id)}<span class="nm">${esc(t.name)}<div class="muted small" style="font-weight:400">${esc(t.sport)}</div></span><span class="rc">${r?esc(r.txt):""}</span></button>`})}
   return h+`<button class="btn full" style="margin-top:16px" data-act="newteam">+ Agregar equipo</button>`}
+function viewTeam(id){const t=team(id),k=tkey(id),T=SP&&SP.teams[k],r=recordOf(id);
+  let h=`<button class="back" data-act="teamback">‹ Tus equipos</button><h1 style="display:flex;align-items:center;gap:6px">${badge(id)}${esc(t.name)}</h1><p class="muted small" style="margin:4px 0 0">${esc(t.sport)} · ${t.tier==="principal"?"Principal":"Auxiliar"}</p>`;
+  h+=`<div class="card"><div class="met-h"><h3>Récord</h3><button class="link" data-act="editrec" data-id="${id}">Editar récord</button></div>
+    <p class="num" style="font-size:24px;margin:6px 0 0">${r?esc(r.txt):"—"}</p><p class="small muted" style="margin:2px 0 0">${r?esc(r.sub):AUTO.includes(k)?"Se llena solo al conectar el script.":"Escríbelo tú con Editar récord."}</p></div>`;
+  if(T&&T.events&&T.events.length){const now=Date.now(),evs=T.events.filter(e=>Math.abs(new Date(e.date)-now)<7.5*864e5).sort((p,q)=>new Date(p.date)-new Date(q.date));
+    if(evs.length)h+=`<h2>Esta semana</h2><div class="card">${evs.map(e=>{const d=new Date(e.date),res=evMine(e,k);
+      return`<div class="ev"><span class="muted">${esc(d.toLocaleDateString("es-SV",{weekday:"short",day:"numeric"}))}</span><span>${esc(e.completed?evText(e,k):e.name)}<div class="muted" style="font-size:12px">${esc(e.league||"")}${e.completed?"":" · "+d.toLocaleTimeString("es-SV",{hour:"numeric",minute:"2-digit"})}</div></span><b class="${res==="G"?"pos":res==="P"?"neg":"muted"}">${e.completed?(res||"✓"):""}</b></div>`}).join("")}</div>`}
+  const bs=ST.bets.filter(b=>b.legs.some(l=>l.teamId===id)).slice(-12).reverse();
+  h+=`<h2>Tus apuestas</h2>`;
+  h+=bs.length?`<div class="card">${bs.map(b=>{const ls=b.legs.filter(l=>l.teamId===id),sc=b.scores&&b.scores[id];
+    return`<div class="ev"><span class="muted">${esc(b.date?b.date.slice(5).split("-").reverse().join("/"):"")}</span><span>${ls.map(l=>esc(l.text)+(l.ok===true?' <span class="pos">✓</span>':l.ok===false?' <span class="neg">✗</span>':"")).join("<br>")}
+      <div class="muted" style="font-size:12px">${esc(M[b.method]?.name||"")} · ${sc?esc(sc):`<button class="link" style="font-size:12px" data-act="setscore" data-id="${b.id}" data-t="${id}">anotar resultado</button>`}</div></span>
+      <b class="${b.status==="ganada"?"pos":b.status==="perdida"?"neg":"muted"} small">${b.status==="ganada"?"Ganó":b.status==="perdida"?"Perdió":"En juego"}</b></div>`}).join("")}</div>`:`<p class="muted">Todavía no le has apostado.</p>`;
+  const ps=ST.picks.filter(p=>p.teamId===id).map(p=>({p,s:pickStats(p)})).sort((a,b)=>(b.s.u-a.s.u)||((b.s.pct??-1)-(a.s.pct??-1)));
+  h+=`<h2>Picks</h2><div class="team">${ps.map(({p,s})=>`<button class="pk" data-act="editpick" data-id="${p.id}"><span class="tx">${esc(p.text)}${p.player?`<span class="tag">jugador</span>`:""}${s.u?`<div class="bar"><i style="width:${s.pct}%"></i></div>`:""}</span><span class="rec num">${s.u?s.h+"/"+s.u:"—"}</span></button>`).join("")}
+    <div class="row" style="padding:10px 14px;border-top:1px solid var(--line)"><button class="btn" data-act="newpick" data-id="${id}">+ Pick</button><button class="link" data-act="editteam" data-id="${id}" style="margin-left:auto">Editar equipo</button></div></div>`;
+  const cs=combos().filter(o=>o.a===id||o.b===id).slice(0,5);
+  if(cs.length)h+=`<h2>Combinaciones</h2><div class="card">${cs.map(comboRow).join("")}</div>`;
+  return h}
 
 /* ---- números ---- */
 function viewStats(){
   const by=m=>{const b=ST.bets.filter(x=>x.method===m&&settled(x));const w=b.filter(x=>x.status==="ganada").length;return{n:b.length,w,l:b.length-w}};
-  let h=`<h1>Números</h1><h2>Por método</h2><div class="card"><table class="t"><tr><th>Método</th><th class="r">Apuestas</th><th class="r">Ganó</th><th class="r">Perdió</th><th class="r">Acierto</th></tr>`;
+  let h=`<h1>Números</h1><div class="seg2"><button class="${UI.st!=="combos"?"on":""}" data-act="stab" data-id="general">General</button><button class="${UI.st==="combos"?"on":""}" data-act="stab" data-id="combos">Combinaciones</button></div>`;
+  if(UI.st==="combos"){const cs=combos();
+    if(!cs.length)return h+`<p class="muted">Todavía no hay parlays con dos o más equipos.</p>`;
+    const good=cs.filter(o=>o.n>=5).sort((p,q)=>q.w/q.n-p.w/p.n);
+    if(good.length)h+=`<div class="card"><p style="margin:0" class="small">Mejor pareja con datos suficientes: <b>${esc(team(good[0].a).name)} + ${esc(team(good[0].b).name)}</b> (${Math.round(good[0].w/good[0].n*100)}%).</p></div>`;
+    return h+`<h2>Todas las parejas</h2><div class="card">${cs.map(comboRow).join("")}</div><p class="small muted">Las apuestas viejas del Excel no tienen marcado qué pick falló: cuentan en el parlay, pero no en el detalle por equipo.</p>`}
+  h+=`<h2>Por método</h2><div class="card"><table class="t"><tr><th>Método</th><th class="r">Apuestas</th><th class="r">Ganó</th><th class="r">Perdió</th><th class="r">Acierto</th></tr>`;
   for(const m of["tommy","walter","ragnar","rick"]){const s=by(m);h+=`<tr><td style="color:${M[m].c};font-weight:600">${M[m].name.split(" ")[0]}</td><td class="r">${s.n}</td><td class="r">${s.w}</td><td class="r">${s.l}</td><td class="r num">${s.n?Math.round(s.w/s.n*100)+"%":"—"}</td></tr>`}
   h+=`</table></div>`;
   const att=ST.attempts.filter(a=>a.method!=="ragnar"&&a.status!=="vivo");
   if(att.length){const avg=att.reduce((s,a)=>s+betsOfAttempt(a).length,0)/att.length;
-    h+=`<div class="card"><p style="margin:0">Tus intentos de Tommy y Walter que ya terminaron duraron <b>${avg.toFixed(1)} días</b> en promedio (de ${ST.settings.maxDias}).</p></div>`}
+    h+=`<div class="card"><p style="margin:0">Tus intentos de Skipper y Kowalski que ya terminaron duraron <b>${avg.toFixed(1)} días</b> en promedio (de ${ST.settings.maxDias}).</p></div>`}
   const all=ST.picks.map(p=>({p,s:pickStats(p)})).filter(x=>x.s.u);
   const fails=all.filter(x=>x.s.f).sort((a,b)=>b.s.f-a.s.f).slice(0,6);
   h+=`<h2>Los que te han fallado</h2>`;
@@ -621,14 +694,14 @@ const back=`<button class="back" data-tab="mas">‹ Más</button>`;
 function viewReglas(){return back+`<h1>Reglas</h1><p class="muted small">Toca una para editarla.</p><ol class="rules">${ST.rules.map(r=>`<li><button class="link" style="color:var(--ink);text-decoration:none;text-align:left;font-size:16px" data-act="editrule" data-id="${r.id}">${esc(r.text)}</button></li>`).join("")}</ol><button class="btn full" style="margin-top:14px" data-act="newrule">+ Agregar regla</button>`}
 function viewDinero(){const c=cuenta();return back+`<h1>Entradas y salidas</h1><p class="muted small">Entrada es dinero que metes; salida es lo que retiras de Bet365. Toca una entrada para cambiar de dónde salió el dinero.</p>
   <div class="facts"><div class="fact"><small>Agregado</small><span class="num">${money(c.ent)}</span></div><div class="fact"><small>Retirado</small><span class="num">${money(c.sal)}</span></div></div>
-  <div class="card scroll"><table class="t"><tr><th>Fecha</th><th>Método</th><th>Nota</th><th class="r">Monto</th></tr>${ST.moves.slice().reverse().map(m=>`<tr ${m.type==="entrada"||(m.type==="uso"&&m.orig)?`data-act="origen" data-id="${m.id}" style="cursor:pointer"`:""}><td class="small">${esc(fmtDate(m.date))}</td><td class="small">${esc(M[m.method]?.name.split(" ")[0]||(m.method==="previo"?"Antes":m.method))}</td><td class="small">${esc(m.note||"")}${m.type==="entrada"?`<div class="muted" style="font-size:12px">${m.fuente==="previa"?"de ganancias anteriores":"de tu bolsa"}</div>`:m.type==="uso"?`<div class="muted" style="font-size:12px">del saldo disponible</div>`:""}</td><td class="r num ${m.type==="entrada"?"neg":m.type==="salida"?"pos":"muted"}">${m.type==="entrada"?"−$"+fmt(m.amount):m.type==="salida"?"+$"+fmt(m.amount):m.type==="traspaso"?(m.amount>=0?"→ Ragnar $"+fmt(m.amount):"Ragnar → $"+fmt(-m.amount)):m.type==="uso"?"Ragnar → $"+fmt(m.amount):"ajuste "+signed(m.amount)}</td></tr>`).join("")}</table></div>`}
+  <div class="card scroll"><table class="t"><tr><th>Fecha</th><th>Método</th><th>Nota</th><th class="r">Monto</th></tr>${ST.moves.slice().reverse().map(m=>`<tr ${m.type==="entrada"||(m.type==="uso"&&m.orig)?`data-act="origen" data-id="${m.id}" style="cursor:pointer"`:""}><td class="small">${esc(fmtDate(m.date))}</td><td class="small">${esc(M[m.method]?.name.split(" ")[0]||(m.method==="previo"?"Antes":m.method))}</td><td class="small">${esc(m.note||"")}${m.type==="entrada"?`<div class="muted" style="font-size:12px">${m.fuente==="previa"?"de ganancias anteriores":"de tu bolsa"}</div>`:m.type==="uso"?`<div class="muted" style="font-size:12px">del saldo disponible</div>`:""}</td><td class="r num ${m.type==="entrada"?"neg":m.type==="salida"?"pos":"muted"}">${m.type==="entrada"?"−$"+fmt(m.amount):m.type==="salida"?"+$"+fmt(m.amount):m.type==="traspaso"?(m.amount>=0?"→ Rico $"+fmt(m.amount):"Rico → $"+fmt(-m.amount)):m.type==="uso"?"Rico → $"+fmt(m.amount):"ajuste "+signed(m.amount)}</td></tr>`).join("")}</table></div>`}
 function viewAjustes(){const s=ST.settings;return back+`<h1>Ajustes</h1>
-  <label class="f">Capital inicial de Tommy</label><input class="in" type="number" inputmode="decimal" data-set="capital.tommy" value="${s.capital.tommy}">
-  <label class="f">Capital inicial de Walter</label><input class="in" type="number" inputmode="decimal" data-set="capital.walter" value="${s.capital.walter}">
-  <label class="f">Recarga del fondo de Ragnar</label><input class="in" type="number" inputmode="decimal" data-set="capital.ragnar" value="${s.capital.ragnar}">
-  <label class="f">Cuota diaria de Tommy</label><input class="in" type="number" inputmode="decimal" step="0.01" data-set="tommyCuota" value="${s.tommyCuota}">
+  <label class="f">Capital inicial de Skipper</label><input class="in" type="number" inputmode="decimal" data-set="capital.tommy" value="${s.capital.tommy}">
+  <label class="f">Capital inicial de Kowalski</label><input class="in" type="number" inputmode="decimal" data-set="capital.walter" value="${s.capital.walter}">
+  <label class="f">Recarga del fondo de Rico</label><input class="in" type="number" inputmode="decimal" data-set="capital.ragnar" value="${s.capital.ragnar}">
+  <label class="f">Cuota diaria de Skipper</label><input class="in" type="number" inputmode="decimal" step="0.01" data-set="tommyCuota" value="${s.tommyCuota}">
   <label class="f">Máximo de días por intento</label><input class="in" type="number" inputmode="numeric" data-set="maxDias" value="${s.maxDias}">
-  <label class="f">Montos permitidos en Ragnar (separados por coma)</label><input class="in" data-set="ragnarMontos" value="${s.ragnarMontos.join(", ")}">
+  <label class="f">Montos permitidos en Rico (separados por coma)</label><input class="in" data-set="ragnarMontos" value="${s.ragnarMontos.join(", ")}">
   <label class="f">Día de pago del sueldo</label><input class="in" type="number" inputmode="numeric" data-set="payDay" value="${s.payDay}">
   <label class="f">Si cae fin de semana, te pagan</label><select class="in" data-set="weekendShift"><option value="antes" ${s.weekendShift==="antes"?"selected":""}>El viernes anterior</option><option value="despues" ${s.weekendShift==="despues"?"selected":""}>El lunes siguiente</option></select>`}
 function viewRespaldo(){return back+`<h1>Respaldo</h1><p class="muted">Guarda una copia de todo por si cambias de teléfono o algo falla.</p>
@@ -665,11 +738,11 @@ const A={
     confirmSheet("¿Seguro que quieres reiniciar ya?",`<div class="advice">${adv.html}</div>`,"Reiniciar de todos modos",()=>startAttempt(m))},
   close(e){const a=ST.attempts.find(x=>x.id===e.dataset.id),bal=attemptBal(a);
     confirmSheet(`Cerrar intento ${a.n}`,`<p>Se registra que retiras ${money(bal)} de ${M[a.method].name}.</p>`,"Cerrar y cobrar",()=>{a.status="cerrado";a.end=todayISO();ST.moves.push({id:uid(),date:todayISO(),type:"salida",method:a.method,amount:bal,note:`Cobro intento ${a.n}`});UI.detail=null;commit();toast("Cobro registrado")})},
-  "ragnar-load"(){formSheet("Recargar fondo de Ragnar",`<label class="f">Monto</label><input class="in" name="a" type="number" inputmode="decimal" value="${ST.settings.capital.ragnar}">`,"Recargar",v=>{const a=parseFloat(v.a);if(!(a>0))return false;
+  "ragnar-load"(){formSheet("Recargar fondo de Rico",`<label class="f">Monto</label><input class="in" name="a" type="number" inputmode="decimal" value="${ST.settings.capital.ragnar}">`,"Recargar",v=>{const a=parseFloat(v.a);if(!(a>0))return false;
     ST.moves.push({id:uid(),date:todayISO(),type:"entrada",method:"ragnar",amount:a,note:"Recarga"});commit()})},
-  "ragnar-out"(){formSheet("Retirar de Ragnar",`<label class="f">Monto (libre: ${money(ragnarFree())})</label><input class="in" name="a" type="number" inputmode="decimal">`,"Retirar",v=>{const a=parseFloat(v.a);if(!(a>0)||a>ragnarFree()+1e-9){toast("Monto inválido");return false}
+  "ragnar-out"(){formSheet("Retirar de Rico",`<label class="f">Monto (libre: ${money(ragnarFree())})</label><input class="in" name="a" type="number" inputmode="decimal">`,"Retirar",v=>{const a=parseFloat(v.a);if(!(a>0)||a>ragnarFree()+1e-9){toast("Monto inválido");return false}
     ST.moves.push({id:uid(),date:todayISO(),type:"salida",method:"ragnar",amount:a,note:"Retiro"});commit()})},
-  "ragnar-fix"(){formSheet("Corregir saldo de Ragnar",`<p class="small muted">Escribe lo que de verdad tienes en Bet365 para Ragnar. La diferencia queda como ajuste: no cuenta como dinero metido ni retirado.</p><label class="f">Saldo real (la app dice ${money(ragnarFund())})</label><input class="in" name="a" type="text" inputmode="decimal">`,"Corregir",v=>{const a=num(v.a);if(!(a>=0))return false;const d=r2(a-ragnarFund());if(!d)return;
+  "ragnar-fix"(){formSheet("Corregir saldo de Rico",`<p class="small muted">Escribe lo que de verdad tienes en Bet365 para Rico. La diferencia queda como ajuste: no cuenta como dinero metido ni retirado.</p><label class="f">Saldo real (la app dice ${money(ragnarFund())})</label><input class="in" name="a" type="text" inputmode="decimal">`,"Corregir",v=>{const a=num(v.a);if(!(a>=0))return false;const d=r2(a-ragnarFund());if(!d)return;
     ST.moves.push({id:uid(),date:todayISO(),type:"ajuste",method:"ragnar",amount:d,note:"Ajuste al saldo real"});commit();toast("Saldo corregido")})},
   editbet(e){const b=ST.bets.find(x=>x.id===e.dataset.id);if(!b)return;
     formSheet("Editar apuesta",`<label class="f">Monto apostado</label><input class="in" name="st" type="text" inputmode="decimal" autocomplete="off" value="${b.stake}">
@@ -688,36 +761,44 @@ const A={
       ST.bets=ST.bets.filter(x=>x!==b);ST.moves=ST.moves.filter(x=>x.betId!==b.id);
       if(keep){const d=r2(before-cuenta().juego);if(Math.abs(d)>0.004)ST.moves.push({id:uid(),date:todayISO(),type:"ajuste",method:"ragnar",amount:d,note:"Ajuste al eliminar apuesta"})}
       closeSheet();commit();toast("Apuesta eliminada")}},
-  agregar(){formSheet("Agregar dinero",`<p class="small muted">Lo que agregas va directo a Ragnar y suma en "Agregado". La diferencia total no cambia al agregar: solo cambia cuando ganas o pierdes.</p><label class="f">Monto</label><input class="in" name="a" type="text" inputmode="decimal" autocomplete="off">
+  team(e){UI.team=e.dataset.id;render();scrollTo(0,0)},
+  teamback(){UI.team=null;render();scrollTo(0,0)},
+  stab(e){UI.st=e.dataset.id;render()},
+  editrec(e){const id=e.dataset.id,cur=ST.records&&ST.records[id];
+    formSheet(`Récord de ${team(id).name}`,`<p class="small muted">Escríbelo como lo veas en tu otra app. Ej.: "17-0, 9 KO", "#2 ATP · 45-8 en el año", "3º en la URC". Déjalo vacío para usar el automático.</p><input class="in" name="t" autocomplete="off" value="${esc(cur?.txt||"")}">`,"Guardar",v=>{
+      ST.records=ST.records||{};if(v.t)ST.records[id]={txt:v.t,at:todayISO()};else delete ST.records[id];commit()})},
+  setscore(e){const b=ST.bets.find(x=>x.id===e.dataset.id),id=e.dataset.t;
+    formSheet("Resultado del partido",`<p class="small muted">Ej.: "Glasgow 28-17 Leinster" o "Alcaraz ganó 6-4 6-3".</p><input class="in" name="t" autocomplete="off">`,"Guardar",v=>{if(!v.t)return false;b.scores=b.scores||{};b.scores[id]=v.t;commit()})},
+  agregar(){formSheet("Agregar dinero",`<p class="small muted">Lo que agregas va directo a Rico y suma en "Agregado". La diferencia total no cambia al agregar: solo cambia cuando ganas o pierdes.</p><label class="f">Monto</label><input class="in" name="a" type="text" inputmode="decimal" autocomplete="off">
       <label class="f">¿De dónde sale?</label><select class="in" name="o"><option value="bolsa">De mi bolsillo</option><option value="previa">De ganancias anteriores</option></select>`,"Agregar",v=>{
       const a=r2(num(v.a));if(!(a>0)){toast("Escribe un monto");return false}
       const mv={id:uid(),date:todayISO(),type:"entrada",method:"ragnar",amount:a,note:"Dinero agregado"};if(v.o==="previa")mv.fuente="previa";
-      ST.moves.push(mv);commit();toast(`Agregaste ${money(a)} a Ragnar`)})},
+      ST.moves.push(mv);commit();toast(`Agregaste ${money(a)} a Rico`)})},
   rickbet(){UI.draft=newDraft("rick");UI.detail=null;UI.tab="apostar";render();scrollTo(0,0)},
-  editsaldo(){const c=cuenta();formSheet("Editar saldo disponible",`<p class="small muted">Escribe lo que de verdad tienes en Bet365. La diferencia se pone en Ragnar; no cuenta como agregado ni retirado.</p><label class="f">Saldo real (la app dice ${money(c.juego)})</label><input class="in" name="a" type="text" inputmode="decimal" autocomplete="off">`,"Guardar",v=>{const a=num(v.a);if(!(a>=0)){toast("Escribe un monto");return false}
+  editsaldo(){const c=cuenta();formSheet("Editar saldo disponible",`<p class="small muted">Escribe lo que de verdad tienes en Bet365. La diferencia se pone en Rico; no cuenta como agregado ni retirado.</p><label class="f">Saldo real (la app dice ${money(c.juego)})</label><input class="in" name="a" type="text" inputmode="decimal" autocomplete="off">`,"Guardar",v=>{const a=num(v.a);if(!(a>=0)){toast("Escribe un monto");return false}
     const d=r2(a-c.juego);if(!d){toast("Ya cuadra");return}
-    ST.moves.push({id:uid(),date:todayISO(),type:"ajuste",method:"ragnar",amount:d,note:"Ajuste del saldo disponible"});commit();toast(`Ajuste de ${signed(d)} en Ragnar`)})},
+    ST.moves.push({id:uid(),date:todayISO(),type:"ajuste",method:"ragnar",amount:d,note:"Ajuste del saldo disponible"});commit();toast(`Ajuste de ${signed(d)} en Rico`)})},
   retirar(e){const opts=[];for(const k of["tommy","walter"]){const a=liveAttempt(k);if(a&&!pendingOf(k).length)opts.push({k,bal:attemptBal(a)})}
     opts.push({k:"ragnar",bal:ragnarFree()});
     let sel=e.dataset.id&&opts.find(o=>o.k===e.dataset.id)?e.dataset.id:(opts.filter(o=>o.k!=="ragnar").sort((x,y)=>y.bal-x.bal)[0]||opts[0]).k;
     if(e.dataset.id&&e.dataset.id!=="ragnar"&&pendingOf(e.dataset.id).length){toast("Primero resuelve la apuesta en juego");return}
     formSheet("Retirar dinero",`<label class="f">¿De dónde sale?</label><select class="in" name="m">${opts.map(o=>`<option value="${o.k}" ${o.k===sel?"selected":""}>${M[o.k].name} · ${money(o.bal)}</option>`).join("")}</select>
       <label class="f">Cuánto retiras</label><input class="in" name="a" type="text" inputmode="decimal" autocomplete="off">
-      <p class="small muted" style="margin:6px 0 0">Si retiras más de lo que tiene el método, la diferencia sale de Ragnar.</p>
-      <label class="f">Después del retiro</label><select class="in" name="fin"><option value="sigue">El método sigue vivo con lo que quede</option><option value="cierra">Cerrar el intento: lo que quede pasa a Ragnar</option></select>`,"Retirar",v=>{
+      <p class="small muted" style="margin:6px 0 0">Si retiras más de lo que tiene el método, la diferencia sale de Rico.</p>
+      <label class="f">Después del retiro</label><select class="in" name="fin"><option value="sigue">El método sigue vivo con lo que quede</option><option value="cierra">Cerrar el intento: lo que quede pasa a Rico</option></select>`,"Retirar",v=>{
       const m=v.m,amt=r2(num(v.a));if(!(amt>0)){toast("Escribe un monto");return false}
-      if(m==="ragnar"){if(amt>ragnarFree()+1e-9){toast("Ragnar no tiene tanto");return false}
+      if(m==="ragnar"){if(amt>ragnarFree()+1e-9){toast("Rico no tiene tanto");return false}
         ST.moves.push({id:uid(),date:todayISO(),type:"salida",method:"ragnar",amount:amt,note:"Retiro"});commit();toast(`Retiraste ${money(amt)}`);return}
       const a=liveAttempt(m),bal=attemptBal(a),falta=r2(amt-bal);
-      if(falta>0.004&&falta>ragnarFree()+1e-9){toast(`Faltan ${money(falta)} y Ragnar no alcanza`);return false}
-      if(falta>0.004)ST.moves.push({id:uid(),date:todayISO(),type:"traspaso",method:"ragnar",from:a.id,amount:-falta,note:`Ragnar completa retiro de ${M[m].name.split(" ")[0]}`});
+      if(falta>0.004&&falta>ragnarFree()+1e-9){toast(`Faltan ${money(falta)} y Rico no alcanza`);return false}
+      if(falta>0.004)ST.moves.push({id:uid(),date:todayISO(),type:"traspaso",method:"ragnar",from:a.id,amount:-falta,note:`Rico completa retiro de ${M[m].name.split(" ")[0]}`});
       ST.moves.push({id:uid(),date:todayISO(),type:"salida",method:m,from:a.id,amount:amt,note:`Retiro intento ${a.n}`});
       const queda=attemptBal(a);
       if(v.fin==="cierra"||queda<0.005){if(queda>0.004)ST.moves.push({id:uid(),date:todayISO(),type:"traspaso",method:"ragnar",from:a.id,amount:queda,note:`Resto de ${M[m].name.split(" ")[0]} al cerrar`});a.status="cerrado";a.end=todayISO()}
       commit();toast(`Retiraste ${money(amt)}`)})},
   restartpocket(e){const m=e.dataset.id,cap=ST.settings.capital[m],a=liveAttempt(m);
     if(pendingOf(m).length){toast("Primero resuelve la apuesta en juego");return}
-    formSheet(`${M[m].name}: solo reiniciar`,`<p class="small muted">Metes dinero de tu bolsillo: se suma en "Agregado".${a?` El intento actual se cierra y sus ${money(attemptBal(a))} pasan a Ragnar.`:""}</p><label class="f">Con cuánto arrancas</label><input class="in" name="a" type="text" inputmode="decimal" autocomplete="off" value="${cap}">`,"Reiniciar",v=>{
+    formSheet(`${M[m].name}: solo reiniciar`,`<p class="small muted">Metes dinero de tu bolsillo: se suma en "Agregado".${a?` El intento actual se cierra y sus ${money(attemptBal(a))} pasan a Rico.`:""}</p><label class="f">Con cuánto arrancas</label><input class="in" name="a" type="text" inputmode="decimal" autocomplete="off" value="${cap}">`,"Reiniciar",v=>{
       const amt=r2(num(v.a));if(!(amt>0)){toast("Escribe un monto");return false}
       closeToRagnar(m);const n=ST.attempts.filter(x=>x.method===m).length+1;
       ST.attempts.push({id:m+uid(),method:m,n,start:todayISO(),capital:amt,status:"vivo",end:null});
@@ -725,7 +806,7 @@ const A={
       commit();toast(`${M[m].name}: intento ${n} con ${money(amt)} de tu bolsillo`)})},
   usesaldo(e){const m=e.dataset.id,cap=ST.settings.capital[m],a=liveAttempt(m);
     if(pendingOf(m).length){toast("Primero resuelve la apuesta en juego");return}
-    formSheet(`${M[m].name}: usar saldo disponible`,`<p class="small muted">${a?`El intento actual se cierra y sus ${money(attemptBal(a))} pasan a Ragnar. `:""}El dinero sale de Ragnar (libre: ${money(r2(ragnarFree()+(a?attemptBal(a):0)))}). Tu saldo disponible no cambia y no cuenta como agregado.</p><label class="f">Con cuánto arrancas</label><input class="in" name="a" type="text" inputmode="decimal" autocomplete="off" value="${cap}">`,"Empezar",v=>{
+    formSheet(`${M[m].name}: usar saldo disponible`,`<p class="small muted">${a?`El intento actual se cierra y sus ${money(attemptBal(a))} pasan a Rico. `:""}El dinero sale de Rico (libre: ${money(r2(ragnarFree()+(a?attemptBal(a):0)))}). Tu saldo disponible no cambia y no cuenta como agregado.</p><label class="f">Con cuánto arrancas</label><input class="in" name="a" type="text" inputmode="decimal" autocomplete="off" value="${cap}">`,"Empezar",v=>{
       const amt=r2(num(v.a));if(!(amt>0)){toast("Escribe un monto");return false}
       const libre=r2(ragnarFree()+(a?attemptBal(a):0));
       if(amt>libre+1e-9){toast(`Solo hay ${money(libre)} disponibles`);return false}
@@ -751,7 +832,7 @@ const A={
       commit();toast("Intento borrado")})},
   origen(e){const mv=ST.moves.find(x=>x.id===e.dataset.id);const cur=mv.type==="uso"?"saldo":mv.fuente==="previa"?"previa":"bolsa";
     const canSaldo=mv.type==="uso"||mv.method==="tommy"||mv.method==="walter";
-    formSheet("¿De dónde salió este dinero?",`<label class="f">${money(mv.amount)} · ${esc(mv.note||"")}</label><select class="in" name="o"><option value="bolsa" ${cur==="bolsa"?"selected":""}>De mi bolsillo (suma en Agregado)</option><option value="previa" ${cur==="previa"?"selected":""}>De ganancias anteriores</option>${canSaldo?`<option value="saldo" ${cur==="saldo"?"selected":""}>Del saldo disponible (sale de Ragnar)</option>`:""}</select>`,"Guardar",v=>{
+    formSheet("¿De dónde salió este dinero?",`<label class="f">${money(mv.amount)} · ${esc(mv.note||"")}</label><select class="in" name="o"><option value="bolsa" ${cur==="bolsa"?"selected":""}>De mi bolsillo (suma en Agregado)</option><option value="previa" ${cur==="previa"?"selected":""}>De ganancias anteriores</option>${canSaldo?`<option value="saldo" ${cur==="saldo"?"selected":""}>Del saldo disponible (sale de Rico)</option>`:""}</select>`,"Guardar",v=>{
       if(v.o===cur)return;if(mv.type==="uso")toBolsa(mv);
       if(v.o==="saldo")toSaldo(mv);else if(v.o==="previa")mv.fuente="previa";else delete mv.fuente;commit();toast("Origen actualizado")})},
   togfuente(e){const m=ST.moves.find(x=>x.id===e.dataset.id);m.fuente=m.fuente==="previa"?undefined:"previa";if(!m.fuente)delete m.fuente;commit()},
@@ -810,7 +891,7 @@ function teamFields(t){return`<label class="f">Nombre</label><input class="in" n
   <label class="f">Tipo</label><select class="in" name="tier"><option value="principal" ${t.tier==="principal"?"selected":""}>Principal</option><option value="auxiliar" ${t.tier==="auxiliar"?"selected":""}>Auxiliar</option></select>`}
 
 document.addEventListener("click",ev=>{
-  const tb=ev.target.closest("[data-tab]");if(tb){UI.tab=tb.dataset.tab;UI.detail=null;if(UI.tab==="apostar"&&!UI.draft)UI.draft=newDraft();render();scrollTo(0,0);return}
+  const tb=ev.target.closest("[data-tab]");if(tb){if(tb.dataset.tab!==UI.tab||tb.dataset.tab!=="picks")UI.team=null;else UI.team=null;UI.tab=tb.dataset.tab;UI.detail=null;if(UI.tab==="apostar"&&!UI.draft)UI.draft=newDraft();render();scrollTo(0,0);return}
   const e=ev.target.closest("[data-act]");if(!e)return;const f=A[e.dataset.act];if(f)f(e,ev)});
 document.addEventListener("input",ev=>{const e=ev.target;
   if(e.dataset.bind){if(e.dataset.bind==="ret"){(UI.resolve[e.dataset.id]||(UI.resolve[e.dataset.id]={})).ret=e.value;return}
