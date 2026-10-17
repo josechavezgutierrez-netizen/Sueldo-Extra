@@ -184,6 +184,10 @@ table.t td.r,table.t th.r{text-align:right}
 .sb .rb button.on.G{background:var(--win);color:#fff;border-color:var(--win)}
 .sb .rb button.on.P{background:var(--loss);color:#fff;border-color:var(--loss)}
 .sb .rb button.on.E{background:var(--muted);color:#fff;border-color:var(--muted)}
+.sb .rb button.on.OT{background:var(--warn);color:#fff;border-color:var(--warn)}
+.sb .rb button.on.NC{background:var(--muted);color:#fff;border-color:var(--muted)}
+.sb .tn{min-width:0;overflow-wrap:break-word;font-size:20px}
+.sb .line{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)}
 /* barra inferior */
 nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px);z-index:10}
 nav.tabs .in{max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr)}
@@ -377,14 +381,17 @@ function attachScores(){if(!SP||!ST)return;let ch=false;
   if(ch)commit()}
 function ttype(id){const sp=(team(id)?.sport||"").toLowerCase();return /f1|fórmula|formula/.test(sp)?"f1":/ufc|mma|box/.test(sp)?"fight":/tenis/.test(sp)?"tennis":"team"}
 const gamesOf=id=>(ST.games||[]).filter(g=>g.teamId===id&&!g.arch);
+function lg(id){const sp=(team(id)?.sport||"").toLowerCase();return /nhl|hockey/.test(sp)?"nhl":/nfl|americano/.test(sp)?"nfl":/fútbol|futbol|rugby/.test(sp)?"draw":"plain"}
+const RES=["G","P","E","OT","NC"];
 function gRes(g){const t=ttype(g.teamId);
-  if(t==="team"){if(g.res==="G"||g.res==="P"||g.res==="E")return g.res;if(g.gf===""||g.gf==null||g.ga===""||g.ga==null)return null;return +g.gf>+g.ga?"G":+g.gf<+g.ga?"P":"E"}
-  if(t==="f1")return g.pos?"P"+g.pos:null;
-  return g.res==="G"||g.res==="P"||g.res==="E"?g.res:null}
+  if(t==="team"){if(RES.includes(g.res))return g.res;if(g.gf===""||g.gf==null||g.ga===""||g.ga==null)return null;return +g.gf>+g.ga?"G":+g.gf<+g.ga?"P":"E"}
+  if(t==="f1")return g.dnf?"DNF":g.pos?"P"+g.pos:null;
+  return RES.includes(g.res)?g.res:null}
 function gText(g){const t=ttype(g.teamId),n=team(g.teamId)?.name||"",r=gRes(g);
-  if(t==="team")return r?(g.home?`${n} ${g.gf}-${g.ga} ${g.rival}`:`${g.rival} ${g.ga}-${g.gf} ${n}`):`${g.home?"vs":"en casa de"} ${g.rival}`;
-  if(t==="f1")return `${g.rival}${g.pos?" · P"+g.pos:""}`;
-  const v={G:"Ganó",P:"Perdió",E:"Empató"}[r];
+  if(t==="team"&&r&&(g.gf===""||g.gf==null))return `${({G:"Ganó",P:"Perdió",E:"Empató",OT:"Perdió en TE"})[r]} ${g.home?"vs":"en casa de"} ${g.rival}`;
+  if(t==="team")return r?(r==="OT"?"(TE) ":"")+(g.home?`${n} ${g.gf}-${g.ga} ${g.rival}`:`${g.rival} ${g.ga}-${g.gf} ${n}`):`${g.home?"vs":"en casa de"} ${g.rival}`;
+  if(t==="f1")return `${g.rival}${g.dnf?" · DNF":g.pos?" · P"+g.pos:""}`;
+  const v={G:"Ganó",P:"Perdió",E:"Empató",NC:"Sin resultado"}[r];
   return v?`${v} vs ${g.rival}${g.how?" · "+g.how:""}${g.score?" · "+g.score:""}`:`vs ${g.rival}${g.how&&t==="tennis"?" · "+g.how:""}`}
 const COMPS={barca:["LaLiga","Champions League","Copa del Rey","Supercopa"],argentina:["Amistosos","Eliminatorias","Copa América","Mundial"],
  miami:["MLS","Leagues Cup","Concacaf Champions Cup"],warriors:["NBA","NBA Cup","Playoffs"],dodgers:["MLB","Playoffs"],oilers:["NHL","Playoffs"],chiefs:["NFL","Playoffs"],
@@ -395,11 +402,14 @@ function gComp(g){return g.comp||compsOf(g.teamId)[0]}
 function baseOf(id,c){const b=ST.base&&ST.base[id];if(!b)return{};if("w" in b||"d" in b||"l" in b||"p" in b||"n" in b)return c===compsOf(id)[0]?b:{};return b[c]||{}}
 function posOf(id,c){const p=ST.pos&&ST.pos[id]&&ST.pos[id][c];if(p)return p;if(c===compsOf(id)[0]&&ST.records&&ST.records[id])return ST.records[id].txt;return ""}
 function recCalc(id,c){c=c||compsOf(id)[0];const t=ttype(id),b=baseOf(id,c),gs=gamesOf(id).filter(g=>gComp(g)===c);
-  if(t==="f1"){let w=+b.w||0,p=+b.p||0,n=+b.n||0;gs.forEach(g=>{if(!g.pos)return;n++;if(+g.pos===1)w++;if(+g.pos<=3)p++});
-    return{txt:`${w}V · ${p} podios`,sub:`en ${n} carreras`,has:n>0||w>0}}
-  let w=+b.w||0,d=+b.d||0,l=+b.l||0;gs.forEach(g=>{const r=gRes(g);if(r==="G")w++;else if(r==="P")l++;else if(r==="E")d++});
-  const fut=/fútbol|futbol|rugby/.test((team(id)?.sport||"").toLowerCase());
-  return{txt:fut||d?`${w}-${d}-${l}`:`${w}-${l}`,sub:fut||d?"G-E-P":"G-P",has:w+d+l>0}}
+  if(t==="f1"){let w=+b.w||0,p=+b.p||0,n=+b.n||0,dnf=+b.dnf||0;gs.forEach(g=>{if(g.dnf){n++;dnf++;return}if(!g.pos)return;n++;if(+g.pos===1)w++;if(+g.pos<=3)p++});
+    return{txt:`${w}V · ${p} podios`,sub:`en ${n} carreras${dnf?` · ${dnf} DNF`:""}`,has:n>0||w>0}}
+  let w=+b.w||0,d=+b.d||0,l=+b.l||0,ot=+b.ot||0,nc=+b.nc||0;gs.forEach(g=>{const r=gRes(g);if(r==="G")w++;else if(r==="P")l++;else if(r==="E")d++;else if(r==="OT")ot++;else if(r==="NC")nc++});
+  const L=lg(id),has=w+d+l+ot+nc>0;
+  if(L==="nhl")return{txt:`${w}-${l}-${ot}`,sub:"G-P-OTL",has};
+  if(L==="nfl")return{txt:d?`${w}-${l}-${d}`:`${w}-${l}`,sub:d?"G-P-E":"G-P",has};
+  if(t==="fight")return{txt:(d?`${w}-${l}-${d}`:`${w}-${l}`)+(nc?` (${nc} NC)`:""),sub:d?"G-P-E":"G-P",has};
+  return{txt:L==="draw"||d?`${w}-${d}-${l}`:`${w}-${l}`,sub:L==="draw"||d?"G-E-P":"G-P",has}}
 function recordOf(id){const cs=compsOf(id);for(const c of cs){const r=recCalc(id,c),p=posOf(id,c);if(r.has||p)return{txt:r.has?r.txt+(p?" · "+p:""):p,sub:c}}return null}
 function attachGame(g){const txt=gText(g);if(!gRes(g))return;
   for(const b of ST.bets)if(b.date===g.date&&b.legs.some(l=>l.teamId===g.teamId)){b.scores=b.scores||{};b.scores[g.teamId]=txt}}
@@ -691,14 +701,16 @@ function viewPicks(){if(UI.team&&team(UI.team))return viewTeam(UI.team);
   return h+`<button class="btn full" style="margin-top:16px" data-act="newteam">+ Agregar equipo</button>`}
 function scoreCard(g){const t=ttype(g.teamId),nm=team(g.teamId)?.name||"",r=gRes(g),fut=/fútbol|futbol|rugby/.test((team(g.teamId)?.sport||"").toLowerCase());
   const meta=`<div class="meta"><span>${g.time?esc(g.time)+" · ":""}${esc(gComp(g))}${g.date!==todayISO()?" · "+esc(fmtDate(g.date)):""}</span><button class="link" style="font-size:12px" data-act="editgame" data-id="${g.id}">Editar</button></div>`;
-  const mine=`<span class="mine">${badge(g.teamId)}${esc(nm)}</span>`;
+  const SH={barca:"Barça",warriors:"Warriors",dodgers:"Dodgers",argentina:"Argentina",oilers:"Oilers",chiefs:"Chiefs",redbull:"Red Bull",glasgow:"Glasgow",trentino:"Trentino",alcaraz:"Alcaraz",topuria:"Topuria",joshua:"Joshua",miami:"Inter Miami"};
+  const mine=`<span class="mine">${badge(g.teamId)}${esc(SH[tkey(g.teamId)]||nm)}</span>`;
   const btn=(v,l)=>`<button class="${r===v?"on "+v:""}" data-act="gres" data-id="${g.id}" data-v="${v}">${l}</button>`;
   if(t==="team"){const L=g.home?mine:esc(g.rival),R=g.home?esc(g.rival):mine,fL=g.home?"gf":"ga",fR=g.home?"ga":"gf";
     return`<div class="sb">${meta}<div class="line"><span class="tn">${L}</span><span class="sc"><input inputmode="numeric" data-gs="${fL}" data-id="${g.id}" value="${esc(g[fL]??"")}" aria-label="Marcador local">–<input inputmode="numeric" data-gs="${fR}" data-id="${g.id}" value="${esc(g[fR]??"")}" aria-label="Marcador visita"></span><span class="tn r">${R}</span></div>
-      <div class="rb">${btn("G","Ganó")}${fut?btn("E","Empató"):""}${btn("P","Perdió")}<span class="muted" style="font-size:12px;margin-left:auto">${g.home?"En casa":"De visita"}</span></div></div>`}
-  if(t==="f1")return`<div class="sb">${meta}<div class="line"><span class="tn">${mine}</span><span class="sc">P<input inputmode="numeric" data-gs="pos" data-id="${g.id}" value="${esc(g.pos??"")}" aria-label="Posición"></span><span class="tn r">${esc(g.rival)}</span></div></div>`;
+      <div class="rb">${btn("G","Ganó")}${fut||lg(g.teamId)==="nfl"?btn("E","Empató"):""}${btn("P","Perdió")}${lg(g.teamId)==="nhl"?btn("OT","Perdió en TE"):""}<span class="muted" style="font-size:12px;margin-left:auto">${g.home?"En casa":"De visita"}</span></div></div>`}
+  if(t==="f1")return`<div class="sb">${meta}<div class="line"><span class="tn">${mine}</span><span class="sc">P<input inputmode="numeric" data-gs="pos" data-id="${g.id}" value="${esc(g.pos??"")}" aria-label="Posición"></span><span class="tn r">${esc(g.rival)}</span></div>
+    <div class="rb"><button class="${g.dnf?"on P":""}" data-act="gdnf" data-id="${g.id}">No terminó (DNF)</button></div></div>`;
   return`<div class="sb">${meta}<div class="line"><span class="tn">${mine}</span><span class="muted" style="font-weight:700">vs</span><span class="tn r">${esc(g.rival)}</span></div>
-    <div class="rb">${btn("G","Ganó")}${t==="fight"?btn("E","Empate"):""}${btn("P","Perdió")}${g.how?`<span class="muted" style="font-size:12px;margin-left:auto">${esc(g.how)}</span>`:""}</div></div>`}
+    <div class="rb">${btn("G","Ganó")}${t==="fight"?btn("E","Empate"):""}${btn("P","Perdió")}${t==="fight"?btn("NC","Sin resultado"):""}${g.how?`<span class="muted" style="font-size:12px;margin-left:auto">${esc(g.how)}</span>`:""}</div></div>`}
 function viewGamesToday(){const t=todayISO(),gs=(ST.games||[]).filter(g=>!g.arch&&(g.date===t||(!gRes(g)&&g.date<t))).sort((x,y)=>(x.date+(x.time||"")).localeCompare(y.date+(y.time||"")));
   return`<div class="card"><div class="met-h"><h3>Partidos de hoy</h3><button class="btn" style="padding:6px 12px" data-act="addgame">+ Partido</button></div>
    ${gs.length?gs.map(scoreCard).join(""):`<p class="small muted" style="margin:8px 0 0">Anota quién juega hoy, aunque no le apuestes. El resultado suma a su récord.</p>`}</div>`}
@@ -794,12 +806,12 @@ function gameSheet(g){const t=ttype(g.teamId),nm=team(g.teamId).name;
   if(t==="team")f+=`<label class="f">¿Dónde juega?</label>${sel("home",[["1","En casa"],["0","De visita"]],g.home?"1":"0")}<label class="f">Rival</label><input class="in" name="rival" autocomplete="off" value="${esc(g.rival)}">
     <div class="row" style="gap:8px"><div style="flex:1"><label class="f">Goles/puntos de ${esc(nm)}</label><input class="in" name="gf" inputmode="numeric" value="${g.gf??""}"></div><div style="flex:1"><label class="f">Del rival</label><input class="in" name="ga" inputmode="numeric" value="${g.ga??""}"></div></div><p class="small muted">Deja el marcador vacío si todavía no termina.</p>`;
   else if(t==="f1")f+=`<label class="f">Gran Premio</label><input class="in" name="rival" autocomplete="off" value="${esc(g.rival)}" placeholder="GP de México"><label class="f">Posición de Verstappen</label><input class="in" name="pos" inputmode="numeric" value="${g.pos??""}">`;
-  else f+=`<label class="f">Rival</label><input class="in" name="rival" autocomplete="off" value="${esc(g.rival)}"><label class="f">Resultado</label>${sel("res",[["","Todavía no"],["G","Ganó"],["P","Perdió"],["E","Empate"]],g.res)}`+
+  else f+=`<label class="f">Rival</label><input class="in" name="rival" autocomplete="off" value="${esc(g.rival)}"><label class="f">Resultado</label>${sel("res",[["","Todavía no"],["G","Ganó"],["P","Perdió"],["E","Empate"]].concat(t==="fight"?[["NC","Sin resultado (NC)"]]:[]),g.res)}`+
     (t==="fight"?`<label class="f">¿Cómo terminó?</label>${sel("how",[["",""],["KO/TKO","KO/TKO"],["Sumisión","Sumisión"],["Decisión","Decisión"],["Otro","Otro"]],g.how)}`:`<label class="f">Torneo</label><input class="in" name="how" autocomplete="off" value="${esc(g.how||"")}"><label class="f">Marcador</label><input class="in" name="score" autocomplete="off" value="${esc(g.score||"")}" placeholder="6-4 6-3">`);
   formSheet(`${g.id?"Partido":"Nuevo partido"} · ${nm}`,f,"Guardar",v=>{if(!v.rival){toast("Escribe el rival");return false}
     let comp=v.comp;if(comp==="__new"){if(!v.newcomp){toast("Escribe la competición");return false}comp=v.newcomp;const cl=compsOf(g.teamId);if(!cl.includes(comp))cl.push(comp);ST.comps[g.teamId]=cl}
     const o=g.id?g:{id:"g"+uid(),teamId:g.teamId};Object.assign(o,{date:v.date||todayISO(),time:v.time||"",rival:v.rival,comp});
-    if(t==="team"){Object.assign(o,{home:v.home==="1",gf:v.gf,ga:v.ga});if(v.gf!==""&&v.ga!=="")o.res=+v.gf>+v.ga?"G":+v.gf<+v.ga?"P":"E"}else if(t==="f1")o.pos=v.pos;else Object.assign(o,{res:v.res,how:v.how||"",score:v.score||""});
+    if(t==="team"){Object.assign(o,{home:v.home==="1",gf:v.gf,ga:v.ga});if(v.gf!==""&&v.ga!==""){const r=+v.gf>+v.ga?"G":+v.gf<+v.ga?"P":"E";if(!(r==="P"&&o.res==="OT"))o.res=r}}else if(t==="f1")o.pos=v.pos;else Object.assign(o,{res:v.res,how:v.how||"",score:v.score||""});
     ST.games=ST.games||[];if(!g.id)ST.games.push(o);attachGame(o);commit();toast(gRes(o)?"Resultado guardado":"Partido guardado")},
     g.id?`<button class="link" style="margin-right:auto;color:var(--loss)" id="delg">Borrar</button>`:"");
   const cmp=document.querySelector(".sheet [name=comp]"),nc=document.querySelector(".sheet [name=newcomp]");if(cmp)cmp.onchange=()=>{nc.style.display=cmp.value==="__new"?"block":"none";if(cmp.value==="__new")nc.focus()};
@@ -855,6 +867,7 @@ const A={
   addgame(){const ts=ST.teams.filter(t=>t.tier==="principal");
     sheet(`<h3>¿Quién juega?</h3><div class="chips" style="margin-top:12px">${ts.map(t=>`<button class="chip" data-act="addgame2" data-id="${t.id}">${badge(t.id)}${esc(t.name)}</button>`).join("")}</div><div class="row end" style="margin-top:16px"><button class="btn ghost" data-act="closesheet">Cancelar</button></div>`)},
   addgame2(e){gameSheet({id:null,teamId:e.dataset.id,date:todayISO(),home:true,rival:"",gf:"",ga:"",pos:"",res:"",how:"",score:""})},
+  gdnf(e){const g=(ST.games||[]).find(x=>x.id===e.dataset.id);if(!g)return;g.dnf=!g.dnf;if(g.dnf)g.pos="";attachGame(g);commit()},
   gres(e){const g=(ST.games||[]).find(x=>x.id===e.dataset.id);if(!g)return;g.res=g.res===e.dataset.v?"":e.dataset.v;attachGame(g);commit()},
   editgame(e){const g=(ST.games||[]).find(x=>x.id===e.dataset.id);if(g)gameSheet(g)},
   newseason(e){const id=e.dataset.id,r={txt:compsOf(id).map(c=>{const x=recCalc(id,c),p=posOf(id,c);return x.has||p?`${c} ${x.txt}${p?" ("+p+")":""}`:""}).filter(Boolean).join(" · ")||"sin registros",sub:""};
@@ -864,10 +877,10 @@ const A={
   editrec(e){const id=e.dataset.id,c=e.dataset.c||compsOf(id)[0],b=baseOf(id,c),t=ttype(id);
     const nf=(n,l,v)=>`<div style="flex:1"><label class="f">${l}</label><input class="in" name="${n}" type="text" inputmode="numeric" value="${v??""}"></div>`;
     formSheet(`${team(id).name} · ${c}`,`<p class="small muted">Pon con cuánto arranca en esta competición. Los partidos que registres se suman solos.</p>
-      <div class="row" style="gap:8px">${t==="f1"?nf("w","Victorias",b.w)+nf("p","Podios",b.p)+nf("n","Carreras",b.n):nf("w","Ganados",b.w)+nf("d","Empates",b.d)+nf("l","Perdidos",b.l)}</div>
+      <div class="row" style="gap:8px">${t==="f1"?nf("w","Victorias",b.w)+nf("p","Podios",b.p)+nf("n","Carreras",b.n)+nf("dnf","DNF",b.dnf):lg(id)==="nhl"?nf("w","Ganados",b.w)+nf("l","Perdidos",b.l)+nf("ot","OTL",b.ot):t==="fight"?nf("w","Ganadas",b.w)+nf("l","Perdidas",b.l)+nf("d","Empates",b.d)+nf("nc","NC",b.nc):lg(id)==="draw"||lg(id)==="nfl"?nf("w","Ganados",b.w)+nf("d","Empates",b.d)+nf("l","Perdidos",b.l):nf("w","Ganados",b.w)+nf("l","Perdidos",b.l)}</div>
       <label class="f">Lugar en la tabla (opcional)</label><input class="in" name="pos" autocomplete="off" placeholder="Ej.: 1º, 3º grupo B, #2 ATP" value="${esc(posOf(id,c))}">`,"Guardar",v=>{
       ST.base=ST.base||{};let all=ST.base[id];if(all&&("w" in all||"d" in all||"l" in all||"p" in all||"n" in all)){const old=all;all={};all[compsOf(id)[0]]=old}all=all||{};
-      const o={};["w","d","l","p","n"].forEach(k=>{if(v[k]!==undefined&&v[k]!=="")o[k]=+v[k]});if(Object.keys(o).length)all[c]=o;else delete all[c];ST.base[id]=all;
+      const o={};["w","d","l","p","n","ot","nc","dnf"].forEach(k=>{if(v[k]!==undefined&&v[k]!=="")o[k]=+v[k]});if(Object.keys(o).length)all[c]=o;else delete all[c];ST.base[id]=all;
       ST.pos=ST.pos||{};(ST.pos[id]=ST.pos[id]||{})[c]=v.pos;if(!v.pos)delete ST.pos[id][c];if(ST.records&&c===compsOf(id)[0])delete ST.records[id];commit()},
       compsOf(id).length>1?`<button class="link" style="margin-right:auto;color:var(--loss)" id="delc">Quitar competición</button>`:"");
     const dc=document.getElementById("delc");if(dc)dc.onclick=()=>{if(gamesOf(id).some(g=>gComp(g)===c)){toast("Tiene partidos registrados");return}ST.comps[id]=compsOf(id).filter(x=>x!==c);closeSheet();commit()}},
@@ -1007,7 +1020,7 @@ document.addEventListener("input",ev=>{const e=ev.target;
     UI.draft[e.dataset.bind]=e.value;if(e.dataset.bind!=="custom")updDyn()}});
 document.addEventListener("change",ev=>{const e=ev.target;
   if(e.dataset&&e.dataset.gs){const g=(ST.games||[]).find(x=>x.id===e.dataset.id);if(!g)return;g[e.dataset.gs]=e.value.replace(/[^0-9]/g,"");
-    if(ttype(g.teamId)==="team"&&g.gf!==""&&g.gf!=null&&g.ga!==""&&g.ga!=null)g.res=+g.gf>+g.ga?"G":+g.gf<+g.ga?"P":"E";attachGame(g);
+    if(ttype(g.teamId)==="team"&&g.gf!==""&&g.gf!=null&&g.ga!==""&&g.ga!=null){const r=+g.gf>+g.ga?"G":+g.gf<+g.ga?"P":"E";if(!(r==="P"&&g.res==="OT"))g.res=r}attachGame(g);
     ST.updatedAt=Date.now();saveLocal();setDirty(true);clearTimeout(saveT);saveT=setTimeout(pushNow,800);
     setTimeout(()=>{const a=document.activeElement;if(!(a&&a.dataset&&a.dataset.gs))render()},0);return}
   if(e.id==="impfile"&&e.files[0]){e.files[0].text().then(t=>{document.getElementById("imp").value=t;toast("Archivo cargado. Toca Restaurar.")});return}
