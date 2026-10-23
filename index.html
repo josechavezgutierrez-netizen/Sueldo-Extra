@@ -188,6 +188,14 @@ table.t td.r,table.t th.r{text-align:right}
 .sb .rb button.on.NC{background:var(--muted);color:#fff;border-color:var(--muted)}
 .sb .tn{min-width:0;overflow-wrap:break-word;font-size:20px}
 .sb .line{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)}
+.vbtn{background:none;border:0;padding:0;display:inline-flex;align-items:center;gap:5px;justify-content:flex-end;color:inherit}
+.vbtn svg{width:14px;height:14px;opacity:.45}
+.cmb{display:block;width:100%;text-align:left;background:none;border:0;border-top:1px solid var(--line);padding:12px 0}
+.cmb:first-child{border-top:0}
+.cmb .top{display:flex;align-items:center;gap:4px}
+.cmb .nm{flex:1;font-weight:600;font-size:15px}
+.cmb .pc{font-family:var(--cond);font-size:26px;font-weight:700}
+.cmb .sub{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);margin-top:2px}
 /* barra inferior */
 nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px);z-index:10}
 nav.tabs .in{max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr)}
@@ -421,12 +429,24 @@ function combos(){const map={};
       const o=map[k]||(map[k]={a:x,b:y,n:0,w:0,pa:[0,0],pb:[0,0]});o.n++;if(b.status==="ganada")o.w++;
       for(const l of b.legs){if(l.ok==null)continue;if(l.teamId===x){o.pa[1]++;if(l.ok)o.pa[0]++}if(l.teamId===y){o.pb[1]++;if(l.ok)o.pb[0]++}}}}
   return Object.values(map).sort((p,q)=>(q.n-p.n)||(q.w/q.n-p.w/p.n))}
+const SHN={barca:"Barça",warriors:"Warriors",dodgers:"Dodgers",argentina:"Argentina",oilers:"Oilers",chiefs:"Chiefs",redbull:"Red Bull",glasgow:"Glasgow",trentino:"Trentino",alcaraz:"Alcaraz",topuria:"Topuria",joshua:"Joshua",miami:"Inter Miami"};
+const shn=id=>SHN[tkey(id)]||team(id)?.name||"";
 function comboRow(o){const pct=Math.round(o.w/o.n*100),ra=o.pa[1]?o.pa[0]/o.pa[1]:null,rb=o.pb[1]?o.pb[0]/o.pb[1]:null;
-  const worst=ra!=null&&rb!=null&&ra!==rb?(ra<rb?"a":"b"):null;
-  const line=(id,pr,w)=>`<div class="small" style="margin-top:3px">${tname(id)}: ${pr[1]?`${pr[0]} de ${pr[1]} picks`:"sin detalle"}${w?` <span class="neg">← falla más</span>`:""}</div>`;
-  return`<div class="combo"><div class="hd">${badge(o.a)}${badge(o.b)}<span>${esc(team(o.a).name)} + ${esc(team(o.b).name)}</span></div>
-   <div class="small" style="margin-top:4px"><b class="${pct>=60?"pos":pct<40?"neg":""}">${o.w} de ${o.n} parlays (${pct}%)</b>${o.n<5?'<span class="tagw">pocos datos</span>':""}</div>
-   ${line(o.a,o.pa,worst==="a")}${line(o.b,o.pb,worst==="b")}</div>`}
+  const worst=ra!=null&&rb!=null&&ra!==rb?(ra<rb?o.a:o.b):null;
+  return`<div class="cmb"><div class="top">${badge(o.a)}${badge(o.b)}<span class="nm">${esc(shn(o.a))} + ${esc(shn(o.b))}</span><span class="pc ${pct>=60?"pos":pct<40?"neg":""}">${pct}%</span></div>
+   <div class="sub"><span>${o.w} de ${o.n} ganadas juntos</span><span>${worst?"Falla más: "+esc(shn(worst)):""}</span></div></div>`}
+function combosDay(){const byDate={};
+  for(const g of ST.games||[]){const r=gRes(g);if(!r||!team(g.teamId)||team(g.teamId).tier!=="principal")continue;
+    const d=byDate[g.date]||(byDate[g.date]={});const won=ttype(g.teamId)==="f1"?(+g.pos===1):r==="G";d[g.teamId]=d[g.teamId]===false?false:won}
+  const map={};
+  for(const d of Object.values(byDate)){const ts=Object.keys(d).sort();
+    for(let i=0;i<ts.length;i++)for(let j=i+1;j<ts.length;j++){const k=ts[i]+"|"+ts[j],o=map[k]||(map[k]={a:ts[i],b:ts[j],n:0,w:0,fa:0,fb:0});
+      o.n++;if(d[ts[i]]&&d[ts[j]])o.w++;if(!d[ts[i]])o.fa++;if(!d[ts[j]])o.fb++}}
+  return Object.values(map).sort((p,q)=>(q.w/q.n-p.w/p.n)||(q.n-p.n))}
+function comboDayRow(o){const pct=Math.round(o.w/o.n*100),worst=o.fa!==o.fb?(o.fa>o.fb?o.a:o.b):null;
+  return`<div class="cmb"><div class="top">${badge(o.a)}${badge(o.b)}<span class="nm">${esc(shn(o.a))} + ${esc(shn(o.b))}</span><span class="pc ${pct>=60?"pos":pct<40?"neg":""}">${pct}%</span></div>
+   <div class="sub"><span>${o.w} de ${o.n} ganaron los dos</span><span>${worst?"Falla más: "+esc(shn(worst)):""}</span></div></div>`}
+
 
 /* ---------- cálculos ---------- */
 const betsOfAttempt=a=>ST.bets.filter(b=>b.attemptId===a.id);
@@ -445,7 +465,7 @@ function ragnarFund(){let s=0;for(const mv of ST.moves)if(mv.method==="ragnar")s
   for(const b of ST.bets)if((b.method==="ragnar"||b.method==="rick")&&settled(b))s+=b.ret-b.stake;return r2(s)}
 function ragnarFree(){return r2(ragnarFund()-pendingOf("ragnar").concat(pendingOf("rick")).reduce((s,b)=>s+b.stake,0))}
 function ragnarAlive(){return ragnarFund()>=Math.min(...ST.settings.ragnarMontos)}
-function cuenta(){let ent=0,sal=0;for(const mv of ST.moves){if(mv.type==="entrada"&&mv.fuente!=="previa")ent+=mv.amount;else if(mv.type==="salida")sal+=mv.amount}
+function cuenta(){let ent=0,sal=0;for(const mv of ST.moves){if(mv.type==="entrada"&&mv.fuente!=="previa")ent+=mv.amount;else if(mv.type==="salida")sal+=mv.amount;else if(mv.type==="ajag")ent+=mv.amount;else if(mv.type==="ajret")sal+=mv.amount}
   let juego=0;for(const a of ST.attempts)if(a.status==="vivo")juego+=attemptBal(a);juego+=Math.max(0,ragnarFund());
   return{ent:r2(ent),sal:r2(sal),juego:r2(juego),neto:r2(sal+juego-ent)}}
 function paydayOf(y,m){const s=ST.settings;const d=new Date(y,m,s.payDay);const w=d.getDay();const after=s.weekendShift==="despues";
@@ -477,7 +497,7 @@ function checks(d){
   const w=[];const s=ST.settings;
   const legs=d.legs;const teams=[...new Set(legs.map(l=>l.teamId).filter(Boolean))];
   const prin=teams.filter(t=>team(t)?.tier==="principal"),aux=teams.filter(t=>team(t)?.tier==="auxiliar");
-  if(!legs.length)w.push({e:1,t:"Agrega al menos un pick."});
+  if(!legs.length&&!(d.method==="ragnar"&&d.sonadora))w.push({e:1,t:"Agrega al menos un pick."});
   const c=num(d.cuota);
   if(!(c>1))w.push({e:1,t:"Escribe la cuota del parlay."});
   if(d.method==="tommy"||d.method==="walter"){
@@ -498,7 +518,7 @@ function checks(d){
     const amt=num(d.stake);
     if(c>15)w.push({t:`La cuota ${c.toFixed(2)} es muy alta. ¿No la escribiste en el lugar del monto?`});
     if(!(amt>0))w.push({e:1,t:"Escribe cuánto vas a apostar."});
-    else{if(!s.ragnarMontos.includes(amt))w.push({t:`En Rico tus montos son ${s.ragnarMontos.map(x=>"$"+x).join(", ")}. Vas con $${fmt(amt)}.`});
+    else{if(!d.sonadora&&!s.ragnarMontos.includes(amt))w.push({t:`En Rico tus montos son ${s.ragnarMontos.map(x=>"$"+x).join(", ")}. Vas con $${fmt(amt)}.`});
       if(amt>ragnarFree()+1e-9)w.push({e:1,t:`El fondo de Rico solo tiene ${money(ragnarFree())} libres.`});
       const prev=ST.bets.filter(b=>b.method==="ragnar"&&settled(b)).pop();
       if(prev&&prev.status==="perdida"&&amt>prev.stake)w.push({t:`Vienes de perder $${fmt(prev.stake)} y estás subiendo el monto. Regla 18: nunca aumentar para recuperar.`});}
@@ -554,12 +574,12 @@ function viewInicio(){
   let h=`<div class="top"><h1>Operación<br>Sueldo extra</h1><div class="pay">Próximo pago<br><b>${esc(np.toLocaleDateString("es-SV",{weekday:"short",day:"numeric",month:"short"}))}</b> · ${d===0?"hoy":d+" d"}</div></div>`;
   const dc=dayColors();if(dc.length){h+=`<div class="daybar" style="background:linear-gradient(90deg,${dc.length>1?dc.join(","):dc[0]+","+dc[0]})"></div><div class="enjuego">En juego: ${dayTeams().map(k=>badge(k)).join("")}</div>`}
   h+=`<div class="cuenta"><div class="ledger">
-    <span class="op"></span><span>Retirado de Bet365</span><span class="v">${money(c.sal)}</span>
-    <span class="op">+</span><span>Saldo disponible</span><span class="v">${money(c.juego)}</span>
-    <span class="op">−</span><span>Agregado</span><span class="v">${money(c.ent)}</span>
+    <span class="op"></span><span>Retirado de Bet365</span><button class="v vbtn" data-act="editret" aria-label="Editar retirado">${money(c.sal)}${IC.pen}</button>
+    <span class="op">+</span><span>Saldo disponible</span><button class="v vbtn" data-act="editsaldo" aria-label="Editar saldo disponible">${money(c.juego)}${IC.pen}</button>
+    <span class="op">−</span><span>Agregado</span><button class="v vbtn" data-act="editag" aria-label="Editar agregado">${money(c.ent)}${IC.pen}</button>
     <span class="rule"></span>
     <span class="op">=</span><span><b>Diferencia total</b></span><span class="v res ${c.neto>=0?"pos":"neg"}">${signed(c.neto)}</span></div>
-    <div class="ledger-act" style="flex-wrap:wrap"><button class="ibtn" data-act="agregar" aria-label="Agregar dinero">${IC.add}Agregar</button><button class="ibtn" data-act="editsaldo" aria-label="Editar saldo disponible">${IC.pen}Editar saldo</button><button class="ibtn" data-act="retirar" aria-label="Retirar dinero">${IC.out}Retirar</button></div></div>`;
+    <div class="ledger-act" style="flex-wrap:wrap"><button class="ibtn" data-act="agregar" aria-label="Agregar dinero">${IC.add}Agregar</button><button class="ibtn" data-act="retirar" aria-label="Retirar dinero">${IC.out}Retirar</button></div></div>`;
   const pend=ST.bets.filter(b=>b.status==="pendiente");
   if(pend.length){h+=`<h2>Por resolver</h2>`+pend.map(pendCard).join("")}
   h+=`<h2>Métodos</h2>`+["tommy","walter"].map(ladderCard).join("")+ragnarCard()+rickCard();
@@ -575,7 +595,7 @@ function ladderCard(m){
     else{const st=suggestStake(m,bal)||bal;h+=`<p class="one">Mete <b>${money(st)}</b> → <b>${money(targetFor(m,st))}</b> · cuota ≥ ${minCuota(m,st).toFixed(2)}</p>`}
     h+=strip(a,m);
   }else{const np=nextPayday();
-    h+=`<span class="pill ${last?.status==="cerrado"?"cerrado":"caido"}">${last?.status==="cerrado"?"Cobrado":"Caído"}</span></div>
+    h+=`<span class="pill ${last?.status==="cerrado"?"cerrado":"caido"}">${last?attLabel(last):"Caído"}</span></div>
      <p class="one">Listo para reiniciar · próximo pago ${esc(np.toLocaleDateString("es-SV",{day:"numeric",month:"short"}))}</p>`}
   return h+`</div>`}
 function strip(a,m){const bs=betsOfAttempt(a);const n=ST.settings.maxDias;let h=`<div class="strip" aria-label="Progreso de ${n} días">`;
@@ -586,16 +606,17 @@ function strip(a,m){const bs=betsOfAttempt(a);const n=ST.settings.maxDias;let h=
   return h+`</div>`}
 function rickStats(){const rb=ST.bets.filter(b=>b.method==="rick"),st=rb.filter(settled),w=st.filter(b=>b.status==="ganada").length;
   return{rb,n:st.length,w,l:st.length-w,net:r2(st.reduce((x,b)=>x+b.ret-b.stake,0)),pend:rb.filter(b=>b.status==="pendiente")}}
+function rickMonth(){const ym=todayISO().slice(0,7);const v=r2(ST.bets.filter(b=>b.method==="rick"&&settled(b)&&(b.date||"").slice(0,7)===ym).reduce((x,b)=>x+b.ret-b.stake,0));return Math.max(0,v)}
 function rickCard(){const r=rickStats();
   return`<div class="met" style="--c:var(--rick)" data-act="detail" data-id="rick" role="button" tabindex="0"><div class="met-h"><span class="met-name">Cabo</span><span class="pill">Libre</span></div>
-   <div class="met-bal"><span class="num ${r.net>=0?"pos":"neg"}">${signed(r.net)}</span></div>
+   <div class="met-bal"><span class="num pos">${money(rickMonth())}</span><span class="muted small">recuperado este mes</span></div>
    <p class="one">${r.pend.length?`${r.pend.length} en juego · `:""}${r.w} ganadas, ${r.l} perdidas</p></div>`}
 function rickDetail(){const r=rickStats();
-  let h=`<div class="facts"><div class="fact"><small>Saldo disponible</small><span class="num">${money(cuenta().juego)}</span></div><div class="fact"><small>Resultado de Cabo</small><span class="num ${r.net>=0?"pos":"neg"}">${signed(r.net)}</span></div></div>
+  let h=`<div class="facts"><div class="fact"><small>Saldo disponible</small><span class="num">${money(cuenta().juego)}</span></div><div class="fact"><small>Recuperado este mes</small><span class="num pos">${money(rickMonth())}</span></div></div>
    <div class="row" style="margin-top:10px"><button class="btn pri" data-act="rickbet">Apostar con Cabo</button><button class="btn" data-act="editsaldo">${IC.pen} Editar saldo</button></div><h2>Apuestas</h2>`;
   if(!r.rb.length)return h+`<p class="muted">Todavía no hay apuestas con Cabo.</p>`;
   h+=`<ul class="lad" style="--c:var(--rick)">`;
-  r.rb.slice().reverse().forEach(b=>{h+=`<li><span class="d small" style="font-size:14px">${esc(b.date?b.date.slice(5).split("-").reverse().join("/"):"")}</span><div>${money(b.stake)} a ${b.cuota.toFixed(2)}<div class="det">${esc(b.legs.map(l=>l.text+(l.ok===false?" ✗":"")).join(" · "))}</div>${settled(b)?`<button class="link" style="font-size:13px;margin-top:4px" data-act="editbet" data-id="${b.id}">Editar</button>`:""}</div><span class="small ${b.status==="ganada"?"pos":b.status==="perdida"?"neg":"muted"}">${b.status==="ganada"?signed(b.ret-b.stake):b.status==="perdida"?signed(-b.stake):"En juego"}</span></li>`});
+  r.rb.slice().reverse().forEach(b=>{h+=`<li><span class="d small" style="font-size:14px">${esc(b.date?b.date.slice(5).split("-").reverse().join("/"):"")}</span><div>${money(b.stake)} a ${b.cuota.toFixed(2)}<div class="det">${b.sonadora?"✨ Soñadora":esc(b.legs.map(l=>l.text+(l.ok===false?" ✗":"")).join(" · "))}</div>${settled(b)?`<button class="link" style="font-size:13px;margin-top:4px" data-act="editbet" data-id="${b.id}">Editar</button>`:""}</div><span class="small ${b.status==="ganada"?"pos":b.status==="perdida"?"neg":"muted"}">${b.status==="ganada"?signed(b.ret-b.stake):b.status==="perdida"?signed(-b.stake):"En juego"}</span></li>`});
   return h+`</ul>`}
 function ragnarCard(){const f=ragnarFund(),alive=ragnarAlive();
   return`<div class="met" style="--c:var(--ragnar)" data-act="detail" data-id="ragnar" role="button" tabindex="0"><div class="met-h"><span class="met-name">Rico</span><span class="pill ${alive?"vivo":"caido"}">La caja</span></div>
@@ -604,7 +625,7 @@ function ragnarCard(){const f=ragnarFund(),alive=ragnarAlive();
 
 function pendCard(b){
   const r=UI.resolve[b.id]||(UI.resolve[b.id]={ret:r2(b.stake*b.cuota)});
-  return`<div class="card pend" style="--c:${M[b.method].c}"><div class="met-h"><h3 style="color:var(--c)">${M[b.method].name}</h3><span class="muted small">${esc(fmtDate(b.date))}</span></div>
+  return`<div class="card pend" style="--c:${M[b.method].c}"><div class="met-h"><h3 style="color:var(--c)">${M[b.method].name}${b.sonadora?" · ✨ Soñadora":""}</h3><span class="muted small">${esc(fmtDate(b.date))}</span></div>
    <p class="small" style="margin:4px 0 0">${money(b.stake)} a cuota ${b.cuota.toFixed(2)} → paga ${money(b.stake*b.cuota)}</p>${b.attemptId&&b.target?`<p class="small muted" style="margin:2px 0 0">Meta: ${money(b.target)}. Lo que cobres de más pasa a Rico.</p>`:""}
    <ul class="legs">${b.legs.map((l,i)=>`<li><span>${esc(l.text)}${l.teamId?`<br><span class="muted small">${tname(l.teamId)}</span>`:""}</span>
      <button class="tog ${l.ok===true?"on-ok":""}" data-act="leg" data-id="${b.id}" data-i="${i}" data-v="1" aria-label="Se cumplió">✓</button>
@@ -618,7 +639,7 @@ function viewDetail(m){
   if(m==="rick")return h+rickDetail();
   const a0=m==="ragnar"?null:liveAttempt(m),mb=m==="ragnar"?ragnarFund():(a0?attemptBal(a0):0);
   h+=`<div class="facts"><div class="fact"><small>Saldo total</small><span class="num">${money(cuenta().juego)}</span></div><div class="fact"><small>Saldo del método</small><span class="num">${money(mb)}</span></div></div>
-   <div class="row" style="margin-top:10px">${m==="ragnar"?`<button class="btn" data-act="retirar" data-id="ragnar">Retirar</button>`:`${a0?`<button class="btn" data-act="retirar" data-id="${m}">Retirar</button>`:""}<button class="btn" data-act="usesaldo" data-id="${m}">Reiniciar con dinero del saldo disponible</button><button class="btn" data-act="restartpocket" data-id="${m}">Solo reiniciar (de mi bolsillo)</button>`}</div>`;
+   <div class="row" style="margin-top:10px">${m==="ragnar"?`<button class="btn" data-act="retirar" data-id="ragnar">Retirar</button>`:`${a0?`<button class="btn" data-act="retirar" data-id="${m}">Retirar</button>`:""}${a0?`<button class="btn" data-act="repartir" data-id="${m}">Repartir</button>`:""}<button class="btn" data-act="usesaldo" data-id="${m}">Reiniciar con mi saldo</button><button class="btn" data-act="restartpocket" data-id="${m}">Meter dinero nuevo de mi bolsillo</button>`}</div>`;
   if(a0){const sm=startMove(a0);if(sm)h+=`<div class="advice" style="margin-top:12px"><p class="small">Este intento arrancó con ${money(sm.amount)} <b>de tu bolsillo</b>.</p><button class="btn" data-act="fixorigen" data-id="${sm.id}">Corregir: lo tomé del saldo disponible</button></div>`}
   if(m!=="ragnar"&&!a0){const adv=restartAdvice(m);h+=`<div class="advice" style="margin-top:12px">${adv.html}</div>`}
   if(m==="ragnar")return h+ragnarDetail();
@@ -632,7 +653,7 @@ function viewDetail(m){
   const prev=ST.attempts.filter(x=>x.method===m&&x!==a).reverse();
   if(prev.length){h+=`<h2>Intentos anteriores</h2>`;
     prev.forEach(x=>{const bs=betsOfAttempt(x),lost=bs.find(b=>b.status==="perdida");const peak=Math.max(x.capital,...bs.filter(b=>b.status==="ganada").map(b=>b.target?Math.min(b.ret,b.target):b.ret));const open=!!UI.hist[x.id];
-      h+=`<div class="card"><div class="met-h"><h3>Intento ${x.n}</h3><span class="pill ${x.status}">${x.status==="cerrado"?"Cobrado":"Caído"}</span></div>
+      h+=`<div class="card"><div class="met-h"><h3>Intento ${x.n}</h3><span class="pill ${x.status}">${attLabel(x)}</span></div>
       <p class="small" style="margin:6px 0 0">Del ${esc(fmtDate(x.start))}${x.end?" al "+esc(fmtDate(x.end)):""}. Arrancó con ${money(x.capital)}, llegó a ${money(peak)} en ${bs.filter(b=>b.status==="ganada").length} días ganados.</p>
       ${open?`<ul class="hist">${bs.map((b,i)=>`<li><span class="num" style="color:${M[m].c}">${i+1}</span><div>${money(b.stake)} → ${money(b.status==="ganada"?(b.target?Math.min(b.ret,b.target):b.ret):b.stake*b.cuota)} <span class="muted">a ${b.cuota.toFixed(2)}</span><div class="det">${esc(b.legs.map(l=>l.text+(l.ok===false?" ✗":"")).join(" · ")||"sin picks")}</div></div><span class="${b.status==="ganada"?"pos":"neg"}">${b.status==="ganada"?"Ganó":"Perdió"}</span></li>`).join("")}</ul>`:
         lost?`<p class="small" style="margin:6px 0 0"><b>Lo tumbó el día ${bs.indexOf(lost)+1}:</b> ${esc(lost.legs.filter(l=>l.ok!==true).map(l=>l.text).join(" · ")||lost.legs.map(l=>l.text).join(" · "))}</p>`:""}
@@ -646,7 +667,7 @@ function ragnarDetail(){
    <h2>Por equipo</h2><div class="scroll"><table class="t"><tr><th>Equipo</th><th class="r">Apuestas</th><th class="r">Ganadas</th><th class="r">Te falló</th></tr>`;
   Object.entries(per).sort((a,b)=>b[1].n-a[1].n).forEach(([t,o])=>{h+=`<tr><td>${tname(t)||esc(t)}</td><td class="r">${o.n}</td><td class="r">${o.w}</td><td class="r ${o.f?"neg":""}">${o.f}</td></tr>`});
   h+=`</table></div><h2>Apuestas</h2><ul class="lad" style="--c:var(--ragnar)">`;
-  rb.slice().reverse().forEach(b=>{h+=`<li><span class="d small" style="font-size:14px">${esc(b.date?b.date.slice(5).split("-").reverse().join("/"):"")}</span><div>${money(b.stake)} a ${b.cuota.toFixed(2)}<div class="det">${esc(b.legs.map(l=>l.text+(l.ok===false?" ✗":"")).join(" · "))}</div>${settled(b)?`<button class="link" style="font-size:13px;margin-top:4px" data-act="editbet" data-id="${b.id}">Editar</button>`:""}</div><span class="small ${b.status==="ganada"?"pos":b.status==="perdida"?"neg":"muted"}">${b.status==="ganada"?signed(b.ret-b.stake):b.status==="perdida"?signed(-b.stake):"En juego"}</span></li>`});
+  rb.slice().reverse().forEach(b=>{h+=`<li><span class="d small" style="font-size:14px">${esc(b.date?b.date.slice(5).split("-").reverse().join("/"):"")}</span><div>${money(b.stake)} a ${b.cuota.toFixed(2)}<div class="det">${b.sonadora?"✨ Soñadora":esc(b.legs.map(l=>l.text+(l.ok===false?" ✗":"")).join(" · "))}</div>${settled(b)?`<button class="link" style="font-size:13px;margin-top:4px" data-act="editbet" data-id="${b.id}">Editar</button>`:""}</div><span class="small ${b.status==="ganada"?"pos":b.status==="perdida"?"neg":"muted"}">${b.status==="ganada"?signed(b.ret-b.stake):b.status==="perdida"?signed(-b.stake):"En juego"}</span></li>`});
   return h+`</ul>`}
 
 /* ---- apostar ---- */
@@ -667,6 +688,8 @@ function viewApostar(){
   h+=`<div class="row" style="gap:10px"><div style="flex:1"><label class="f">Cuota del parlay</label><input class="in" type="text" inputmode="decimal" autocomplete="off" placeholder="1.15" value="${esc(d.cuota)}" data-bind="cuota"></div>
    <div style="flex:1"><label class="f">Fecha</label><input class="in" type="date" value="${esc(d.date)}" data-bind="date"></div></div>`;
   h+=`<div id="dynpay">${dynPay(d)}</div>`;
+  if(m==="ragnar")h+=`<div class="row" style="margin-top:12px"><button class="chip ${d.sonadora?"on":""}" data-act="sonadora">✨ Soñadora</button><span class="small muted">Parlay grande de Champions/Europa League, sin registrar picks.</span></div>`;
+  if(m==="ragnar"&&d.sonadora){h+=`<div id="dyncheck">${dynCheck(d)}</div>`;return h}
   h+=`<label class="f">Picks del parlay (${d.legs.length})</label>`;
   if(d.legs.length)h+=`<ul class="legs" style="margin:0 0 8px">${d.legs.map((l,i)=>`<li><span>${esc(l.text)}<br><span class="muted small">${tname(l.teamId)}</span></span><button class="tog" data-act="rmleg" data-i="${i}" aria-label="Quitar">−</button></li>`).join("")}</ul>`;
   const tierChips=tier=>ST.teams.filter(t=>t.tier===tier).map(t=>`<button class="chip ${tier==="principal"?"prin":""} ${d.team===t.id?"on":""}" data-act="dteam" data-id="${t.id}">${badge(t.id)}${esc(t.name)}</button>`).join("");
@@ -737,11 +760,11 @@ function viewTeam(id){const t=team(id),r=recCalc(id),note=ST.records&&ST.records
 function viewStats(){
   const by=m=>{const b=ST.bets.filter(x=>x.method===m&&settled(x));const w=b.filter(x=>x.status==="ganada").length;return{n:b.length,w,l:b.length-w}};
   let h=`<h1>Números</h1><div class="seg2"><button class="${UI.st!=="combos"?"on":""}" data-act="stab" data-id="general">General</button><button class="${UI.st==="combos"?"on":""}" data-act="stab" data-id="combos">Combinaciones</button></div>`;
-  if(UI.st==="combos"){const cs=combos();
-    if(!cs.length)return h+`<p class="muted">Todavía no hay parlays con dos o más equipos.</p>`;
-    const good=cs.filter(o=>o.n>=5).sort((p,q)=>q.w/q.n-p.w/p.n);
-    if(good.length)h+=`<div class="card"><p style="margin:0" class="small">Mejor pareja con datos suficientes: <b>${esc(team(good[0].a).name)} + ${esc(team(good[0].b).name)}</b> (${Math.round(good[0].w/good[0].n*100)}%).</p></div>`;
-    return h+`<h2>Parejas de principales</h2><div class="card">${cs.map(comboRow).join("")}</div><p class="small muted">Las apuestas viejas del Excel no tienen marcado qué pick falló: cuentan en el parlay, pero no en el detalle por equipo.</p>`}
+  if(UI.st==="combos"){const day=UI.cv==="dia";
+    h+=`<div class="chips" style="margin:6px 0 10px"><button class="chip ${!day?"on":""}" data-act="cview" data-id="ap">Apostadas</button><button class="chip ${day?"on":""}" data-act="cview" data-id="dia">Mismo día</button></div>`;
+    if(day){const cs=combosDay();return h+(cs.length?`<div class="card">${cs.map(comboDayRow).join("")}</div>`:`<p class="muted">Todavía no hay días con dos principales registrados en Partidos de hoy.</p>`)}
+    const cs=combos().sort((p,q)=>(q.w/q.n-p.w/p.n)||(q.n-p.n));
+    return h+(cs.length?`<div class="card">${cs.map(comboRow).join("")}</div>`:`<p class="muted">Todavía no hay parlays con dos principales.</p>`)}
   h+=`<h2>Por método</h2><div class="card"><table class="t"><tr><th>Método</th><th class="r">Apuestas</th><th class="r">Ganó</th><th class="r">Perdió</th><th class="r">Acierto</th></tr>`;
   for(const m of["tommy","walter","ragnar","rick"]){const s=by(m);h+=`<tr><td style="color:${M[m].c};font-weight:600">${M[m].name.split(" ")[0]}</td><td class="r">${s.n}</td><td class="r">${s.w}</td><td class="r">${s.l}</td><td class="r num">${s.n?Math.round(s.w/s.n*100)+"%":"—"}</td></tr>`}
   h+=`</table></div>`;
@@ -775,7 +798,7 @@ const back=`<button class="back" data-tab="mas">‹ Más</button>`;
 function viewReglas(){return back+`<h1>Reglas</h1><p class="muted small">Toca una para editarla.</p><ol class="rules">${ST.rules.map(r=>`<li><button class="link" style="color:var(--ink);text-decoration:none;text-align:left;font-size:16px" data-act="editrule" data-id="${r.id}">${esc(r.text)}</button></li>`).join("")}</ol><button class="btn full" style="margin-top:14px" data-act="newrule">+ Agregar regla</button>`}
 function viewDinero(){const c=cuenta();return back+`<h1>Entradas y salidas</h1><p class="muted small">Entrada es dinero que metes; salida es lo que retiras de Bet365. Toca una entrada para cambiar de dónde salió el dinero.</p>
   <div class="facts"><div class="fact"><small>Agregado</small><span class="num">${money(c.ent)}</span></div><div class="fact"><small>Retirado</small><span class="num">${money(c.sal)}</span></div></div>
-  <div class="card scroll"><table class="t"><tr><th>Fecha</th><th>Método</th><th>Nota</th><th class="r">Monto</th></tr>${ST.moves.slice().reverse().map(m=>`<tr ${m.type==="entrada"||(m.type==="uso"&&m.orig)?`data-act="origen" data-id="${m.id}" style="cursor:pointer"`:""}><td class="small">${esc(fmtDate(m.date))}</td><td class="small">${esc(M[m.method]?.name.split(" ")[0]||(m.method==="previo"?"Antes":m.method))}</td><td class="small">${esc(m.note||"")}${m.type==="entrada"?`<div class="muted" style="font-size:12px">${m.fuente==="previa"?"de ganancias anteriores":"de tu bolsa"}</div>`:m.type==="uso"?`<div class="muted" style="font-size:12px">del saldo disponible</div>`:""}</td><td class="r num ${m.type==="entrada"?"neg":m.type==="salida"?"pos":"muted"}">${m.type==="entrada"?"−$"+fmt(m.amount):m.type==="salida"?"+$"+fmt(m.amount):m.type==="traspaso"?(m.amount>=0?"→ Rico $"+fmt(m.amount):"Rico → $"+fmt(-m.amount)):m.type==="uso"?"Rico → $"+fmt(m.amount):"ajuste "+signed(m.amount)}</td></tr>`).join("")}</table></div>`}
+  <div class="card scroll"><table class="t"><tr><th>Fecha</th><th>Método</th><th>Nota</th><th class="r">Monto</th></tr>${ST.moves.slice().reverse().map(m=>`<tr ${m.type==="entrada"||(m.type==="uso"&&m.orig)?`data-act="origen" data-id="${m.id}" style="cursor:pointer"`:""}><td class="small">${esc(fmtDate(m.date))}</td><td class="small">${esc(M[m.method]?.name.split(" ")[0]||(m.method==="previo"?"Antes":m.method))}</td><td class="small">${esc(m.note||"")}${m.type==="entrada"?`<div class="muted" style="font-size:12px">${m.fuente==="previa"?"de ganancias anteriores":"de tu bolsa"}</div>`:m.type==="uso"?`<div class="muted" style="font-size:12px">del saldo disponible</div>`:""}</td><td class="r num ${m.type==="entrada"?"neg":m.type==="salida"?"pos":"muted"}">${m.type==="entrada"?"−$"+fmt(m.amount):m.type==="salida"?"+$"+fmt(m.amount):m.type==="traspaso"?(m.amount>=0?"→ Rico $"+fmt(m.amount):"Rico → $"+fmt(-m.amount)):m.type==="uso"?"Rico → $"+fmt(m.amount):m.type==="ajag"?"agregado "+signed(m.amount):m.type==="ajret"?"retirado "+signed(m.amount):"ajuste "+signed(m.amount)}</td></tr>`).join("")}</table></div>`}
 function viewAjustes(){const s=ST.settings;return back+`<h1>Ajustes</h1>
   <label class="f">Capital inicial de Skipper</label><input class="in" type="number" inputmode="decimal" data-set="capital.tommy" value="${s.capital.tommy}">
   <label class="f">Capital inicial de Kowalski</label><input class="in" type="number" inputmode="decimal" data-set="capital.walter" value="${s.capital.walter}">
@@ -825,7 +848,8 @@ function toBolsa(mv){const meth=mv.orig;mv.type="entrada";mv.method=meth;mv.note
   const a=ST.attempts.find(x=>x.id===mv.to);if(a)delete a.fuente;delete mv.orig;delete mv.to}
 function closeToRagnar(m){const a=liveAttempt(m);if(!a)return;const q=attemptBal(a);
   if(q>0.004)ST.moves.push({id:uid(),date:todayISO(),type:"traspaso",method:"ragnar",from:a.id,amount:q,note:`Resto de ${M[m].name.split(" ")[0]} al reiniciar`});
-  a.status="cerrado";a.end=todayISO()}
+  a.status="cerrado";a.how="repartido";a.end=todayISO()}
+function attLabel(a){if(a.status!=="cerrado")return"Caído";if(a.how==="repartido"||ST.moves.some(m=>m.from===a.id&&/al reiniciar|al repartir/.test(m.note||"")))return"Repartido";return"Cobrado"}
 function startAttempt(m){const n=ST.attempts.filter(a=>a.method===m).length+1,cap=ST.settings.capital[m];
   ST.attempts.push({id:m+uid(),method:m,n,start:todayISO(),capital:cap,status:"vivo",end:null});
   ST.moves.push({id:uid(),date:todayISO(),type:"entrada",method:m,amount:cap,note:`Inicio intento ${n}`});commit();toast(`${M[m].name}: intento ${n} empezado`)}
@@ -897,6 +921,10 @@ const A={
       const mv={id:uid(),date:todayISO(),type:"entrada",method:"ragnar",amount:a,note:"Dinero agregado"};if(v.o==="previa")mv.fuente="previa";
       ST.moves.push(mv);commit();toast(`Agregaste ${money(a)} a Rico`)})},
   rickbet(){UI.draft=newDraft("rick");UI.detail=null;UI.tab="apostar";render();scrollTo(0,0)},
+  editag(){const c=cuenta();formSheet("Editar agregado",`<p class="small muted">Corrige cuánto has metido de tu bolsa en total. No cambia tu saldo disponible.</p><label class="f">Agregado real (la app dice ${money(c.ent)})</label><input class="in" name="a" type="text" inputmode="decimal" autocomplete="off">`,"Guardar",v=>{const a=num(v.a);if(!(a>=0)){toast("Escribe un monto");return false}
+    const d=r2(a-c.ent);if(!d)return;ST.moves.push({id:uid(),date:todayISO(),type:"ajag",method:"cuenta",amount:d,note:"Corrección de agregado"});commit();toast("Agregado corregido")})},
+  editret(){const c=cuenta();formSheet("Editar retirado",`<p class="small muted">Corrige cuánto has retirado de Bet365 en total. No cambia tu saldo disponible.</p><label class="f">Retirado real (la app dice ${money(c.sal)})</label><input class="in" name="a" type="text" inputmode="decimal" autocomplete="off">`,"Guardar",v=>{const a=num(v.a);if(!(a>=0)){toast("Escribe un monto");return false}
+    const d=r2(a-c.sal);if(!d)return;ST.moves.push({id:uid(),date:todayISO(),type:"ajret",method:"cuenta",amount:d,note:"Corrección de retirado"});commit();toast("Retirado corregido")})},
   editsaldo(){const c=cuenta();formSheet("Editar saldo disponible",`<p class="small muted">Escribe lo que de verdad tienes en Bet365. La diferencia se pone en Rico; no cuenta como agregado ni retirado.</p><label class="f">Saldo real (la app dice ${money(c.juego)})</label><input class="in" name="a" type="text" inputmode="decimal" autocomplete="off">`,"Guardar",v=>{const a=num(v.a);if(!(a>=0)){toast("Escribe un monto");return false}
     const d=r2(a-c.juego);if(!d){toast("Ya cuadra");return}
     ST.moves.push({id:uid(),date:todayISO(),type:"ajuste",method:"ragnar",amount:d,note:"Ajuste del saldo disponible"});commit();toast(`Ajuste de ${signed(d)} en Rico`)})},
@@ -918,9 +946,24 @@ const A={
       const queda=attemptBal(a);
       if(v.fin==="cierra"||queda<0.005){if(queda>0.004)ST.moves.push({id:uid(),date:todayISO(),type:"traspaso",method:"ragnar",from:a.id,amount:queda,note:`Resto de ${M[m].name.split(" ")[0]} al cerrar`});a.status="cerrado";a.end=todayISO()}
       commit();toast(`Retiraste ${money(amt)}`)})},
+  repartir(e){const src=e.dataset.id,a=liveAttempt(src);if(!a)return;if(pendingOf(src).length){toast("Primero resuelve la apuesta en juego");return}
+    const bal=attemptBal(a),other=src==="tommy"?"walter":"tommy",oa=liveAttempt(other);
+    if(oa&&pendingOf(other).length){toast(`${M[other].name} tiene una apuesta en juego`);return}
+    const total=r2(bal+(oa?attemptBal(oa):0));
+    formSheet(`Repartir ${money(bal)}`,`<p class="small muted">Cada método arranca un intento nuevo con lo que pongas. No se suma nada a "Agregado". Lo que sobre va a Rico.${oa?` ${M[other].name} tiene ${money(attemptBal(oa))}: su intento también se cierra y entra al reparto.`:""}</p>
+      <label class="f">Para ${M.tommy.name}</label><input class="in" name="t" inputmode="decimal" value="${src==="tommy"?"":""}">
+      <label class="f">Para ${M.walter.name}</label><input class="in" name="w" inputmode="decimal">
+      <p class="small muted" style="margin-top:8px">Disponible para repartir: <b>${money(total)}</b></p>`,"Repartir",v=>{
+      const t=r2(num(v.t)||0),w=r2(num(v.w)||0);if(t<0||w<0||t+w<=0){toast("Escribe los montos");return false}
+      const libre=r2(ragnarFree()+total);if(t+w>libre+1e-9){toast(`Solo hay ${money(libre)} disponibles`);return false}
+      ["tommy","walter"].forEach(k=>{const x=liveAttempt(k);if(x){closeToRagnar(k);ST.moves.forEach(mv=>{if(mv.from===x.id&&/al reiniciar/.test(mv.note||""))mv.note=mv.note.replace("al reiniciar","al repartir")})}});
+      [["tommy",t],["walter",w]].forEach(([k,amt])=>{if(!(amt>0))return;const n=ST.attempts.filter(x=>x.method===k).length+1,id=k+uid();
+        ST.attempts.push({id,method:k,n,start:todayISO(),capital:amt,status:"vivo",end:null,fuente:"saldo"});
+        ST.moves.push({id:uid(),date:todayISO(),type:"uso",method:"ragnar",to:id,amount:amt,note:`Inicio intento ${n} de ${M[k].name} (reparto)`})});
+      commit();toast("Repartido")})},
   restartpocket(e){const m=e.dataset.id,cap=ST.settings.capital[m],a=liveAttempt(m);
     if(pendingOf(m).length){toast("Primero resuelve la apuesta en juego");return}
-    formSheet(`${M[m].name}: solo reiniciar`,`<p class="small muted">Metes dinero de tu bolsillo: se suma en "Agregado".${a?` El intento actual se cierra y sus ${money(attemptBal(a))} pasan a Rico.`:""}</p><label class="f">Con cuánto arrancas</label><input class="in" name="a" type="text" inputmode="decimal" autocomplete="off" value="${cap}">`,"Reiniciar",v=>{
+    formSheet(`${M[m].name}: solo reiniciar`,`<p class="small muted"><b>¿Seguro que es dinero nuevo?</b> Esto se suma en "Agregado". Si solo vas a usar lo que ya tienes en Bet365, usa "Reiniciar con mi saldo" o "Repartir".${a?` El intento actual se cierra y sus ${money(attemptBal(a))} pasan a Rico.`:""}</p><label class="f">Con cuánto arrancas</label><input class="in" name="a" type="text" inputmode="decimal" autocomplete="off" value="${cap}">`,"Reiniciar",v=>{
       const amt=r2(num(v.a));if(!(amt>0)){toast("Escribe un monto");return false}
       closeToRagnar(m);const n=ST.attempts.filter(x=>x.method===m).length+1;
       ST.attempts.push({id:m+uid(),method:m,n,start:todayISO(),capital:amt,status:"vivo",end:null});
@@ -962,12 +1005,14 @@ const A={
   leg(e){const b=ST.bets.find(x=>x.id===e.dataset.id),l=b.legs[+e.dataset.i],v=e.dataset.v==="1";l.ok=l.ok===v?null:v;commit()},
   settle(e){const b=ST.bets.find(x=>x.id===e.dataset.id),v=e.dataset.v;
     if(v==="ganada"){b.legs.forEach(l=>{if(l.ok==null)l.ok=true});b.ret=r2(num(UI.resolve[b.id]?.ret)||b.stake*b.cuota)}else b.ret=0;
-    if(v==="perdida"&&!b.legs.some(l=>l.ok===false)){toast("Marca con ✗ el pick que falló");return}
+    if(v==="perdida"&&b.legs.length&&!b.legs.some(l=>l.ok===false)){toast("Marca con ✗ el pick que falló");return}
     b.status=v;
     if(b.attemptId){const a=ST.attempts.find(x=>x.id===b.attemptId);if(v==="perdida"){a.status="caido";a.end=b.date}
       if(v==="ganada"&&b.target){const msg=roundToTarget(a,b);if(msg){delete UI.resolve[b.id];commit();toast(msg);return}}}
     b.adj=true;delete UI.resolve[b.id];commit();toast(v==="ganada"?"Ganada":"Perdida registrada")},
   delbet(e){confirmSheet("Borrar apuesta","<p>Se borra esta apuesta pendiente.</p>","Borrar",()=>{ST.bets=ST.bets.filter(x=>x.id!==e.dataset.id);ST.moves=ST.moves.filter(x=>x.betId!==e.dataset.id);commit()})},
+  cview(e){UI.cv=e.dataset.id;render()},
+  sonadora(){UI.draft.sonadora=!UI.draft.sonadora;if(UI.draft.sonadora){UI.draft.legs=[];UI.draft.team=null}render()},
   dm(e){const m=e.dataset.id;UI.draft.method=m;UI.draft.stake="";render()},
   amt(e){UI.draft.stake=e.dataset.id;render()},
   dteam(e){UI.draft.team=UI.draft.team===e.dataset.id?null:e.dataset.id;render()},
@@ -978,7 +1023,7 @@ const A={
   savebet(){const d=UI.draft,m=d.method;let stake,attemptId=null,target;
     if(m==="tommy"||m==="walter"){const a=liveAttempt(m),bal=attemptBal(a);stake=num(d.stake);attemptId=a.id;target=targetFor(m,stake);
       const sob=r2(bal-stake);var bid="b"+uid();if(sob>0.004)ST.moves.push({id:uid(),date:d.date||todayISO(),type:"traspaso",method:"ragnar",from:a.id,betId:bid,amount:sob,note:`Sobrante de ${M[m].name.split(" ")[0]}`})}else{stake=num(d.stake);target=r2(stake*num(d.cuota))}
-    ST.bets.push({id:(typeof bid!=="undefined"&&bid)||"b"+uid(),method:m,attemptId,date:d.date||todayISO(),stake:r2(stake),cuota:num(d.cuota),target,legs:d.legs.map(l=>({...l})),status:"pendiente",ret:0});
+    ST.bets.push({id:(typeof bid!=="undefined"&&bid)||"b"+uid(),method:m,attemptId,date:d.date||todayISO(),stake:r2(stake),cuota:num(d.cuota),target,legs:d.legs.map(l=>({...l})),status:"pendiente",ret:0,...(m==="ragnar"&&d.sonadora?{sonadora:true}:{})});
     UI.draft=null;UI.tab="inicio";commit();scrollTo(0,0);toast("Apuesta guardada")},
   toggleteam(e){const t=e.dataset.id,tier=team(t).tier;UI.open[t]=!(UI.open[t]??(tier==="principal"));render()},
   editpick(e){const p=pick(e.dataset.id);formSheet("Editar pick",`<label class="f">Pick</label><input class="in" name="text" value="${esc(p.text)}"><label class="row" style="margin-top:12px"><input type="checkbox" name="player" ${p.player?"checked":""}> Es estadística de jugador</label>`,"Guardar",v=>{if(!v.text)return false;p.text=v.text;p.player=v.player;commit()},
