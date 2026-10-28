@@ -64,6 +64,7 @@ h3{font-size:19px}
 .met-bal .num{font-size:34px}
 .next{font-size:15px;margin-top:6px}
 .next b{font-weight:600}
+.prog{height:8px;border-radius:5px;background:var(--line);margin-top:12px;overflow:hidden}.prog>i{display:block;height:100%;background:var(--c)}
 .strip{display:grid;grid-template-columns:repeat(15,1fr);gap:3px;margin-top:12px}
 .cell{aspect-ratio:1;border-radius:3px;background:var(--surface2);border:1px solid var(--line);font-size:9px;display:flex;align-items:center;justify-content:center;color:var(--muted)}
 .cell.w{background:var(--c);border-color:var(--c)}
@@ -223,7 +224,7 @@ nav.tabs .plus span{width:46px;height:46px;border-radius:14px;background:var(--i
 <script>
 "use strict";
 const KEY="operacion-sueldo-extra-v1";
-const M={tommy:{name:"Skipper",c:"var(--tommy)"},walter:{name:"Kowalski",c:"var(--walter)"},ragnar:{name:"Rico",c:"var(--ragnar)"},rick:{name:"Cabo",c:"var(--rick)"}};
+const M={tommy:{name:"Camino",c:"var(--tommy)"},walter:{name:"Kowalski",c:"var(--walter)"},ragnar:{name:"Rico",c:"var(--ragnar)"},rick:{name:"Cabo libre",c:"var(--rick)"}};
 let ST=null, saveT=null, sync="local";
 const UI={tab:"inicio",detail:null,draft:null,open:{},resolve:{},hist:{}};
 
@@ -255,7 +256,8 @@ let pushing=false,again=false;
 const isDirty=()=>localStorage.getItem(FKEY)==="1";
 const setDirty=v=>{try{v?localStorage.setItem(FKEY,"1"):localStorage.removeItem(FKEY)}catch(e){}};
 function saveLocal(){try{localStorage.setItem(KEY,JSON.stringify(ST))}catch(e){}}
-function commit(){ST.updatedAt=Date.now();saveLocal();setDirty(true);clearTimeout(saveT);saveT=setTimeout(pushNow,800);render()}
+function camMark(){if(ST)for(const a of ST.attempts)if(a.method==="tommy"&&a.status==="vivo")a.camino=true}
+function commit(){camMark();ST.updatedAt=Date.now();saveLocal();setDirty(true);clearTimeout(saveT);saveT=setTimeout(pushNow,800);render()}
 function renderSync(){const e=document.getElementById("sync");if(e)e.textContent=syncText()}
 function syncText(){if(!DRIVE)return"Sin conectar a Google Drive. Conéctalo en Más → Google Drive.";
   return{nube:"Guardado en tu Google Drive",subiendo:"Guardando en Google Drive…",offline:"Sin internet: guardado en el celular. Se sube a Drive cuando vuelva la conexión.",error:"No se pudo guardar en Drive. Revisa Más → Google Drive.",local:"Conectando con Google Drive…"}[sync]}
@@ -459,14 +461,27 @@ const lastAttempt=m=>ST.attempts.filter(a=>a.method===m).pop()||null;
 const pendingOf=m=>ST.bets.filter(b=>b.method===m&&b.status==="pendiente");
 function dayNum(a){return betsOfAttempt(a).filter(settled).length+1}
 function walterTarget(bal){return bal<100?(Math.floor(bal/10+1e-9)+1)*10:(Math.floor(bal/20+1e-9)+1)*20}
-function targetFor(m,bal){return m==="tommy"?r2(bal*ST.settings.tommyCuota):walterTarget(bal)}
-function minCuota(m,bal){return m==="tommy"?ST.settings.tommyCuota:ceil2(walterTarget(bal)/bal)}
+const PLAN0={s:150,k:350,ap:100,re:50,cs:1.15,wk:1.10,we:1.15};
+function P(){const s=ST.settings;if(!s.plan)s.plan={...PLAN0};for(const k in PLAN0)if(!(s.plan[k]>0))s.plan[k]=PLAN0[k];return s.plan}
+const FN={S:"Skipper",K:"Kowalski",C:"Cabo"},FC={S:"var(--tommy)",K:"var(--walter)",C:"var(--rick)"};
+function isWE(date){const w=parseISO(date||todayISO()).getDay();return w===0||w===6}
+function camFb(bal,a){if(a&&a.cabo)return"C";return bal<P().s-1e-9?"S":"K"}
+function camCapF(f,a){return f==="S"?P().s:f==="K"?P().k:(a&&a.meta||Infinity)}
+function camCuota(bal,date,a){return camFb(bal,a)==="S"?P().cs:(isWE(date)?P().we:P().wk)}
+function camTarget(bal,date,a){a=a||liveAttempt("tommy");const cap=camCapF(camFb(bal,a),a),x=bal*camCuota(bal,date,a);return r2(x>=cap-5?Math.max(cap,bal):x)}
+const betFase=b=>b.fase||(b.stake<P().s-1e-9?"S":"K");
+function camNum(a){const f=camFb(attemptBal(a),a),n=betsOfAttempt(a).filter(b=>betFase(b)===f).length;return n+(pendingOf("tommy").length?0:1)}
+function camLabel(a){const f=camFb(attemptBal(a),a);return`${FN[f]} · Apuesta ${camNum(a)}`}
+function camEstado(a){const bal=attemptBal(a);if(!a.cabo&&bal>=P().k-1e-9)return"pasar";if(a.cabo&&!a.meta)return"sinmeta";if(a.cabo&&bal>=a.meta-1e-9)return"meta";return"juega"}
+function respFund(){let s=0;for(const mv of ST.moves)if(mv.method==="respaldo")s+=mv.type==="traspaso"||mv.type==="ajuste"?mv.amount:-mv.amount;return r2(s)}
+function targetFor(m,bal,date){return m==="tommy"?camTarget(bal,date):walterTarget(bal)}
+function minCuota(m,bal,date){const a=liveAttempt("tommy");return m==="tommy"?Math.min(camCuota(bal,date,a),ceil2(camTarget(bal,date,a)/bal)):ceil2(walterTarget(bal)/bal)}
 function ragnarFund(){let s=0;for(const mv of ST.moves)if(mv.method==="ragnar")s+=(mv.type==="entrada"||mv.type==="ajuste"||mv.type==="traspaso")?mv.amount:-mv.amount;
   for(const b of ST.bets)if((b.method==="ragnar"||b.method==="rick")&&settled(b))s+=b.ret-b.stake;return r2(s)}
 function ragnarFree(){return r2(ragnarFund()-pendingOf("ragnar").concat(pendingOf("rick")).reduce((s,b)=>s+b.stake,0))}
 function ragnarAlive(){return ragnarFund()>=Math.min(...ST.settings.ragnarMontos)}
 function cuenta(){let ent=0,sal=0;for(const mv of ST.moves){if(mv.type==="entrada"&&mv.fuente!=="previa")ent+=mv.amount;else if(mv.type==="salida")sal+=mv.amount;else if(mv.type==="ajag")ent+=mv.amount;else if(mv.type==="ajret")sal+=mv.amount}
-  let juego=0;for(const a of ST.attempts)if(a.status==="vivo")juego+=attemptBal(a);juego+=Math.max(0,ragnarFund());
+  let juego=0;for(const a of ST.attempts)if(a.status==="vivo")juego+=attemptBal(a);juego+=Math.max(0,ragnarFund())+respFund();
   return{ent:r2(ent),sal:r2(sal),juego:r2(juego),neto:r2(sal+juego-ent)}}
 function paydayOf(y,m){const s=ST.settings;const d=new Date(y,m,s.payDay);const w=d.getDay();const after=s.weekendShift==="despues";
   if(w===6)d.setDate(d.getDate()+(after?2:-1));if(w===0)d.setDate(d.getDate()+(after?1:-2));return d}
@@ -505,9 +520,13 @@ function checks(d){
     if(a){const bal=attemptBal(a),st=num(d.stake);
       if(!(st>0))w.push({e:1,t:"Escribe cuánto vas a meter."});
       else if(st>bal+1e-9)w.push({e:1,t:`Solo tienes ${money(bal)} en este método.`});
-      const need=minCuota(d.method,st>0?st:bal);
+      const need=minCuota(d.method,st>0?st:bal,d.date);
       if(c>1&&c<need-1e-9)w.push({t:`La cuota ${c.toFixed(2)} no llega a la meta. Necesitas al menos ${need.toFixed(2)}.`});
-      if(dayNum(a)>s.maxDias)w.push({t:`Ya pasaste los ${s.maxDias} días de este intento.`});}
+      if(d.method==="walter"&&dayNum(a)>s.maxDias)w.push({t:`Ya pasaste los ${s.maxDias} días de este intento.`});
+      if(d.method==="tommy"){const es=camEstado(a);
+        if(es==="pasar")w.push({e:1,t:`Llegaste a ${money(P().k)}. Apartá ${money(P().ap)} y pasá a Cabo desde Inicio.`});
+        else if(es==="sinmeta")w.push({e:1,t:"Poné la meta de Cabo desde Inicio."});
+        else if(es==="meta")w.push({e:1,t:`Cabo llegó a su meta. Retirá desde Inicio.`});}}
     legs.filter(l=>l.pickId&&pick(l.pickId)?.player).forEach(l=>w.push({t:`“${l.text}” es estadística de jugador. En Skipper y Kowalski no se permite.`}));
   }else if(d.method==="rick"){
     const amt=num(d.stake);
@@ -582,9 +601,25 @@ function viewInicio(){
     <div class="ledger-act" style="flex-wrap:wrap"><button class="ibtn" data-act="agregar" aria-label="Agregar dinero">${IC.add}Agregar</button><button class="ibtn" data-act="retirar" aria-label="Retirar dinero">${IC.out}Retirar</button></div></div>`;
   const pend=ST.bets.filter(b=>b.status==="pendiente");
   if(pend.length){h+=`<h2>Por resolver</h2>`+pend.map(pendCard).join("")}
-  h+=`<h2>Métodos</h2>`+["tommy","walter"].map(ladderCard).join("")+ragnarCard()+rickCard();
+  h+=`<h2>Métodos</h2>`+camCard()+(liveAttempt("walter")?ladderCard("walter"):"")+ragnarCard()+`<div class="row" style="margin-top:10px;gap:16px">${ST.attempts.some(a=>a.method==="walter")?`<button class="link" data-act="detail" data-id="walter">Historial de Kowalski</button>`:""}${ST.bets.some(b=>b.method==="rick")?`<button class="link" data-act="detail" data-id="rick">Historial de Cabo libre</button>`:""}</div>`;
   return h}
 
+function camCard(){const m="tommy",a=liveAttempt(m),last=lastAttempt(m),pl=P(),rf=respFund();
+  let h=`<div class="met" style="--c:${a?FC[camFb(attemptBal(a),a)]:M[m].c}" data-act="detail" data-id="${m}" role="button" tabindex="0"><div class="met-h"><span class="met-name">Camino</span>`;
+  if(a){const bal=attemptBal(a),f=camFb(bal,a),p=pendingOf(m)[0],es=camEstado(a),cap=camCapF(f,a);
+    h+=`<span class="pill vivo">${camLabel(a)}</span></div><div class="met-bal"><span class="num">${money(bal)}</span><span class="muted small">${cap<Infinity?"hacia "+money(cap):"sin meta"}${f==="C"?` <button class="link" style="font-size:13px" data-act="cammeta">cambiar meta</button>`:""}</span></div>`;
+    if(es==="pasar")h+=`<p class="one"><b>¡Llegaste a ${money(pl.k)}!</b> Apartá ${money(pl.ap)} de respaldo y Cabo arranca con ${money(r2(bal-pl.ap))}.</p><button class="btn pri" style="margin-top:8px" data-act="camcabo">Apartar ${money(pl.ap)} y pasar a Cabo</button>`;
+    else if(es==="sinmeta")h+=`<p class="one">Cabo arrancó con ${money(bal)}. Poné tu meta.</p><button class="btn pri" style="margin-top:8px" data-act="cammeta">Poner meta de Cabo</button>`;
+    else if(es==="meta")h+=`<p class="one"><b>¡Cabo llegó a ${money(a.meta)}!</b> Retirás todo y Skipper vuelve a empezar con ${money(pl.re)} del respaldo.</p><button class="btn pri" style="margin-top:8px" data-act="camretiro">Retirar ${money(bal)}</button>`;
+    else if(p)h+=`<p class="one">En juego: ${money(p.stake)} a ${p.cuota.toFixed(2)} → meta ${money(p.target)}</p>`;
+    else h+=`<p class="one">Hoy mete <b>${money(bal)}</b> → <b>${money(targetFor(m,bal))}</b> · cuota ≥ ${minCuota(m,bal).toFixed(2)}</p>`;
+    const lo=f==="S"?a.capital:f==="K"?pl.s:(a.caboCap||bal),pct=cap<Infinity?Math.min(100,(bal-lo)/Math.max(1,cap-lo)*100):0;
+    h+=`<div class="prog"><i style="width:${Math.max(0,pct).toFixed(0)}%"></i></div>
+     <div class="row small muted" style="margin-top:8px;gap:6px;flex-wrap:wrap">${["S","K","C"].map(x=>`<span style="${x===f?"color:"+FC[x]+";font-weight:700":""}">${FN[x]}${x==="S"?" →"+money(pl.s):x==="K"?" →"+money(pl.k):a.meta?" →"+money(a.meta):""}</span>`).join(" · ")}</div>`;
+  }else{const usaR=rf>=pl.re-1e-9;h+=`<span class="pill caido">${last?(last.status==="cerrado"?attLabel(last):"Ciclo caído"):"Sin ciclo"}</span></div>
+     <p class="one">Skipper vuelve a empezar con ${money(pl.re)} ${usaR?"del respaldo":"de tu bolsillo"}.</p><div class="row" style="margin-top:8px"><button class="btn pri" data-act="camnuevo">Empezar con ${money(pl.re)} ${usaR?"del respaldo":"de mi bolsillo"}</button></div>`}
+  h+=`<p class="small muted" style="margin:8px 0 0">Respaldo apartado: <b style="color:var(--ink)">${money(rf)}</b></p>`;
+  return h+`</div>`}
 function ladderCard(m){
   const a=liveAttempt(m),last=lastAttempt(m),s=ST.settings;
   let h=`<div class="met" style="--c:${M[m].c}" data-act="detail" data-id="${m}" role="button" tabindex="0"><div class="met-h"><span class="met-name">${M[m].name}</span>`;
@@ -633,7 +668,7 @@ function pendCard(b){
    <label class="f">Cobro real si ganó</label><input class="in" type="text" inputmode="decimal" autocomplete="off" value="${r.ret}" data-bind="ret" data-id="${b.id}">
    <div class="row" style="margin-top:12px"><button class="btn win" data-act="settle" data-id="${b.id}" data-v="ganada">Ganó</button><button class="btn loss" data-act="settle" data-id="${b.id}" data-v="perdida">Perdió</button><button class="link" data-act="delbet" data-id="${b.id}" style="margin-left:auto">Borrar</button></div></div>`}
 
-const INFO={"tommy": "Parlay diario a cuota 1.15 metiendo todo. Máximo 30 días; si pierdes, el intento termina.", "walter": "De $50 a $100 subes de $10 en $10; desde $100, de $20 en $20. Lo que sobra va a Rico.", "ragnar": "La caja: aquí llega lo que sobra de Skipper y Kowalski. Apuestas a tus equipos con $3, $5 o $10.", "rick": "Libre: sin meta ni cuota. Apuesta con el saldo disponible y lo ganado regresa ahí."};
+const INFO={"tommy": "Un solo camino por ciclos, metiendo todo. Skipper: de $50 a $150 a 1.15. Kowalski: de $150 a $350 a 1.10 entre semana y 1.15 en finde. Al llegar a $350 apartás $100 de respaldo y Cabo sigue con $250 a 1.10/1.15 hasta la meta que pongás. Al llegar, retirás todo y Skipper vuelve a empezar con $50 del respaldo. Si una apuesta pierde, Skipper arranca con $50 del respaldo (o de tu bolsillo si ya no hay).", "walter": "De $50 a $100 subes de $10 en $10; desde $100, de $20 en $20. Lo que sobra va a Rico.", "ragnar": "La caja: aquí llega lo que sobra de Skipper y Kowalski. Apuestas a tus equipos con $3, $5 o $10.", "rick": "Libre: sin meta ni cuota. Apuesta con el saldo disponible y lo ganado regresa ahí."};
 function viewDetail(m){
   let h=`<button class="back" data-act="back">‹ Inicio</button><h1 style="color:${M[m].c}">${M[m].name}</h1><p class="muted small" style="margin:6px 0 12px">${INFO[m]}</p>`;
   if(m==="rick")return h+rickDetail();
@@ -648,12 +683,13 @@ function viewDetail(m){
     h+=`<p class="muted">Intento ${a.n} desde ${esc(fmtDate(a.start))}. Saldo ${money(bal)}.</p><ul class="lad" style="--c:${M[m].c}">`;
     bs.forEach((b,i)=>{h+=`<li><span class="d">${i+1}</span><div>${money(b.stake)} → ${money(b.status==="ganada"?b.ret:b.stake*b.cuota)} <span class="muted small">cuota ${b.cuota.toFixed(2)}</span><div class="det">${esc(b.legs.map(l=>l.text).join(" · "))||"sin picks"}</div></div><span class="${b.status==="ganada"?"pos":b.status==="perdida"?"neg":"muted"} small">${b.status==="ganada"?"Ganó":b.status==="perdida"?"Perdió":"En juego"}</span></li>`});
     let cur=bal;const start=bs.length+1;
-    if(!pendingOf(m).length)for(let d=start;d<=ST.settings.maxDias;d++){const tg=targetFor(m,cur);h+=`<li class="fut"><span class="d">${d}</span><div>${money(cur)} → ${money(tg)} <span class="small">cuota ${minCuota(m,cur).toFixed(2)}</span></div><span class="small">meta</span></li>`;cur=tg}
+    if(m==="tommy"){const end=a.cabo?(a.meta||cur):P().k;if(!pendingOf(m).length){let dt=parseISO(todayISO()),d=start;while(cur<end-1e-9&&d<start+60){if(dt.getDay()===5){dt.setDate(dt.getDate()+1);continue}const ds=toISO(dt),tg=camTarget(cur,ds,a);h+=`<li class="fut"><span class="d">${d}</span><div>${money(cur)} → ${money(tg)} <span class="small">cuota ${Math.min(camCuota(cur,ds,a),ceil2(tg/cur)).toFixed(2)} · ${FN[camFb(cur,a)]} · ${esc(dt.toLocaleDateString("es-SV",{weekday:"short",day:"numeric"}))}</span></div><span class="small">meta</span></li>`;cur=tg;d++;dt.setDate(dt.getDate()+1)}}}
+    else if(!pendingOf(m).length)for(let d=start;d<=ST.settings.maxDias;d++){const tg=targetFor(m,cur);h+=`<li class="fut"><span class="d">${d}</span><div>${money(cur)} → ${money(tg)} <span class="small">cuota ${minCuota(m,cur).toFixed(2)}</span></div><span class="small">meta</span></li>`;cur=tg}
     h+=`</ul>`}
   const prev=ST.attempts.filter(x=>x.method===m&&x!==a).reverse();
   if(prev.length){h+=`<h2>Intentos anteriores</h2>`;
     prev.forEach(x=>{const bs=betsOfAttempt(x),lost=bs.find(b=>b.status==="perdida");const peak=Math.max(x.capital,...bs.filter(b=>b.status==="ganada").map(b=>b.target?Math.min(b.ret,b.target):b.ret));const open=!!UI.hist[x.id];
-      h+=`<div class="card"><div class="met-h"><h3>Intento ${x.n}</h3><span class="pill ${x.status}">${attLabel(x)}</span></div>
+      h+=`<div class="card"><div class="met-h"><h3>${x.method==="tommy"?(x.camino?"Ciclo":"Intento")+" "+x.n+(x.camino?"":" · Skipper"):"Intento "+x.n}</h3><span class="pill ${x.status}">${attLabel(x)}</span></div>
       <p class="small" style="margin:6px 0 0">Del ${esc(fmtDate(x.start))}${x.end?" al "+esc(fmtDate(x.end)):""}. Arrancó con ${money(x.capital)}, llegó a ${money(peak)} en ${bs.filter(b=>b.status==="ganada").length} días ganados.</p>
       ${open?`<ul class="hist">${bs.map((b,i)=>`<li><span class="num" style="color:${M[m].c}">${i+1}</span><div>${money(b.stake)} → ${money(b.status==="ganada"?(b.target?Math.min(b.ret,b.target):b.ret):b.stake*b.cuota)} <span class="muted">a ${b.cuota.toFixed(2)}</span><div class="det">${esc(b.legs.map(l=>l.text+(l.ok===false?" ✗":"")).join(" · ")||"sin picks")}</div></div><span class="${b.status==="ganada"?"pos":"neg"}">${b.status==="ganada"?"Ganó":"Perdió"}</span></li>`).join("")}</ul>`:
         lost?`<p class="small" style="margin:6px 0 0"><b>Lo tumbó el día ${bs.indexOf(lost)+1}:</b> ${esc(lost.legs.filter(l=>l.ok!==true).map(l=>l.text).join(" · ")||lost.legs.map(l=>l.text).join(" · "))}</p>`:""}
@@ -671,17 +707,17 @@ function ragnarDetail(){
   return h+`</ul>`}
 
 /* ---- apostar ---- */
-function newDraft(m){return{method:m||"tommy",date:todayISO(),cuota:"",stake:"",legs:[],team:null,custom:""}}
+function newDraft(m){return{method:m==="rick"?"tommy":(m||"tommy"),date:todayISO(),cuota:"",stake:"",legs:[],team:null,custom:""}}
 function viewApostar(){
   const d=UI.draft||(UI.draft=newDraft());const m=d.method;
-  let h=`<h1>Nueva apuesta</h1>${viewHoy()}${viewGamesToday()}<div class="seg" style="margin-top:14px">${["tommy","walter","ragnar","rick"].map(k=>`<button style="--c:${M[k].c}" class="${m===k?"on":""}" data-act="dm" data-id="${k}">${M[k].name.split(" ")[0]}</button>`).join("")}</div>`;
+  let h=`<h1>Nueva apuesta</h1>${viewHoy()}${viewGamesToday()}<div class="seg" style="margin-top:14px;grid-template-columns:repeat(${liveAttempt("walter")?3:2},1fr)">${["tommy",...(liveAttempt("walter")?["walter"]:[]),"ragnar"].map(k=>`<button style="--c:${M[k].c}" class="${m===k?"on":""}" data-act="dm" data-id="${k}">${M[k].name.split(" ")[0]}</button>`).join("")}</div>`;
   if(m==="rick")h+=`<p class="muted small" style="margin:12px 0 0">Método libre: sin meta ni cuota fija. El dinero sale de tu saldo disponible (libre: <b style="color:var(--ink)">${money(ragnarFree())}</b>) y lo que ganes vuelve ahí.</p>
      <label class="f">Cuánto vas a meter</label><input class="in" type="text" inputmode="decimal" autocomplete="off" value="${esc(d.stake)}" data-bind="stake">`;
   else if(m!=="ragnar"){const a=liveAttempt(m);
     if(!a)return h+`<div class="card"><p style="margin:0">${M[m].name} no tiene un intento vivo. Puedes empezar uno desde Inicio.</p></div>`;
     if(pendingOf(m).length)return h+`<div class="card"><p style="margin:0">Ya tienes la apuesta del día en juego. Resuélvela en Inicio antes de meter otra.</p></div>`;
     const bal=attemptBal(a);if(d.stake==="")d.stake=String(suggestStake(m,bal)||bal);
-    h+=`<p class="muted small" style="margin:12px 0 0">Día ${dayNum(a)} · tu saldo en ${M[m].name.split(" ")[0]}: <b style="color:var(--ink)">${money(bal)}</b></p>
+    h+=`<p class="muted small" style="margin:12px 0 0">${m==="tommy"?camLabel(a)+` · cuota ≥ ${minCuota(m,attemptBal(a),d.date).toFixed(2)}${camFb(attemptBal(a),a)!=="S"?(isWE(d.date)?" (finde)":" (entre semana)"):""}`:"Día "+dayNum(a)} · tu saldo en ${M[m].name.split(" ")[0]}: <b style="color:var(--ink)">${money(bal)}</b></p>
      <label class="f">Cuánto vas a meter</label><input class="in" type="text" inputmode="decimal" autocomplete="off" value="${esc(d.stake)}" data-bind="stake">`}
   else h+=`<label class="f">Monto (libre en el fondo: ${money(ragnarFree())})</label><div class="chips">${ST.settings.ragnarMontos.map(x=>`<button class="chip ${num(d.stake)===x?"on":""}" data-act="amt" data-id="${x}">$${x}</button>`).join("")}</div>
      <input class="in" style="margin-top:8px" type="text" inputmode="decimal" autocomplete="off" placeholder="Otro monto" value="${esc(d.stake)}" data-bind="stake">`;
@@ -703,7 +739,7 @@ function viewApostar(){
 
 function dynPay(d){const m=d.method;const stake=num(d.stake);const c=num(d.cuota);let h="";
   if(m!=="ragnar"&&liveAttempt(m)&&stake>0){const bal=attemptBal(liveAttempt(m)),sob=r2(bal-stake);
-    h+=`<div class="facts"><div class="fact"><small>Meta</small><span class="num">${money(targetFor(m,stake))}</span></div><div class="fact"><small>Cuota mínima</small><span class="num">${minCuota(m,stake).toFixed(2)}</span></div></div>`;
+    h+=`<div class="facts"><div class="fact"><small>Meta</small><span class="num">${money(targetFor(m,stake,d.date))}</span></div><div class="fact"><small>Cuota mínima</small><span class="num">${minCuota(m,stake,d.date).toFixed(2)}</span></div></div>`;
     if(sob>0.004)h+=`<p class="small muted" style="margin:6px 0 0">Sobran ${money(sob)}: pasan al fondo de Rico al guardar.</p>`}
   return h+(stake>0&&c>1?`<p class="small muted" style="margin:6px 0 0">Si gana te paga <b class="num" style="color:var(--ink);font-size:17px">${money(stake*c)}</b></p>`:"")}
 function dynCheck(d){const c=num(d.cuota);let h="";const w=checks(d);const real=w.filter(x=>!x.e);
@@ -766,9 +802,17 @@ function viewStats(){
     const cs=combos().sort((p,q)=>(q.w/q.n-p.w/p.n)||(q.n-p.n));
     return h+(cs.length?`<div class="card">${cs.map(comboRow).join("")}</div>`:`<p class="muted">Todavía no hay parlays con dos principales.</p>`)}
   h+=`<h2>Por método</h2><div class="card"><table class="t"><tr><th>Método</th><th class="r">Apuestas</th><th class="r">Ganó</th><th class="r">Perdió</th><th class="r">Acierto</th></tr>`;
-  for(const m of["tommy","walter","ragnar","rick"]){const s=by(m);h+=`<tr><td style="color:${M[m].c};font-weight:600">${M[m].name.split(" ")[0]}</td><td class="r">${s.n}</td><td class="r">${s.w}</td><td class="r">${s.l}</td><td class="r num">${s.n?Math.round(s.w/s.n*100)+"%":"—"}</td></tr>`}
+  const camA=new Set(ST.attempts.filter(a=>a.camino).map(a=>a.id));const rowF=(lbl,c,f)=>{const b=ST.bets.filter(x=>settled(x)&&f(x)),w=b.filter(x=>x.status==="ganada").length;return`<tr><td style="color:${c};font-weight:600">${lbl}</td><td class="r">${b.length}</td><td class="r">${w}</td><td class="r">${b.length-w}</td><td class="r num">${b.length?Math.round(w/b.length*100)+"%":"—"}</td></tr>`};
+  for(const f of["S","K","C"])h+=rowF(FN[f],FC[f],x=>x.method==="tommy"&&camA.has(x.attemptId)&&betFase(x)===f);
+  h+=`<tr><td colspan="5" class="small muted" style="padding-top:10px">Antes del camino</td></tr>`;
+  h+=rowF("Skipper",M.tommy.c,x=>x.method==="tommy"&&!camA.has(x.attemptId));
+  for(const m of["walter","ragnar","rick"]){const s=by(m);h+=`<tr><td style="color:${M[m].c};font-weight:600">${M[m].name}</td><td class="r">${s.n}</td><td class="r">${s.w}</td><td class="r">${s.l}</td><td class="r num">${s.n?Math.round(s.w/s.n*100)+"%":"—"}</td></tr>`}
   h+=`</table></div>`;
-  const att=ST.attempts.filter(a=>a.method!=="ragnar"&&a.status!=="vivo");
+  const cyc=ST.attempts.filter(a=>a.camino&&a.status!=="vivo");if(cyc.length){const cob=cyc.filter(a=>a.status==="cerrado").length,caid=cyc.filter(a=>a.status==="caido"),en={S:0,K:0,C:0};
+    caid.forEach(a=>{const l=betsOfAttempt(a).find(b=>b.status==="perdida");if(l)en[betFase(l)]++});
+    const ret=r2(ST.moves.filter(mv=>mv.type==="salida"&&camA.has(mv.from)).reduce((x,mv)=>x+mv.amount,0));
+    h+=`<h2>Ciclos</h2><div class="card"><p style="margin:0">${cob} ${cob===1?"ciclo cobrado":"ciclos cobrados"} y ${caid.length} ${caid.length===1?"caído":"caídos"}${caid.length?` (en Skipper ${en.S}, Kowalski ${en.K}, Cabo ${en.C})`:""}.</p><p class="small muted" style="margin:6px 0 0">Retirado del camino: <b style="color:var(--ink)">${money(ret)}</b> · Respaldo apartado: <b style="color:var(--ink)">${money(respFund())}</b></p></div>`}
+  const att=ST.attempts.filter(a=>a.method!=="ragnar"&&a.status!=="vivo"&&!a.camino);
   if(att.length){const avg=att.reduce((s,a)=>s+betsOfAttempt(a).length,0)/att.length;
     h+=`<div class="card"><p style="margin:0">Tus intentos de Skipper y Kowalski que ya terminaron duraron <b>${avg.toFixed(1)} días</b> en promedio (de ${ST.settings.maxDias}).</p></div>`}
   const all=ST.picks.map(p=>({p,s:pickStats(p)})).filter(x=>x.s.u);
@@ -785,7 +829,7 @@ function viewStats(){
 function viewMas(){return`<h1>Más</h1><div class="menu">
   <button data-tab="reglas">Reglas <span>${ST.rules.length}</span></button>
   <button data-tab="dinero">Entradas y salidas de dinero <span>${ST.moves.length}</span></button>
-  <button data-tab="ajustes">Ajustes <span>capital, cuotas, día de pago</span></button>
+  <button data-tab="ajustes">Ajustes <span>plan del camino, día de pago</span></button>
   <button data-tab="drive">Google Drive <span>${DRIVE?"conectado":"sin conectar"}</span></button>
   <button data-tab="respaldo">Respaldo <span>exportar o importar</span></button></div>`}
 function viewDrive(){const bk=ST?back:`<button class="back" data-tab="inicio">‹ Volver</button>`;
@@ -798,8 +842,16 @@ const back=`<button class="back" data-tab="mas">‹ Más</button>`;
 function viewReglas(){return back+`<h1>Reglas</h1><p class="muted small">Toca una para editarla.</p><ol class="rules">${ST.rules.map(r=>`<li><button class="link" style="color:var(--ink);text-decoration:none;text-align:left;font-size:16px" data-act="editrule" data-id="${r.id}">${esc(r.text)}</button></li>`).join("")}</ol><button class="btn full" style="margin-top:14px" data-act="newrule">+ Agregar regla</button>`}
 function viewDinero(){const c=cuenta();return back+`<h1>Entradas y salidas</h1><p class="muted small">Entrada es dinero que metes; salida es lo que retiras de Bet365. Toca una entrada para cambiar de dónde salió el dinero.</p>
   <div class="facts"><div class="fact"><small>Agregado</small><span class="num">${money(c.ent)}</span></div><div class="fact"><small>Retirado</small><span class="num">${money(c.sal)}</span></div></div>
-  <div class="card scroll"><table class="t"><tr><th>Fecha</th><th>Método</th><th>Nota</th><th class="r">Monto</th></tr>${ST.moves.slice().reverse().map(m=>`<tr ${m.type==="entrada"||(m.type==="uso"&&m.orig)?`data-act="origen" data-id="${m.id}" style="cursor:pointer"`:""}><td class="small">${esc(fmtDate(m.date))}</td><td class="small">${esc(M[m.method]?.name.split(" ")[0]||(m.method==="previo"?"Antes":m.method))}</td><td class="small">${esc(m.note||"")}${m.type==="entrada"?`<div class="muted" style="font-size:12px">${m.fuente==="previa"?"de ganancias anteriores":"de tu bolsa"}</div>`:m.type==="uso"?`<div class="muted" style="font-size:12px">del saldo disponible</div>`:""}</td><td class="r num ${m.type==="entrada"?"neg":m.type==="salida"?"pos":"muted"}">${m.type==="entrada"?"−$"+fmt(m.amount):m.type==="salida"?"+$"+fmt(m.amount):m.type==="traspaso"?(m.amount>=0?"→ Rico $"+fmt(m.amount):"Rico → $"+fmt(-m.amount)):m.type==="uso"?"Rico → $"+fmt(m.amount):m.type==="ajag"?"agregado "+signed(m.amount):m.type==="ajret"?"retirado "+signed(m.amount):"ajuste "+signed(m.amount)}</td></tr>`).join("")}</table></div>`}
-function viewAjustes(){const s=ST.settings;return back+`<h1>Ajustes</h1>
+  <div class="card scroll"><table class="t"><tr><th>Fecha</th><th>Método</th><th>Nota</th><th class="r">Monto</th></tr>${ST.moves.slice().reverse().map(m=>`<tr ${m.type==="entrada"||(m.type==="uso"&&m.orig)?`data-act="origen" data-id="${m.id}" style="cursor:pointer"`:""}><td class="small">${esc(fmtDate(m.date))}</td><td class="small">${esc(M[m.method]?.name.split(" ")[0]||(m.method==="previo"?"Antes":m.method==="respaldo"?"Respaldo":m.method))}</td><td class="small">${esc(m.note||"")}${m.type==="entrada"?`<div class="muted" style="font-size:12px">${m.fuente==="previa"?"de ganancias anteriores":"de tu bolsa"}</div>`:m.type==="uso"?`<div class="muted" style="font-size:12px">del saldo disponible</div>`:""}</td><td class="r num ${m.type==="entrada"?"neg":m.type==="salida"?"pos":"muted"}">${m.type==="entrada"?"−$"+fmt(m.amount):m.type==="salida"?"+$"+fmt(m.amount):m.type==="traspaso"?(m.amount>=0?"→ Rico $"+fmt(m.amount):"Rico → $"+fmt(-m.amount)):m.type==="uso"?"Rico → $"+fmt(m.amount):m.type==="ajag"?"agregado "+signed(m.amount):m.type==="ajret"?"retirado "+signed(m.amount):"ajuste "+signed(m.amount)}</td></tr>`).join("")}</table></div>`}
+function viewAjustes(){const s=ST.settings,pl=P();return back+`<h1>Ajustes</h1><h2>Plan del camino</h2>
+  <label class="f">Skipper llega hasta</label><input class="in" type="text" inputmode="decimal" data-set="plan.s" value="${pl.s}">
+  <label class="f">Cuota de Skipper</label><input class="in" type="text" inputmode="decimal" data-set="plan.cs" value="${pl.cs}">
+  <label class="f">Kowalski llega hasta</label><input class="in" type="text" inputmode="decimal" data-set="plan.k" value="${pl.k}">
+  <label class="f">Cuota entre semana (Kowalski y Cabo)</label><input class="in" type="text" inputmode="decimal" data-set="plan.wk" value="${pl.wk}">
+  <label class="f">Cuota sábado y domingo (Kowalski y Cabo)</label><input class="in" type="text" inputmode="decimal" data-set="plan.we" value="${pl.we}">
+  <label class="f">Respaldo que se aparta al pasar a Cabo</label><input class="in" type="text" inputmode="decimal" data-set="plan.ap" value="${pl.ap}">
+  <label class="f">Skipper vuelve a empezar con</label><input class="in" type="text" inputmode="decimal" data-set="plan.re" value="${pl.re}">
+  <h2>Otros</h2>
   <label class="f">Capital inicial de Skipper</label><input class="in" type="number" inputmode="decimal" data-set="capital.tommy" value="${s.capital.tommy}">
   <label class="f">Capital inicial de Kowalski</label><input class="in" type="number" inputmode="decimal" data-set="capital.walter" value="${s.capital.walter}">
   <label class="f">Recarga del fondo de Rico</label><input class="in" type="number" inputmode="decimal" data-set="capital.ragnar" value="${s.capital.ragnar}">
@@ -850,6 +902,11 @@ function closeToRagnar(m){const a=liveAttempt(m);if(!a)return;const q=attemptBal
   if(q>0.004)ST.moves.push({id:uid(),date:todayISO(),type:"traspaso",method:"ragnar",from:a.id,amount:q,note:`Resto de ${M[m].name.split(" ")[0]} al reiniciar`});
   a.status="cerrado";a.how="repartido";a.end=todayISO()}
 function attLabel(a){if(a.status!=="cerrado")return"Caído";if(a.how==="repartido"||ST.moves.some(m=>m.from===a.id&&/al reiniciar|al repartir/.test(m.note||"")))return"Repartido";return"Cobrado"}
+function camStart(){const pl=P(),d=todayISO(),n=ST.attempts.filter(x=>x.method==="tommy").length+1,id="tommy"+uid(),usaR=respFund()>=pl.re-1e-9;
+  ST.attempts.push({id,method:"tommy",n,start:d,capital:pl.re,status:"vivo",end:null,camino:true,...(usaR?{fuente:"saldo"}:{})});
+  if(usaR)ST.moves.push({id:uid(),date:d,type:"uso",method:"respaldo",to:id,amount:pl.re,note:`Inicio ciclo ${n} con el respaldo`});
+  else ST.moves.push({id:uid(),date:d,type:"entrada",method:"tommy",amount:pl.re,note:`Inicio intento ${n}`});
+  toast(`Ciclo ${n}: Skipper con ${money(pl.re)}`)}
 function startAttempt(m){const n=ST.attempts.filter(a=>a.method===m).length+1,cap=ST.settings.capital[m];
   ST.attempts.push({id:m+uid(),method:m,n,start:todayISO(),capital:cap,status:"vivo",end:null});
   ST.moves.push({id:uid(),date:todayISO(),type:"entrada",method:m,amount:cap,note:`Inicio intento ${n}`});commit();toast(`${M[m].name}: intento ${n} empezado`)}
@@ -1003,6 +1060,20 @@ const A={
   togfuente(e){const m=ST.moves.find(x=>x.id===e.dataset.id);m.fuente=m.fuente==="previa"?undefined:"previa";if(!m.fuente)delete m.fuente;commit()},
   toghist(e){UI.hist[e.dataset.id]=!UI.hist[e.dataset.id];render()},
   leg(e){const b=ST.bets.find(x=>x.id===e.dataset.id),l=b.legs[+e.dataset.i],v=e.dataset.v==="1";l.ok=l.ok===v?null:v;commit()},
+  camcabo(){const a=liveAttempt("tommy");if(!a||camEstado(a)!=="pasar")return;const pl=P(),bal=attemptBal(a),cab=r2(bal-pl.ap);
+    formSheet("Pasar a Cabo",`<p class="small muted">Apartás ${money(pl.ap)} de respaldo (siguen en Bet365, pero no se juegan) y Cabo arranca con ${money(cab)}.</p><label class="f">Meta de Cabo</label><input class="in" name="a" type="text" inputmode="decimal" autocomplete="off" placeholder="Ej: 550">`,"Pasar a Cabo",v=>{
+      const mt=r2(num(v.a));if(!(mt>cab)){toast(`La meta tiene que ser más de ${money(cab)}`);return false}
+      ST.moves.push({id:uid(),date:todayISO(),type:"traspaso",method:"respaldo",from:a.id,amount:pl.ap,note:`Respaldo apartado del ciclo ${a.n}`});
+      a.cabo=true;a.caboStart=todayISO();a.caboCap=cab;a.meta=mt;commit();toast(`Cabo arranca con ${money(cab)} · meta ${money(mt)}`)})},
+  cammeta(){const a=liveAttempt("tommy");if(!a||!a.cabo)return;const bal=attemptBal(a);
+    formSheet("Meta de Cabo",`<label class="f">Meta (Cabo tiene ${money(bal)})</label><input class="in" name="a" type="text" inputmode="decimal" autocomplete="off" value="${a.meta||""}">`,"Guardar",v=>{
+      const mt=r2(num(v.a));if(!(mt>0)){toast("Escribe la meta");return false}a.meta=mt;commit();toast(`Meta: ${money(mt)}`)})},
+  camretiro(){const a=liveAttempt("tommy");if(!a||camEstado(a)!=="meta")return;const bal=attemptBal(a),pl=P();
+    confirmSheet(`Retirar ${money(bal)}`,`<p>Retirás todo lo de Cabo. El ciclo ${a.n} se cierra como cobrado y Skipper vuelve a empezar con ${money(pl.re)} ${respFund()>=pl.re-1e-9?"del respaldo":"de tu bolsillo (el respaldo no alcanza)"}.</p>`,"Retirar y empezar",()=>{
+      const d=todayISO();ST.moves.push({id:uid(),date:d,type:"salida",method:"tommy",from:a.id,amount:bal,note:`Retiro de Cabo, ciclo ${a.n} (meta ${money(a.meta)})`});
+      a.status="cerrado";a.how="cobrado";a.end=d;camStart();commit();toast(`Retiraste ${money(bal)}`)})},
+  camnuevo(){if(liveAttempt("tommy"))return;const pl=P(),usaR=respFund()>=pl.re-1e-9;
+    confirmSheet(`Ciclo nuevo con ${money(pl.re)}`,usaR?`<p>Los ${money(pl.re)} salen del respaldo apartado (${money(respFund())}). No cuenta como agregado.</p>`:`<p>El respaldo no alcanza. Metés ${money(pl.re)} de tu bolsillo y se suma en "Agregado".</p>`,"Empezar",()=>{camStart();commit()})},
   settle(e){const b=ST.bets.find(x=>x.id===e.dataset.id),v=e.dataset.v;
     if(v==="ganada"){b.legs.forEach(l=>{if(l.ok==null)l.ok=true});b.ret=r2(num(UI.resolve[b.id]?.ret)||b.stake*b.cuota)}else b.ret=0;
     if(v==="perdida"&&b.legs.length&&!b.legs.some(l=>l.ok===false)){toast("Marca con ✗ el pick que falló");return}
@@ -1021,9 +1092,10 @@ const A={
   addcustom(){const d=UI.draft,t=d.custom.trim();if(!t||!d.team)return;
     const p={id:"p"+uid(),teamId:d.team,text:t,player:false,baseUsed:0,baseHit:0};ST.picks.push(p);d.legs.push({pickId:p.id,text:t,teamId:d.team,ok:null});d.custom="";commit();toast("Pick agregado a tu lista")},
   savebet(){const d=UI.draft,m=d.method;let stake,attemptId=null,target;
-    if(m==="tommy"||m==="walter"){const a=liveAttempt(m),bal=attemptBal(a);stake=num(d.stake);attemptId=a.id;target=targetFor(m,stake);
+    if(m==="tommy"||m==="walter"){const a=liveAttempt(m),bal=attemptBal(a);stake=num(d.stake);attemptId=a.id;target=targetFor(m,stake,d.date);
       const sob=r2(bal-stake);var bid="b"+uid();if(sob>0.004)ST.moves.push({id:uid(),date:d.date||todayISO(),type:"traspaso",method:"ragnar",from:a.id,betId:bid,amount:sob,note:`Sobrante de ${M[m].name.split(" ")[0]}`})}else{stake=num(d.stake);target=r2(stake*num(d.cuota))}
-    ST.bets.push({id:(typeof bid!=="undefined"&&bid)||"b"+uid(),method:m,attemptId,date:d.date||todayISO(),stake:r2(stake),cuota:num(d.cuota),target,legs:d.legs.map(l=>({...l})),status:"pendiente",ret:0,...(m==="ragnar"&&d.sonadora?{sonadora:true}:{})});
+    const fase=m==="tommy"?camFb(attemptBal(liveAttempt("tommy")),liveAttempt("tommy")):undefined;
+    ST.bets.push({id:(typeof bid!=="undefined"&&bid)||"b"+uid(),method:m,attemptId,...(fase?{fase}:{}),date:d.date||todayISO(),stake:r2(stake),cuota:num(d.cuota),target,legs:d.legs.map(l=>({...l})),status:"pendiente",ret:0,...(m==="ragnar"&&d.sonadora?{sonadora:true}:{})});
     UI.draft=null;UI.tab="inicio";commit();scrollTo(0,0);toast("Apuesta guardada")},
   toggleteam(e){const t=e.dataset.id,tier=team(t).tier;UI.open[t]=!(UI.open[t]??(tier==="principal"));render()},
   editpick(e){const p=pick(e.dataset.id);formSheet("Editar pick",`<label class="f">Pick</label><input class="in" name="text" value="${esc(p.text)}"><label class="row" style="margin-top:12px"><input type="checkbox" name="player" ${p.player?"checked":""}> Es estadística de jugador</label>`,"Guardar",v=>{if(!v.text)return false;p.text=v.text;p.player=v.player;commit()},
@@ -1072,7 +1144,7 @@ document.addEventListener("change",ev=>{const e=ev.target;
   if(!e.dataset.set)return;const k=e.dataset.set,s=ST.settings;
   if(k==="ragnarMontos"){const a=e.value.split(",").map(x=>parseFloat(x)).filter(x=>x>0);if(a.length)s.ragnarMontos=a}
   else if(k==="weekendShift")s.weekendShift=e.value;
-  else{const n=parseFloat(e.value);if(!(n>0))return;if(k.startsWith("capital."))s.capital[k.split(".")[1]]=n;else s[k]=n}
+  else{const n=parseFloat(e.value);if(!(n>0))return;if(k.startsWith("capital."))s.capital[k.split(".")[1]]=n;else if(k.startsWith("plan."))P()[k.split(".")[1]]=n;else s[k]=n}
   commit();toast("Ajuste guardado")});
 function updDyn(){const d=UI.draft;if(!d)return;const p=document.getElementById("dynpay"),c=document.getElementById("dyncheck");if(p)p.innerHTML=dynPay(d);if(c)c.innerHTML=dynCheck(d)}
 boot();
