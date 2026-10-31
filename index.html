@@ -487,7 +487,7 @@ function ragnarFund(){let s=0;for(const mv of ST.moves)if(mv.method==="ragnar")s
 function ragnarFree(){return r2(ragnarFund()-pendingOf("ragnar").concat(pendingOf("rick")).reduce((s,b)=>s+b.stake,0))}
 function ragnarAlive(){return ragnarFund()>=Math.min(...ST.settings.ragnarMontos)}
 function cuenta(){let ent=0,sal=0;for(const mv of ST.moves){if(mv.type==="entrada"&&mv.fuente!=="previa")ent+=mv.amount;else if(mv.type==="salida")sal+=mv.amount;else if(mv.type==="ajag")ent+=mv.amount;else if(mv.type==="ajret")sal+=mv.amount}
-  let juego=0;for(const a of ST.attempts)if(a.status==="vivo")juego+=attemptBal(a);juego+=Math.max(0,ragnarFund())+respFund();
+  let juego=0;for(const a of ST.attempts)if(a.status==="vivo")juego+=attemptBal(a);juego+=ragnarFund()+respFund();
   return{ent:r2(ent),sal:r2(sal),juego:r2(juego),neto:r2(sal+juego-ent)}}
 function paydayOf(y,m){const s=ST.settings;const d=new Date(y,m,s.payDay);const w=d.getDay();const after=s.weekendShift==="despues";
   if(w===6)d.setDate(d.getDate()+(after?2:-1));if(w===0)d.setDate(d.getDate()+(after?1:-2));return d}
@@ -555,8 +555,7 @@ function checks(d){
     const amt=num(d.stake);
     if(c>15)w.push({t:`La cuota ${c.toFixed(2)} es muy alta. ¿No la escribiste en el lugar del monto?`});
     if(!(amt>0))w.push({e:1,t:"Escribe cuánto vas a apostar."});
-    else{if(!d.sonadora&&!s.ragnarMontos.includes(amt))w.push({t:`En Rico tus montos son ${s.ragnarMontos.map(x=>"$"+x).join(", ")}. Vas con $${fmt(amt)}.`});
-      if(amt>ragnarFree()+1e-9)w.push({e:1,t:`El fondo de Rico solo tiene ${money(ragnarFree())} libres.`});
+    else{
       const prev=ST.bets.filter(b=>b.method==="ragnar"&&settled(b)).pop();
       if(prev&&prev.status==="perdida"&&amt>prev.stake)w.push({t:`Vienes de perder $${fmt(prev.stake)} y estás subiendo el monto. Regla 2: nunca aumentar para recuperar.`});}
   }
@@ -675,7 +674,7 @@ function rickDetail(){const r=rickStats();
 function ragnarCard(){const f=ragnarFund(),alive=ragnarAlive();
   return`<div class="met" style="--c:var(--ragnar)" data-act="detail" data-id="ragnar" role="button" tabindex="0"><div class="met-h"><span class="met-name">Rico</span><span class="pill ${alive?"vivo":"caido"}">La caja</span></div>
    <div class="met-bal"><span class="num">${money(f)}</span></div>
-   <p class="one">Libre para apostar: ${money(ragnarFree())}</p></div>`}
+   <p class="one">${f<-0.004?`Usó ${money(-f)} de tu saldo`:`Libre para apostar: ${money(ragnarFree())}`}</p></div>`}
 
 function pendCard(b){
   const r=UI.resolve[b.id]||(UI.resolve[b.id]={ret:r2(b.stake*b.cuota)});
@@ -738,7 +737,7 @@ function viewApostar(){
     const bal=attemptBal(a);if(d.stake==="")d.stake=String(suggestStake(m,bal)||bal);
     h+=`<p class="muted small" style="margin:12px 0 0">${m==="tommy"?camLabel(a)+` · cuota ≥ ${minCuota(m,attemptBal(a),d.date,soloOf(d)).toFixed(2)}${soloOf(d)?" (solo juega 1 principal)":camFb(attemptBal(a),a)!=="S"?(isWE(d.date)?" (finde)":" (entre semana)"):""}`:"Día "+dayNum(a)} · tu saldo en ${M[m].name.split(" ")[0]}: <b style="color:var(--ink)">${money(bal)}</b></p>
      <label class="f">Cuánto vas a meter</label><input class="in" type="text" inputmode="decimal" autocomplete="off" value="${esc(d.stake)}" data-bind="stake">`}
-  else h+=`<label class="f">Monto (libre en el fondo: ${money(ragnarFree())})</label><div class="chips">${ST.settings.ragnarMontos.map(x=>`<button class="chip ${num(d.stake)===x?"on":""}" data-act="amt" data-id="${x}">$${x}</button>`).join("")}</div>
+  else h+=`<label class="f">Monto (Rico tiene ${money(ragnarFree())} · podés meter lo que querás de tu saldo)</label><div class="chips">${ST.settings.ragnarMontos.map(x=>`<button class="chip ${num(d.stake)===x?"on":""}" data-act="amt" data-id="${x}">$${x}</button>`).join("")}</div>
      <input class="in" style="margin-top:8px" type="text" inputmode="decimal" autocomplete="off" placeholder="Otro monto" value="${esc(d.stake)}" data-bind="stake">`;
   if((m==="tommy"||m==="walter")&&liveAttempt(m)){const pl=playingToday(d.date);h+=`<p class="small muted" style="margin:10px 0 0">Principales que juegan ese día: <b style="color:var(--ink)">${pl.length?pl.map(x=>esc(shn(x))).join(", "):"ninguno anotado"}</b>${pl.length===1?" · regla 14: cuota 1.10":""}</p>`}
   h+=`<div class="row" style="gap:10px"><div style="flex:1"><label class="f">Cuota del parlay</label><input class="in" type="text" inputmode="decimal" autocomplete="off" placeholder="1.15" value="${esc(d.cuota)}" data-bind="cuota"></div>
@@ -852,7 +851,7 @@ function viewMas(){return`<h1>Más</h1><div class="menu">
   <button data-tab="dinero">Entradas y salidas de dinero <span>${ST.moves.length}</span></button>
   <button data-tab="ajustes">Ajustes <span>plan del camino, día de pago</span></button>
   <button data-tab="drive">Google Drive <span>${DRIVE?"conectado":"sin conectar"}</span></button>
-  <button data-tab="respaldo">Respaldo <span>exportar o importar</span></button></div>`}
+  <button data-tab="respaldo">Respaldo <span>exportar o importar</span></button></div><p class="small muted" style="text-align:center;margin-top:16px">Versión 23 · Rico sin límites</p>`}
 function viewDrive(){const bk=ST?back:`<button class="back" data-tab="inicio">‹ Volver</button>`;
   return bk+`<h1>Google Drive</h1><p class="muted">Tus datos se guardan en tu Drive, en la carpeta “Operación Sueldo extra”, con una copia de respaldo por día. Si pierdes el celular, instalas la app en otro y te conectas con estos mismos datos.</p>
   <label class="f">Dirección del script (termina en /exec)</label><input class="in" id="durl" autocomplete="off" value="${esc(DRIVE?.url||"")}" placeholder="https://script.google.com/macros/s/…/exec">
