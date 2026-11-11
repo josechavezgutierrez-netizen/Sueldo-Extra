@@ -618,7 +618,7 @@ const NEW_TEAMS=[["redbull","Red Bull Racing","F1",["Victoria de Verstappen","Ve
  ["topuria","Ilia Topuria","UFC",["Victoria de Topuria","Topuria gana por KO/TKO","La pelea no llega a la decisión"]],
  ["joshua","Anthony Joshua","Boxeo",["Victoria de Joshua","Joshua gana por KO","Más de 3.5 asaltos"]]];
 function migRules(){  if(!ST.settings.rules3){ST.rules=["No meter dinero de tu bolsillo mientras haya un método vivo.", "Nunca subir una apuesta para recuperar una pérdida.", "Solo apostar picks que estén en la pestaña Picks.", "No copiar apuestas de redes sociales ni de tipsters.", "No apostar a tarjetas, córners, faltas ni mercados que no estén definidos.", "En Skipper y Kowalski, nada de estadísticas de jugadores, salvo de los Warriors y sin pasarse.", "En Rico sí se permiten estadísticas de jugadores. En Skipper, Kowalski y Cabo no (salvo de los Warriors).", "Solo apostar a equipos principales o auxiliares.", "Si juegan 3 o más principales, la apuesta lleva solo a esos principales.", "Si juegan 2 principales, la apuesta lleva solo a esos dos.", "Si juega 1 principal, se puede combinar con un auxiliar.", "Si no juega ningún principal, ese día no se apuesta.", "Nunca más de un auxiliar en la misma apuesta.", "Si ese día solo juega un equipo principal, la apuesta es a cuota 1.10 (1.12 o más queda bloqueada), aunque por el plan toque otra cuota.", "Si ninguna apuesta cumple las reglas, ese día no se apuesta.", "Paciencia y disciplina: seguir el sistema, no buscar suerte.", "El respaldo nunca se juega. Solo sirve para volver a arrancar Skipper.", "La meta de Cabo se pone antes de su primera apuesta y no se sube a medio camino. Solo se puede bajar.", "Si la apuesta del día pierde, ese día ya no se apuesta. El ciclo nuevo empieza al día siguiente.", "La apuesta se hace antes de que empiece el primer partido. Nada en vivo.", "Máximo 4 picks por apuesta.", "Un día de descanso fijo a la semana."].map((t,i)=>({id:"r3_"+i,text:t}));ST.settings.rules3=true;return true}return false}
-function migrate(){if(!ST)return false;let r=migRules();if(!ST.settings.rules4){const x=ST.rules.find(q=>/En Cabo s[ií] se permiten/.test(q.text));if(x)x.text="En Rico sí se permiten estadísticas de jugadores. En Skipper, Kowalski y Cabo no (salvo de los Warriors).";ST.settings.rules4=true;r=true}return migrate0()||r}
+function migrate(){if(!ST)return false;let r=migRules();if(!ST.settings.undoAnadir){const n0=ST.moves.length;ST.moves=ST.moves.filter(mv=>!/^Añadido al intento|^Saldo de Bet365 que no estaba en la app/.test(mv.note||""));ST.settings.undoAnadir=true;r=true}if(!ST.settings.rules4){const x=ST.rules.find(q=>/En Cabo s[ií] se permiten/.test(q.text));if(x)x.text="En Rico sí se permiten estadísticas de jugadores. En Skipper, Kowalski y Cabo no (salvo de los Warriors).";ST.settings.rules4=true;r=true}return migrate0()||r}
 function migrate0(){
   if(ST.settings.seedTeams2&&!ST.settings.seedTeams3){const nk=NEW_TEAMS.map(x=>x[0]);
     for(const t of ST.teams){const k=tkey(t.id);if(!nk.includes(k))continue;t.tier="principal";
@@ -730,7 +730,7 @@ function viewDetail(m){
   if(m==="rick")return h+rickDetail();
   const a0=m==="ragnar"?null:liveAttempt(m),mb=m==="ragnar"?ragnarFund():(a0?attemptBal(a0):0);
   h+=`<div class="facts"><div class="fact"><small>Saldo total</small><span class="num">${money(cuenta().juego)}</span></div><div class="fact"><small>Saldo del método</small><span class="num">${money(mb)}</span></div></div>
-   <div class="row" style="margin-top:10px;flex-wrap:wrap">${m==="ragnar"?`<button class="btn" data-act="retirar" data-id="ragnar">Retirar</button>`:`${a0?`<button class="btn pri" data-act="anadir" data-id="${m}">Añadir con el saldo disponible</button>`:""}<button class="btn ${a0?"":"pri"}" data-act="activar" data-id="${m}" data-v="saldo">Activar con el saldo disponible</button><button class="btn" data-act="activar" data-id="${m}" data-v="bolsa">Activar desde el bolsillo</button>`}</div>`;
+   <div class="row" style="margin-top:10px;flex-wrap:wrap">${m==="ragnar"?`<button class="btn" data-act="retirar" data-id="ragnar">Retirar</button>`:`${a0?`<button class="btn pri" data-act="anadir" data-id="${m}">Editar saldo del método</button>`:""}<button class="btn ${a0?"":"pri"}" data-act="activar" data-id="${m}" data-v="saldo">Activar con el saldo disponible</button><button class="btn" data-act="activar" data-id="${m}" data-v="bolsa">Activar desde el bolsillo</button>`}</div>`;
   if(a0){const sm=startMove(a0);if(sm)h+=`<div class="advice" style="margin-top:12px"><p class="small">Este intento arrancó con ${money(sm.amount)} <b>de tu bolsillo</b>.</p><button class="btn" data-act="fixorigen" data-id="${sm.id}">Corregir: lo tomé del saldo disponible</button></div>`}
   if(m==="ragnar")return h+ragnarDetail();
   const a=liveAttempt(m);
@@ -883,7 +883,7 @@ function viewMas(){return`<h1>Más</h1><div class="menu">
   <button data-tab="dinero">Entradas y salidas de dinero <span>${ST.moves.length}</span></button>
   <button data-tab="ajustes">Ajustes <span>plan del camino, día de pago</span></button>
   <button data-tab="drive">Google Drive <span>${DRIVE?"conectado":"sin conectar"}</span></button>
-  <button data-tab="respaldo">Respaldo <span>exportar o importar</span></button></div><p class="small muted" style="text-align:center;margin-top:16px">Versión 25 · Añadir saldo</p>`}
+  <button data-tab="respaldo">Respaldo <span>exportar o importar</span></button></div><p class="small muted" style="text-align:center;margin-top:16px">Versión 26 · Editar saldo del método</p>`}
 function viewDrive(){const bk=ST?back:`<button class="back" data-tab="inicio">‹ Volver</button>`;
   return bk+`<h1>Google Drive</h1><p class="muted">Tus datos se guardan en tu Drive, en la carpeta “Operación Sueldo extra”, con una copia de respaldo por día. Si pierdes el celular, instalas la app en otro y te conectas con estos mismos datos.</p>
   <label class="f">Dirección del script (termina en /exec)</label><input class="in" id="durl" autocomplete="off" value="${esc(DRIVE?.url||"")}" placeholder="https://script.google.com/macros/s/…/exec">
@@ -1113,14 +1113,14 @@ const A={
   toghist(e){UI.hist[e.dataset.id]=!UI.hist[e.dataset.id];render()},
   leg(e){const b=ST.bets.find(x=>x.id===e.dataset.id),l=b.legs[+e.dataset.i],v=e.dataset.v==="1";l.ok=l.ok===v?null:v;commit()},
   anadir(e){const m=e.dataset.id,a=liveAttempt(m);if(!a)return;if(pendingOf(m).length){toast("Primero resuelve la apuesta en juego");return}
-    const bal=attemptBal(a),rf=ragnarFree();
-    formSheet("Añadir con el saldo disponible",`<p class="small muted">Suma dinero al intento que ya va (${money(bal)}) sin reiniciarlo y sin tocar Agregado.</p>
-     <label class="f">Cuánto añadís</label><input class="in" name="a" type="text" inputmode="decimal" autocomplete="off">
-     <label class="f">¿De dónde sale?</label><select class="in" name="o"><option value="rico">Del saldo que ya está en la app (sale de Rico: ${money(rf)})</option><option value="nuevo">Lo tengo en Bet365 pero no estaba en la app</option></select>`,"Añadir",v=>{
-      const amt=r2(num(v.a));if(!(amt>0)){toast("Escribe el monto");return false}const d=todayISO();
-      if(v.o==="nuevo")ST.moves.push({id:uid(),date:d,type:"ajuste",method:"ragnar",amount:amt,note:`Saldo de Bet365 que no estaba en la app`});
-      ST.moves.push({id:uid(),date:d,type:"traspaso",method:"ragnar",from:a.id,amount:-amt,note:`Añadido al intento ${a.n} con saldo disponible`});
-      commit();const nb=attemptBal(a);toast(`${M[m].name}: ${money(bal)} → ${money(nb)}`)})},
+    const bal=attemptBal(a),rf=Math.max(0,ragnarFree()),max=r2(bal+rf);
+    formSheet("Editar saldo del método",`<p class="small muted">Ahora tiene ${money(bal)}. Escribí con cuánto querés seguir. La diferencia se mueve desde o hacia Rico (tiene ${money(rf)}), así que tu saldo total no cambia.</p>
+     <label class="f">Nuevo saldo del método (máximo ${money(max)})</label><input class="in" name="a" type="text" inputmode="decimal" autocomplete="off" value="${bal}">`,"Guardar",v=>{
+      const nb=r2(num(v.a));if(!(nb>0)){toast("Escribe el monto");return false}
+      if(nb>max+1e-9){toast(`Solo hay ${money(max)} en tu saldo disponible. Si en Bet365 tenés más, corregí primero el Saldo en Inicio (lápiz).`);return false}
+      const df=r2(nb-bal);if(!df)return;
+      ST.moves.push({id:uid(),date:todayISO(),type:"traspaso",method:"ragnar",from:a.id,amount:-df,note:`Saldo del intento ${a.n} editado: ${money(bal)} → ${money(nb)}`});
+      commit();toast(`${M[m].name}: ${money(bal)} → ${money(nb)}`)})},
   activar(e){const m=e.dataset.id,src=e.dataset.v,a=liveAttempt(m);if(pendingOf(m).length){toast("Primero resuelve la apuesta en juego");return}
     const tram=m==="tommy"?`<label class="f">Arranca en</label><select class="in" name="f"><option value="auto">Según el monto (menos de ${money(P().s)}: Skipper; desde ${money(P().s)}: Kowalski)</option><option value="S">Skipper (1.15 hasta ${money(P().s)})</option><option value="K">Kowalski (1.10 / 1.15 hasta ${money(P().k)})</option></select>`:"";
     formSheet(src==="saldo"?"Activar con el saldo disponible":"Activar desde el bolsillo",`<p class="small muted">${src==="saldo"?"El monto sale de lo que ya tenés en Bet365. No suma en Agregado.":"Es dinero nuevo: se suma en Agregado."}${a?` El intento actual (${money(attemptBal(a))}) se cierra y pasa a Rico.`:""}</p><label class="f">Con cuánto arranca</label><input class="in" name="a" type="text" inputmode="decimal" autocomplete="off">${tram}`,"Activar",v=>{
