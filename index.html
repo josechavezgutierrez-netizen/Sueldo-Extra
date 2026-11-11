@@ -730,7 +730,7 @@ function viewDetail(m){
   if(m==="rick")return h+rickDetail();
   const a0=m==="ragnar"?null:liveAttempt(m),mb=m==="ragnar"?ragnarFund():(a0?attemptBal(a0):0);
   h+=`<div class="facts"><div class="fact"><small>Saldo total</small><span class="num">${money(cuenta().juego)}</span></div><div class="fact"><small>Saldo del método</small><span class="num">${money(mb)}</span></div></div>
-   <div class="row" style="margin-top:10px;flex-wrap:wrap">${m==="ragnar"?`<button class="btn" data-act="retirar" data-id="ragnar">Retirar</button>`:`<button class="btn pri" data-act="activar" data-id="${m}" data-v="saldo">Activar con el saldo disponible</button><button class="btn" data-act="activar" data-id="${m}" data-v="bolsa">Activar desde el bolsillo</button>`}</div>`;
+   <div class="row" style="margin-top:10px;flex-wrap:wrap">${m==="ragnar"?`<button class="btn" data-act="retirar" data-id="ragnar">Retirar</button>`:`${a0?`<button class="btn pri" data-act="anadir" data-id="${m}">Añadir con el saldo disponible</button>`:""}<button class="btn ${a0?"":"pri"}" data-act="activar" data-id="${m}" data-v="saldo">Activar con el saldo disponible</button><button class="btn" data-act="activar" data-id="${m}" data-v="bolsa">Activar desde el bolsillo</button>`}</div>`;
   if(a0){const sm=startMove(a0);if(sm)h+=`<div class="advice" style="margin-top:12px"><p class="small">Este intento arrancó con ${money(sm.amount)} <b>de tu bolsillo</b>.</p><button class="btn" data-act="fixorigen" data-id="${sm.id}">Corregir: lo tomé del saldo disponible</button></div>`}
   if(m==="ragnar")return h+ragnarDetail();
   const a=liveAttempt(m);
@@ -883,7 +883,7 @@ function viewMas(){return`<h1>Más</h1><div class="menu">
   <button data-tab="dinero">Entradas y salidas de dinero <span>${ST.moves.length}</span></button>
   <button data-tab="ajustes">Ajustes <span>plan del camino, día de pago</span></button>
   <button data-tab="drive">Google Drive <span>${DRIVE?"conectado":"sin conectar"}</span></button>
-  <button data-tab="respaldo">Respaldo <span>exportar o importar</span></button></div><p class="small muted" style="text-align:center;margin-top:16px">Versión 24 · Combinaciones nuevas</p>`}
+  <button data-tab="respaldo">Respaldo <span>exportar o importar</span></button></div><p class="small muted" style="text-align:center;margin-top:16px">Versión 25 · Añadir saldo</p>`}
 function viewDrive(){const bk=ST?back:`<button class="back" data-tab="inicio">‹ Volver</button>`;
   return bk+`<h1>Google Drive</h1><p class="muted">Tus datos se guardan en tu Drive, en la carpeta “Operación Sueldo extra”, con una copia de respaldo por día. Si pierdes el celular, instalas la app en otro y te conectas con estos mismos datos.</p>
   <label class="f">Dirección del script (termina en /exec)</label><input class="in" id="durl" autocomplete="off" value="${esc(DRIVE?.url||"")}" placeholder="https://script.google.com/macros/s/…/exec">
@@ -1112,6 +1112,15 @@ const A={
   togfuente(e){const m=ST.moves.find(x=>x.id===e.dataset.id);m.fuente=m.fuente==="previa"?undefined:"previa";if(!m.fuente)delete m.fuente;commit()},
   toghist(e){UI.hist[e.dataset.id]=!UI.hist[e.dataset.id];render()},
   leg(e){const b=ST.bets.find(x=>x.id===e.dataset.id),l=b.legs[+e.dataset.i],v=e.dataset.v==="1";l.ok=l.ok===v?null:v;commit()},
+  anadir(e){const m=e.dataset.id,a=liveAttempt(m);if(!a)return;if(pendingOf(m).length){toast("Primero resuelve la apuesta en juego");return}
+    const bal=attemptBal(a),rf=ragnarFree();
+    formSheet("Añadir con el saldo disponible",`<p class="small muted">Suma dinero al intento que ya va (${money(bal)}) sin reiniciarlo y sin tocar Agregado.</p>
+     <label class="f">Cuánto añadís</label><input class="in" name="a" type="text" inputmode="decimal" autocomplete="off">
+     <label class="f">¿De dónde sale?</label><select class="in" name="o"><option value="rico">Del saldo que ya está en la app (sale de Rico: ${money(rf)})</option><option value="nuevo">Lo tengo en Bet365 pero no estaba en la app</option></select>`,"Añadir",v=>{
+      const amt=r2(num(v.a));if(!(amt>0)){toast("Escribe el monto");return false}const d=todayISO();
+      if(v.o==="nuevo")ST.moves.push({id:uid(),date:d,type:"ajuste",method:"ragnar",amount:amt,note:`Saldo de Bet365 que no estaba en la app`});
+      ST.moves.push({id:uid(),date:d,type:"traspaso",method:"ragnar",from:a.id,amount:-amt,note:`Añadido al intento ${a.n} con saldo disponible`});
+      commit();const nb=attemptBal(a);toast(`${M[m].name}: ${money(bal)} → ${money(nb)}`)})},
   activar(e){const m=e.dataset.id,src=e.dataset.v,a=liveAttempt(m);if(pendingOf(m).length){toast("Primero resuelve la apuesta en juego");return}
     const tram=m==="tommy"?`<label class="f">Arranca en</label><select class="in" name="f"><option value="auto">Según el monto (menos de ${money(P().s)}: Skipper; desde ${money(P().s)}: Kowalski)</option><option value="S">Skipper (1.15 hasta ${money(P().s)})</option><option value="K">Kowalski (1.10 / 1.15 hasta ${money(P().k)})</option></select>`:"";
     formSheet(src==="saldo"?"Activar con el saldo disponible":"Activar desde el bolsillo",`<p class="small muted">${src==="saldo"?"El monto sale de lo que ya tenés en Bet365. No suma en Agregado.":"Es dinero nuevo: se suma en Agregado."}${a?` El intento actual (${money(attemptBal(a))}) se cierra y pasa a Rico.`:""}</p><label class="f">Con cuánto arranca</label><input class="in" name="a" type="text" inputmode="decimal" autocomplete="off">${tram}`,"Activar",v=>{
