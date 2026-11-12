@@ -558,7 +558,8 @@ function restartAdvice(m){
   return{html:out.join(""),ready:paidSince&&!o.length}}
 
 /* ---------- reglas automáticas ---------- */
-function capOf(d){if(!["tommy","walter","cabo"].includes(d.method))return null;if(!playingToday(d.date).length)return 1.05;if(d.method==="tommy"){const a=liveAttempt("tommy");if(!a||camFb(attemptBal(a),a)==="S")return null}return cupoMax(playingToday(d.date).length,d.date)}
+function auxOf(legs){const ts=[...new Set(legs.map(l=>l.teamId).filter(t=>t&&team(t)?.tier==="auxiliar"))];return ts.length+new Set(legs.filter(l=>l.vname).map(l=>l.vname.toLowerCase())).size}
+function capOf(d){if(!["tommy","walter","cabo"].includes(d.method))return null;if(!playingToday(d.date).length){const n=auxOf(d.legs||[]);return n<=1?1.05:cupoMax(n,d.date)}if(d.method==="tommy"){const a=liveAttempt("tommy");if(!a||camFb(attemptBal(a),a)==="S")return null}return cupoMax(playingToday(d.date).length,d.date)}
 function wPlayerOk(l){const p=pick(l.pickId);if(!p||!p.player)return true;if(tkey(l.teamId)!=="warriors")return false;const t=(p.text||l.text||"").toLowerCase();if(!/combinad/.test(t)||!/punto/.test(t))return false;const n=(t.match(/\d+(\.\d+)?/g)||[]).map(Number);return n.length>0&&Math.max(...n)<=15}
 function checks(d){
   const w=[];const s=ST.settings;
@@ -588,15 +589,15 @@ function checks(d){
     if(ST.bets.some(b=>b.method===d.method&&b.status==="perdida"&&b.date===d.date))w.push({e:1,lk:1,t:"🔒 Regla 19: hoy ya perdiste una apuesta. Ese día ya no se apuesta."});
     const pl=playingToday(d.date),npl=pl.length;
     if(!npl){if(prin.length)w.push({e:1,lk:1,t:`🔒 ${prin.map(shn).join(", ")} no está en Partidos de hoy para esa fecha.`});
-      else if(legs.length&&aux.length!==1)w.push({e:1,lk:1,t:"🔒 Regla 12: si no juega ningún principal, la apuesta lleva un solo auxiliar."});
-      if(c>1.05+1e-9)w.push({e:1,lk:1,t:`🔒 Regla 12: no juega ningún principal. Con un solo auxiliar la cuota tiene que ser 1.05 o menos (pusiste ${c.toFixed(2)}).`});}
+      else if(legs.length&&!aux.length)w.push({e:1,lk:1,t:"🔒 Regla 12: si no juega ningún principal, la apuesta va con auxiliares."});
+      const cp=capOf(d);if(cp&&c>cp+1e-9)w.push({e:1,lk:1,t:aux.length<=1?`🔒 Regla 12: no juega ningún principal. Con un solo auxiliar la cuota tiene que ser 1.05 o menos (pusiste ${c.toFixed(2)}).`:`🔒 Regla 12: no juega ningún principal. Con ${aux.length} auxiliares (${isWE(d.date)?"finde":"entre semana"}) la cuota máxima es ${cp.toFixed(2)} (pusiste ${c.toFixed(2)}).`});}
     else{if((teams.length||aux.length)&&!prin.length)w.push({e:1,lk:1,t:"🔒 Regla 12: la apuesta no lleva ningún principal."});
       if(npl>=3&&aux.length)w.push({e:1,lk:1,t:`🔒 Regla 9: juegan ${npl} principales. La apuesta va solo con ellos, sin auxiliares.`});
       if(npl===2&&aux.length)w.push({e:1,lk:1,t:"🔒 Regla 10: juegan 2 principales. La apuesta va solo con esos dos."});
       if(npl===1&&aux.length>1)w.push({e:1,lk:1,t:"🔒 Regla 11: juega 1 principal. Solo se combina con un auxiliar."});
       const cap=capOf(d);if(cap&&c>cap+1e-9)w.push({e:1,lk:1,t:`🔒 Regla 14: juegan ${npl} ${npl===1?"principal":"principales"} (${isWE(d.date)?"finde":"entre semana"}). La cuota máxima es ${cap.toFixed(2)} y pusiste ${c.toFixed(2)}.`});
       const fuera=prin.filter(t=>!pl.includes(t));if(fuera.length)w.push({e:1,lk:1,t:`🔒 ${fuera.map(shn).join(", ")} no está en Partidos de hoy para esa fecha.`});}
-    if(aux.length>1)w.push({e:1,lk:1,t:"🔒 Regla 13: llevás dos auxiliares. Solo uno por apuesta."});
+    if(aux.length>1&&npl>0)w.push({e:1,lk:1,t:"🔒 Regla 13: llevás dos auxiliares. Solo uno por apuesta cuando juega algún principal."});
     if(legs.length>4)w.push({t:`Llevás ${legs.length} picks. Regla 21: máximo 4 por apuesta.`});
   }else if(d.method==="rick"){
     const amt=num(d.stake);
@@ -643,9 +644,11 @@ function migPlan5(){if(ST.settings.plan5)return false;ST.settings.plan5=true;con
   ST.picks=ST.picks.filter(p=>use(p)!==1);
   const ord=ST.teams.map(t=>t.id);ST.picks.sort((a,b)=>(ord.indexOf(a.teamId)-ord.indexOf(b.teamId))||(use(b)-use(a)));
   return true}
+function migRules7(){if(ST.settings.rules7)return false;ST.settings.rules7=true;const a=ST.rules.find(q=>q.id==="r3_11");if(a)a.text="Si no juega ningún principal, se apuesta con auxiliares: con uno solo, cuota de 1.05 o menos; con dos o más, la cuota máxima de la regla 14 según cuántos van.";
+  const b=ST.rules.find(q=>q.id==="r3_12");if(b)b.text="Nunca más de un auxiliar en la misma apuesta cuando juega algún principal.";return true}
 function migRules6(){if(ST.settings.rules6)return false;ST.settings.rules6=true;const x=ST.rules.find(q=>q.id==="r3_11");if(x)x.text="Si no juega ningún principal, solo se apuesta a un auxiliar, con cuota de 1.05 o menos.";
   if(!ST.rules.some(q=>q.id==="r6_26"))ST.rules.push({id:"r6_26",text:"Los equipos variantes (Femenino, Futsal, otros deportes) solo se usan cuando no juega ningún principal o juega solo uno, para apoyar la cuota. Cuentan como auxiliar."});return true}
-function migrate(){if(!ST)return false;let r=migRules();if(migPlan5())r=true;if(migRules6())r=true;if(!ST.settings.undoAnadir){const n0=ST.moves.length;ST.moves=ST.moves.filter(mv=>!/^Añadido al intento|^Saldo de Bet365 que no estaba en la app/.test(mv.note||""));ST.settings.undoAnadir=true;r=true}if(!ST.settings.rules4){const x=ST.rules.find(q=>/En Cabo s[ií] se permiten/.test(q.text));if(x)x.text="En Rico sí se permiten estadísticas de jugadores. En Skipper, Kowalski y Cabo no (salvo de los Warriors).";ST.settings.rules4=true;r=true}return migrate0()||r}
+function migrate(){if(!ST)return false;let r=migRules();if(migPlan5())r=true;if(migRules6())r=true;if(migRules7())r=true;if(!ST.settings.undoAnadir){const n0=ST.moves.length;ST.moves=ST.moves.filter(mv=>!/^Añadido al intento|^Saldo de Bet365 que no estaba en la app/.test(mv.note||""));ST.settings.undoAnadir=true;r=true}if(!ST.settings.rules4){const x=ST.rules.find(q=>/En Cabo s[ií] se permiten/.test(q.text));if(x)x.text="En Rico sí se permiten estadísticas de jugadores. En Skipper, Kowalski y Cabo no (salvo de los Warriors).";ST.settings.rules4=true;r=true}return migrate0()||r}
 function migrate0(){
   if(ST.settings.seedTeams2&&!ST.settings.seedTeams3){const nk=NEW_TEAMS.map(x=>x[0]);
     for(const t of ST.teams){const k=tkey(t.id);if(!nk.includes(k))continue;t.tier="principal";
@@ -926,7 +929,7 @@ function viewMas(){return`<h1>Más</h1><div class="menu">
   <button data-tab="dinero">Entradas y salidas de dinero <span>${ST.moves.length}</span></button>
   <button data-tab="ajustes">Ajustes <span>plan del camino, día de pago</span></button>
   <button data-tab="drive">Google Drive <span>${DRIVE?"conectado":"sin conectar"}</span></button>
-  <button data-tab="respaldo">Respaldo <span>exportar o importar</span></button></div><p class="small muted" style="text-align:center;margin-top:16px">Versión 30 · Variantes y regla 12</p>`}
+  <button data-tab="respaldo">Respaldo <span>exportar o importar</span></button></div><p class="small muted" style="text-align:center;margin-top:16px">Versión 31 · Dos auxiliares</p>`}
 function viewDrive(){const bk=ST?back:`<button class="back" data-tab="inicio">‹ Volver</button>`;
   return bk+`<h1>Google Drive</h1><p class="muted">Tus datos se guardan en tu Drive, en la carpeta “Operación Sueldo extra”, con una copia de respaldo por día. Si pierdes el celular, instalas la app en otro y te conectas con estos mismos datos.</p>
   <label class="f">Dirección del script (termina en /exec)</label><input class="in" id="durl" autocomplete="off" value="${esc(DRIVE?.url||"")}" placeholder="https://script.google.com/macros/s/…/exec">
