@@ -317,6 +317,7 @@ const MAINC={barca:["#A50044","#004D98"],warriors:["#1D428A","#FFC72C"],dodgers:
 function dayTeams(){const ids=[];for(const b of ST.bets)if(b.status==="pendiente")for(const l of b.legs){const k=tkey(l.teamId);if(k&&MAINC[k]&&!ids.includes(k))ids.push(k)}if(ST.games)for(const id of playingToday()){const k=tkey(id);if(k&&MAINC[k]&&!ids.includes(k))ids.push(k)}return ids}
 function dayColors(){const c=[];dayTeams().forEach(k=>MAINC[k].forEach(x=>{if(!c.includes(x))c.push(x)}));return c}
 const tname=id=>{const t=team(id);return t?badge(id)+esc(t.name):""};
+const lname=l=>l.vname?`${l.vparent?badge(l.vparent):""}${esc(l.vname)} <span class="tag">variante</span>`:tname(l.teamId);
 const MSG={"barca": ["Hoy el Barça va en tu boleto. Que juegue con el corazón blaugrana y la cabeza fría, igual que vos.", "Més que un club, més que una apuesta: hoy el escudo culé empuja tu camino.", "El Barça nació para dominar la pelota. Vos naciste para dominar tu disciplina. Hoy se juntan.", "Camp Nou en la sangre y el plan en la mano. Hoy toca cobrar a lo culé.", "El Barça no se rinde al primer golpe. Tu sistema tampoco. Vamos, pa."], "warriors": ["Los Warriors van en tu parlay. Paciencia, ritmo y a cerrar el partido como campeones.", "Golden State sabe remontar y sabe rematar. Hoy rematás vos también.", "Gen dorado: los Warriors juegan en equipo y vos jugás con método. Combinación ganadora.", "Hoy el triple puede caer en cualquier momento. Vos ya hiciste tu jugada, ahora a confiar."], "dodgers": ["Los Dodgers van contigo. Turno a turno, carrera a carrera, igual que tu camino: paso a paso.", "Azul de Los Ángeles en tu boleto. Que el bullpen cierre y vos cobrés.", "El béisbol se gana con paciencia, y la paciencia es tu mejor regla. Vamos, Dodgers.", "Cada entrada cuenta. Cada apuesta también. Hoy los Dodgers suman a tu camino."], "argentina": ["La Albiceleste va en tu parlay. Garra, corazón y a cobrar como campeones del mundo.", "Argentina juega con el alma, vos apostás con cabeza. Hoy se da.", "Tres estrellas en el pecho y tu disciplina en la apuesta. Vamos, Argentina.", "La camiseta celeste y blanca no se rinde. Tu método tampoco."], "oilers": ["Los Oilers van en tu boleto. Hielo frío, cabeza fría, y a cobrar.", "Edmonton juega rápido y duro. Vos jugás con orden. Buen día para sumar.", "Que el disco entre y tu saldo suba. Vamos, Oilers.", "Tres periodos de lucha. Una apuesta bien hecha. Hoy los Oilers empujan tu camino."], "chiefs": ["Los Chiefs van en tu parlay. Cuarto período, y los campeones saben cerrar.", "Kansas City sabe ganar los partidos cerrados. Hoy te toca a vos también.", "Rojo y oro en tu boleto. Yarda a yarda, apuesta a apuesta.", "Los Chiefs no se ponen nerviosos en el último cuarto. Vos tampoco."], "redbull": ["Red Bull en tu boleto. Que salga con todo y vos cobrés en la bandera a cuadros.", "Estrategia, ritmo y cero errores: así gana Red Bull, así ganás vos.", "Luces apagadas y a correr. Tu apuesta ya está en la parrilla.", "Cada vuelta suma. Cada apuesta bien hecha también. Vamos, Red Bull."], "glasgow": ["Glasgow Warriors en tu parlay. Fuerza, orden y a empujar hasta el try.", "En el rugby se avanza metro a metro. En tu camino, apuesta a apuesta.", "Los Warriors escoceses no aflojan en el scrum. Vos no aflojás en tu método.", "Hoy se juega con fuerza y se cobra con disciplina. Vamos, Glasgow."], "trentino": ["Trentino va en tu boleto. Recepción limpia, remate firme y a cobrar.", "Punto a punto se gana el set. Apuesta a apuesta se gana el camino.", "El voleibol premia al que no se desespera. Igual que tus reglas.", "Bloqueo, ataque y victoria. Vamos, Trentino."], "alcaraz": ["Alcaraz va en tu parlay. Punto a punto, set a set, hasta cobrar.", "Garra española en la cancha y disciplina en tu apuesta. Buen día para ganar.", "El tenis se gana con la cabeza. Tu camino también. Vamos, Carlitos.", "Cada punto cuenta. Cada regla también. Hoy se juega con todo."], "topuria": ["Topuria va en tu boleto. Puños firmes y cabeza fría, como tu método.", "Cada round es una batalla. Cada apuesta es un paso. Hoy se gana.", "El que entrena con disciplina gana en la jaula. Vos apostás igual.", "Hoy sube al octágono un campeón. Tu apuesta sube con él."], "joshua": ["Joshua va en tu parlay. Paciencia en el ring y potencia cuando toca.", "El boxeo se gana round a round. Tu camino, apuesta a apuesta.", "Guardia arriba y golpe preciso. Así se apuesta, pa.", "Hoy pelea un gigante. Que tu apuesta salga con la mano en alto."], "miami": ["Inter Miami en tu boleto. Que el rosa sume al camino.", "Miami va con todo hoy. Vos con tus reglas. Buen equipo.", "Fútbol con estilo y apuesta con método. Vamos, Inter Miami."]};
 const JUEGA={"barca": ["Hoy juega el Barça. Que el Camp Nou sienta que hay un culé disciplinado del otro lado.", "Día de Barça. Visca el Barça, y que hoy brille el escudo.", "Juega el Barça: corazón blaugrana encendido y cabeza fría para apostar.", "El Barça sale a la cancha hoy. Que se note por qué es més que un club."], "warriors": ["Hoy juegan los Warriors. Que caigan los triples y que la defensa aguante.", "Noche de Warriors. A disfrutar el básquet de Golden State.", "Juega Golden State. Que el equipo dorado brille hoy."], "dodgers": ["Hoy juegan los Dodgers. Que batee todo el lineup.", "Día de béisbol azul. Vamos, Dodgers.", "Juegan los Dodgers: que el pitcheo domine y las carreras lleguen."], "argentina": ["Hoy juega Argentina. Que la Albiceleste salga con el alma.", "Día de selección: vamos, Argentina, con todo.", "Juega Argentina. Garra y fútbol de campeón."], "oilers": ["Hoy juegan los Oilers. Que el hielo sea de Edmonton.", "Noche de hockey: vamos, Oilers.", "Juegan los Oilers. Velocidad y goles, que se note."], "chiefs": ["Hoy juegan los Chiefs. Que Kansas City haga temblar el estadio.", "Día de Chiefs: vamos por la victoria.", "Juegan los Chiefs. Que el ataque no pare."], "redbull": ["Hoy corre Red Bull. Que salga como avión.", "Día de carrera: vamos, Red Bull, a buscar la bandera a cuadros.", "Corre Red Bull hoy. Estrategia perfecta y a cruzar primero."], "glasgow": ["Hoy juegan los Glasgow Warriors. Fuerza en el scrum y tries a montones.", "Día de rugby: vamos, Glasgow.", "Juega Glasgow. Que avancen metro a metro hasta ganar."], "trentino": ["Hoy juega Trentino. Que el remate no perdone.", "Día de voleibol: vamos, Trentino.", "Juega Trentino. Bloqueo firme y a ganar el set."], "alcaraz": ["Hoy juega Alcaraz. Que la derecha haga daño.", "Día de tenis: vamos, Carlitos.", "Juega Alcaraz. Garra y talento en la cancha."], "topuria": ["Hoy pelea Topuria. Que salga con todo.", "Noche de pelea: vamos, Topuria.", "Pelea Topuria. Cabeza fría y puños firmes."], "joshua": ["Hoy pelea Joshua. Guardia arriba y a ganar.", "Noche de boxeo: vamos, AJ.", "Pelea Joshua. Que la potencia hable."], "miami": ["Hoy juega Inter Miami. Que el rosa brille.", "Día de Inter Miami: vamos con todo."]};
 function playingToday(date){const t=date||todayISO();return[...new Set((ST.games||[]).filter(g=>g.date===t&&team(g.teamId)?.tier==="principal").map(g=>g.teamId))]}
@@ -557,12 +558,12 @@ function restartAdvice(m){
   return{html:out.join(""),ready:paidSince&&!o.length}}
 
 /* ---------- reglas automáticas ---------- */
-function capOf(d){if(!["tommy","walter","cabo"].includes(d.method))return null;if(d.method==="tommy"){const a=liveAttempt("tommy");if(!a||camFb(attemptBal(a),a)==="S")return null}return cupoMax(playingToday(d.date).length,d.date)}
+function capOf(d){if(!["tommy","walter","cabo"].includes(d.method))return null;if(!playingToday(d.date).length)return 1.05;if(d.method==="tommy"){const a=liveAttempt("tommy");if(!a||camFb(attemptBal(a),a)==="S")return null}return cupoMax(playingToday(d.date).length,d.date)}
 function wPlayerOk(l){const p=pick(l.pickId);if(!p||!p.player)return true;if(tkey(l.teamId)!=="warriors")return false;const t=(p.text||l.text||"").toLowerCase();if(!/combinad/.test(t)||!/punto/.test(t))return false;const n=(t.match(/\d+(\.\d+)?/g)||[]).map(Number);return n.length>0&&Math.max(...n)<=15}
 function checks(d){
   const w=[];const s=ST.settings;
   const legs=d.legs;const teams=[...new Set(legs.map(l=>l.teamId).filter(Boolean))];
-  const prin=teams.filter(t=>team(t)?.tier==="principal"),aux=teams.filter(t=>team(t)?.tier==="auxiliar");
+  const prin=teams.filter(t=>team(t)?.tier==="principal"),aux=[...teams.filter(t=>team(t)?.tier==="auxiliar"),...new Set(legs.filter(l=>l.vname).map(l=>"v:"+l.vname.toLowerCase()))];
   if(!legs.length&&d.method!=="ragnar")w.push({e:1,t:"Agrega al menos un pick."});
   const c=num(d.cuota);
   if(!(c>1))w.push({e:1,t:"Escribe la cuota del parlay."});
@@ -586,8 +587,10 @@ function checks(d){
       if(d.method==="cabo"&&!ob.length)w.push({e:1,lk:1,t:"🔒 Regla 24: primero va la apuesta del Camino ese día."});}
     if(ST.bets.some(b=>b.method===d.method&&b.status==="perdida"&&b.date===d.date))w.push({e:1,lk:1,t:"🔒 Regla 19: hoy ya perdiste una apuesta. Ese día ya no se apuesta."});
     const pl=playingToday(d.date),npl=pl.length;
-    if(!npl)w.push({e:1,lk:1,t:"🔒 Regla 12: no hay ningún principal anotado en Partidos de hoy para esa fecha. Anotalos primero."});
-    else{if(teams.length&&!prin.length)w.push({e:1,lk:1,t:"🔒 Regla 12: la apuesta no lleva ningún principal."});
+    if(!npl){if(prin.length)w.push({e:1,lk:1,t:`🔒 ${prin.map(shn).join(", ")} no está en Partidos de hoy para esa fecha.`});
+      else if(legs.length&&aux.length!==1)w.push({e:1,lk:1,t:"🔒 Regla 12: si no juega ningún principal, la apuesta lleva un solo auxiliar."});
+      if(c>1.05+1e-9)w.push({e:1,lk:1,t:`🔒 Regla 12: no juega ningún principal. Con un solo auxiliar la cuota tiene que ser 1.05 o menos (pusiste ${c.toFixed(2)}).`});}
+    else{if((teams.length||aux.length)&&!prin.length)w.push({e:1,lk:1,t:"🔒 Regla 12: la apuesta no lleva ningún principal."});
       if(npl>=3&&aux.length)w.push({e:1,lk:1,t:`🔒 Regla 9: juegan ${npl} principales. La apuesta va solo con ellos, sin auxiliares.`});
       if(npl===2&&aux.length)w.push({e:1,lk:1,t:"🔒 Regla 10: juegan 2 principales. La apuesta va solo con esos dos."});
       if(npl===1&&aux.length>1)w.push({e:1,lk:1,t:"🔒 Regla 11: juega 1 principal. Solo se combina con un auxiliar."});
@@ -604,7 +607,7 @@ function checks(d){
     if(!(num(d.stake)>0))w.push({e:1,t:"Escribe cuánto vas a apostar."});
     return w.filter(x=>x.e&&!/pick/.test(x.t))
   }
-  legs.filter(l=>!l.pickId).forEach(l=>w.push({t:`“${l.text}” no está en tu lista de picks.`}));
+  legs.filter(l=>!l.pickId&&!l.vname).forEach(l=>w.push({t:`“${l.text}” no está en tu lista de picks.`}));
   legs.filter(l=>/tarjeta|c[oó]rner|falta/i.test(l.text)).forEach(l=>w.push({t:`“${l.text}”: no apuestas tarjetas, córners ni faltas.`}));
   if(d.method==="ragnar"&&!d.sonadora&&legs.length>4)w.push({t:`Llevás ${legs.length} picks. Regla 21: máximo 4 por apuesta.`});
   return w}
@@ -640,7 +643,9 @@ function migPlan5(){if(ST.settings.plan5)return false;ST.settings.plan5=true;con
   ST.picks=ST.picks.filter(p=>use(p)!==1);
   const ord=ST.teams.map(t=>t.id);ST.picks.sort((a,b)=>(ord.indexOf(a.teamId)-ord.indexOf(b.teamId))||(use(b)-use(a)));
   return true}
-function migrate(){if(!ST)return false;let r=migRules();if(migPlan5())r=true;if(!ST.settings.undoAnadir){const n0=ST.moves.length;ST.moves=ST.moves.filter(mv=>!/^Añadido al intento|^Saldo de Bet365 que no estaba en la app/.test(mv.note||""));ST.settings.undoAnadir=true;r=true}if(!ST.settings.rules4){const x=ST.rules.find(q=>/En Cabo s[ií] se permiten/.test(q.text));if(x)x.text="En Rico sí se permiten estadísticas de jugadores. En Skipper, Kowalski y Cabo no (salvo de los Warriors).";ST.settings.rules4=true;r=true}return migrate0()||r}
+function migRules6(){if(ST.settings.rules6)return false;ST.settings.rules6=true;const x=ST.rules.find(q=>q.id==="r3_11");if(x)x.text="Si no juega ningún principal, solo se apuesta a un auxiliar, con cuota de 1.05 o menos.";
+  if(!ST.rules.some(q=>q.id==="r6_26"))ST.rules.push({id:"r6_26",text:"Los equipos variantes (Femenino, Futsal, otros deportes) solo se usan cuando no juega ningún principal o juega solo uno, para apoyar la cuota. Cuentan como auxiliar."});return true}
+function migrate(){if(!ST)return false;let r=migRules();if(migPlan5())r=true;if(migRules6())r=true;if(!ST.settings.undoAnadir){const n0=ST.moves.length;ST.moves=ST.moves.filter(mv=>!/^Añadido al intento|^Saldo de Bet365 que no estaba en la app/.test(mv.note||""));ST.settings.undoAnadir=true;r=true}if(!ST.settings.rules4){const x=ST.rules.find(q=>/En Cabo s[ií] se permiten/.test(q.text));if(x)x.text="En Rico sí se permiten estadísticas de jugadores. En Skipper, Kowalski y Cabo no (salvo de los Warriors).";ST.settings.rules4=true;r=true}return migrate0()||r}
 function migrate0(){
   if(ST.settings.seedTeams2&&!ST.settings.seedTeams3){const nk=NEW_TEAMS.map(x=>x[0]);
     for(const t of ST.teams){const k=tkey(t.id);if(!nk.includes(k))continue;t.tier="principal";
@@ -754,7 +759,7 @@ function pendCard(b){
   const r=UI.resolve[b.id]||(UI.resolve[b.id]={ret:r2(b.stake*b.cuota)});
   return`<div class="card pend" style="--c:${M[b.method].c}"><div class="met-h"><h3 style="color:var(--c)">${M[b.method].name}${b.sonadora?" · ✨ Soñadora":""}</h3><span class="muted small">${esc(fmtDate(b.date))}</span></div>
    <p class="small" style="margin:4px 0 0">${money(b.stake)} a cuota ${b.cuota.toFixed(2)} → paga ${money(b.stake*b.cuota)}</p>${b.attemptId&&b.target?`<p class="small muted" style="margin:2px 0 0">Meta: ${money(b.target)}. Lo que cobres de más pasa a Rico.</p>`:""}
-   <ul class="legs">${b.legs.map((l,i)=>`<li><span>${esc(l.text)}${l.teamId?`<br><span class="muted small">${tname(l.teamId)}</span>`:""}</span>
+   <ul class="legs">${b.legs.map((l,i)=>`<li><span>${esc(l.text)}${l.teamId||l.vname?`<br><span class="muted small">${lname(l)}</span>`:""}</span>
      <button class="tog ${l.ok===true?"on-ok":""}" data-act="leg" data-id="${b.id}" data-i="${i}" data-v="1" aria-label="Se cumplió">✓</button>
      <button class="tog ${l.ok===false?"on-no":""}" data-act="leg" data-id="${b.id}" data-i="${i}" data-v="0" aria-label="Falló">✗</button></li>`).join("")}</ul>
    <label class="f">Cobro real si ganó</label><input class="in" type="text" inputmode="decimal" autocomplete="off" value="${r.ret}" data-bind="ret" data-id="${b.id}">
@@ -818,9 +823,11 @@ function viewApostar(){
   if(m==="ragnar")h+=`<div class="row" style="margin-top:12px"><button class="chip ${d.sonadora?"on":""}" data-act="sonadora">✨ Soñadora</button><span class="small muted">Parlay grande de Champions/Europa League, sin registrar picks.</span></div>`;
   if(m==="ragnar"&&d.sonadora){h+=`<div id="dyncheck">${dynCheck(d)}</div>`;return h}
   h+=`<label class="f">Picks del parlay (${d.legs.length})</label>`;
-  if(d.legs.length)h+=`<ul class="legs" style="margin:0 0 8px">${d.legs.map((l,i)=>`<li><span>${esc(l.text)}<br><span class="muted small">${tname(l.teamId)}</span></span><button class="tog" data-act="rmleg" data-i="${i}" aria-label="Quitar">−</button></li>`).join("")}</ul>`;
+  if(d.legs.length)h+=`<ul class="legs" style="margin:0 0 8px">${d.legs.map((l,i)=>`<li><span>${esc(l.text)}<br><span class="muted small">${lname(l)}</span></span><button class="tog" data-act="rmleg" data-i="${i}" aria-label="Quitar">−</button></li>`).join("")}</ul>`;
   const tierChips=tier=>ST.teams.filter(t=>t.tier===tier).map(t=>`<button class="chip ${tier==="principal"?"prin":""} ${d.team===t.id?"on":""}" data-act="dteam" data-id="${t.id}">${badge(t.id)}${esc(t.name)}</button>`).join("");
   h+=`<p class="small muted" style="margin:4px 0 6px">Principales</p><div class="chips">${tierChips("principal")}</div><p class="small muted" style="margin:10px 0 6px">Auxiliares</p><div class="chips">${tierChips("auxiliar")}</div>`;
+  if(m==="ragnar"||playingToday(d.date).length<=1)h+=`<button class="link" style="margin-top:10px" data-act="addvar">+ Equipo variante (Femenino, Futsal, otro deporte…)</button>`;
+  else h+=`<p class="small muted" style="margin:10px 0 0">Equipos variantes: solo cuando no juega ningún principal o juega uno (regla 26).</p>`;
   if(d.team){const ps=ST.picks.filter(p=>p.teamId===d.team).map(p=>({p,s:pickStats(p)})).sort((a,b)=>(b.s.u-a.s.u)||((b.s.pct??-1)-(a.s.pct??-1)));
     h+=`<div class="team"><div class="team-h"><h3>${tname(d.team)}</h3><span class="muted small">toca para agregar</span></div>`+
      ps.map(({p,s})=>{const used=d.legs.some(l=>l.pickId===p.id);return`<button class="pk" data-act="addleg" data-id="${p.id}" ${used?"disabled":""}><span class="tx">${used?"✓ ":""}${esc(p.text)}${p.player?`<span class="tag">jugador</span>`:""}</span><span class="rec small muted">${s.u?s.h+"/"+s.u:"nuevo"}</span></button>`}).join("")+
@@ -919,7 +926,7 @@ function viewMas(){return`<h1>Más</h1><div class="menu">
   <button data-tab="dinero">Entradas y salidas de dinero <span>${ST.moves.length}</span></button>
   <button data-tab="ajustes">Ajustes <span>plan del camino, día de pago</span></button>
   <button data-tab="drive">Google Drive <span>${DRIVE?"conectado":"sin conectar"}</span></button>
-  <button data-tab="respaldo">Respaldo <span>exportar o importar</span></button></div><p class="small muted" style="text-align:center;margin-top:16px">Versión 28 · Agregado oculto</p>`}
+  <button data-tab="respaldo">Respaldo <span>exportar o importar</span></button></div><p class="small muted" style="text-align:center;margin-top:16px">Versión 30 · Variantes y regla 12</p>`}
 function viewDrive(){const bk=ST?back:`<button class="back" data-tab="inicio">‹ Volver</button>`;
   return bk+`<h1>Google Drive</h1><p class="muted">Tus datos se guardan en tu Drive, en la carpeta “Operación Sueldo extra”, con una copia de respaldo por día. Si pierdes el celular, instalas la app en otro y te conectas con estos mismos datos.</p>
   <label class="f">Dirección del script (termina en /exec)</label><input class="in" id="durl" autocomplete="off" value="${esc(DRIVE?.url||"")}" placeholder="https://script.google.com/macros/s/…/exec">
@@ -1169,6 +1176,13 @@ const A={
       if(src==="saldo")ST.moves.push({id:uid(),date:d,type:"uso",method:"ragnar",to:id,amount:amt,note:`Activado con saldo (${M[m].name})`});
       else ST.moves.push({id:uid(),date:d,type:"entrada",method:m,amount:amt,note:`Inicio intento ${n}`});
       commit();toast(`${M[m].name} activado con ${money(amt)}`)})},
+  addvar(){const pr=ST.teams.filter(t=>t.tier==="principal");
+    formSheet("Pick de equipo variante",`<p class="small muted">Para equipos que no están en tu lista (Barça Femenino, Barça Futsal…). Cuenta como auxiliar: máximo uno por apuesta. Es solo para esta apuesta, no se guarda en Equipos.</p>
+     <label class="f">Es variante de</label><select class="in" name="p"><option value="">Ninguno / otro</option>${pr.map(t=>`<option value="${t.id}">${esc(t.name)}</option>`).join("")}</select>
+     <label class="f">Nombre del equipo</label><input class="in" name="n" autocomplete="off" placeholder="Ej: Barça Femenino">
+     <label class="f">Pick</label><input class="in" name="t" autocomplete="off" placeholder="Ej: Victoria del Barça Femenino">`,"Agregar a la apuesta",v=>{
+      const n=(v.n||"").trim(),t=(v.t||"").trim();if(!n||!t){toast("Escribe el equipo y el pick");return false}
+      UI.draft.legs.push({text:t,teamId:null,vname:n,vparent:v.p||null,ok:null});render()})},
   togag(){UI.showAg=!UI.showAg;render()},
   dividir(){const a=liveAttempt("tommy");if(!a||camEstado(a)!=="dividir"||pendingOf("tommy").length)return;const pl=P(),bal=attemptBal(a),rest=r2(bal-pl.ca),cb=liveAttempt("cabo");
     if(pendingOf("cabo").length){toast("Primero resuelve la apuesta de Cabo");return}
