@@ -234,7 +234,7 @@ nav.tabs .plus span{width:46px;height:46px;border-radius:14px;background:var(--i
 <script>
 "use strict";
 const KEY="operacion-sueldo-extra-v1";
-const M={tommy:{name:"Camino",c:"var(--tommy)"},walter:{name:"Kowalski",c:"var(--walter)"},ragnar:{name:"Rico",c:"var(--ragnar)"},rick:{name:"Cabo libre",c:"var(--rick)"}};
+const M={tommy:{name:"Camino",c:"var(--tommy)"},walter:{name:"Kowalski",c:"var(--walter)"},ragnar:{name:"Rico",c:"var(--ragnar)"},rick:{name:"Cabo libre",c:"var(--rick)"},cabo:{name:"Cabo",c:"var(--rick)"}};
 let ST=null, saveT=null, sync="local";
 const UI={tab:"inicio",detail:null,draft:null,open:{},resolve:{},hist:{}};
 
@@ -509,21 +509,22 @@ const lastAttempt=m=>ST.attempts.filter(a=>a.method===m).pop()||null;
 const pendingOf=m=>ST.bets.filter(b=>b.method===m&&b.status==="pendiente");
 function dayNum(a){return betsOfAttempt(a).filter(settled).length+1}
 function walterTarget(bal){return bal<100?(Math.floor(bal/10+1e-9)+1)*10:(Math.floor(bal/20+1e-9)+1)*20}
-const PLAN0={s:150,k:350,ap:100,re:50,cs:1.15,wk:1.10,we:1.15};
+const PLAN0={s:150,k:250,ca:150,ap:100,re:50,cs:1.15,wk:1.10,we:1.15};
 function P(){const s=ST.settings;if(!s.plan)s.plan={...PLAN0};for(const k in PLAN0)if(!(s.plan[k]>0))s.plan[k]=PLAN0[k];return s.plan}
 const FN={S:"Skipper",K:"Kowalski",C:"Cabo"},FC={S:"var(--tommy)",K:"var(--walter)",C:"var(--rick)"};
 function isWE(date){const w=parseISO(date||todayISO()).getDay();return w===0||w===6}
-function camFb(bal,a){if(a&&a.cabo)return"C";if(a&&a.forceK)return"K";return bal<P().s-1e-9?"S":"K"}
+function camFb(bal,a){if(a&&(a.cabo||a.method==="cabo"))return"C";if(a&&a.forceK)return"K";return bal<P().s-1e-9?"S":"K"}
 function camCapF(f,a){return f==="S"?P().s:f==="K"?P().k:(a&&a.meta||Infinity)}
-function camCuota(bal,date,a,solo){if(solo)return 1.10;return camFb(bal,a)==="S"?P().cs:(isWE(date)?P().we:P().wk)}
+function camCuota(bal,date,a,cap){const c=camFb(bal,a)==="S"?P().cs:(isWE(date)?P().we:P().wk);return cap?Math.min(c,cap):c}
+function cupoMax(n,date){const we=isWE(date);if(n<=0)return null;if(n===1)return 1.11;if(n===2)return we?1.21:1.13;if(n===3)return we?1.21:1.16;return 1.26}
 function camTarget(bal,date,a,solo){a=a||liveAttempt("tommy");const cap=camCapF(camFb(bal,a),a),x=bal*camCuota(bal,date,a,solo);return r2(x>=cap-5?Math.max(cap,bal):x)}
 const betFase=b=>b.fase||(b.stake<P().s-1e-9?"S":"K");
 function camNum(a){const f=camFb(attemptBal(a),a),n=betsOfAttempt(a).filter(b=>betFase(b)===f).length;return n+(pendingOf("tommy").length?0:1)}
 function camLabel(a){const f=camFb(attemptBal(a),a);return`${FN[f]} · Apuesta ${camNum(a)}`}
-function camEstado(a){const bal=attemptBal(a);if(!a.cabo&&bal>=P().k-1e-9)return"pasar";if(a.cabo&&!a.meta)return"sinmeta";if(a.cabo&&bal>=a.meta-1e-9)return"meta";return"juega"}
+function camEstado(a){const bal=attemptBal(a);if(a.method==="cabo")return!a.meta?"sinmeta":bal>=a.meta-1e-9?"meta":"juega";if(!a.cabo&&bal>=P().k-1e-9)return"dividir";if(a.cabo&&!a.meta)return"sinmeta";if(a.cabo&&bal>=a.meta-1e-9)return"meta";return"juega"}
 function respFund(){let s=0;for(const mv of ST.moves)if(mv.method==="respaldo")s+=mv.type==="traspaso"||mv.type==="ajuste"?mv.amount:-mv.amount;return r2(s)}
-function targetFor(m,bal,date,solo){return m==="tommy"?camTarget(bal,date,null,solo):walterTarget(bal)}
-function minCuota(m,bal,date,solo){const a=liveAttempt("tommy");return m==="tommy"?Math.min(camCuota(bal,date,a,solo),ceil2(camTarget(bal,date,a,solo)/bal)):ceil2(walterTarget(bal)/bal)}
+function targetFor(m,bal,date,solo){return m==="tommy"||m==="cabo"?camTarget(bal,date,liveAttempt(m),solo):walterTarget(bal)}
+function minCuota(m,bal,date,solo){const a=liveAttempt(m==="cabo"?"cabo":"tommy");return m==="tommy"||m==="cabo"?Math.min(camCuota(bal,date,a,solo),ceil2(camTarget(bal,date,a,solo)/bal)):ceil2(walterTarget(bal)/bal)}
 function ragnarFund(){let s=0;for(const mv of ST.moves)if(mv.method==="ragnar")s+=(mv.type==="entrada"||mv.type==="ajuste"||mv.type==="traspaso")?mv.amount:-mv.amount;
   for(const b of ST.bets)if((b.method==="ragnar"||b.method==="rick")&&settled(b))s+=b.ret-b.stake;return r2(s)}
 function ragnarFree(){return r2(ragnarFund()-pendingOf("ragnar").concat(pendingOf("rick")).reduce((s,b)=>s+b.stake,0))}
@@ -556,7 +557,8 @@ function restartAdvice(m){
   return{html:out.join(""),ready:paidSince&&!o.length}}
 
 /* ---------- reglas automáticas ---------- */
-function soloOf(d){return d.method==="tommy"&&playingToday(d.date).length===1}
+function capOf(d){if(!["tommy","walter","cabo"].includes(d.method))return null;if(d.method==="tommy"){const a=liveAttempt("tommy");if(!a||camFb(attemptBal(a),a)==="S")return null}return cupoMax(playingToday(d.date).length,d.date)}
+function wPlayerOk(l){const p=pick(l.pickId);if(!p||!p.player)return true;if(tkey(l.teamId)!=="warriors")return false;const t=(p.text||l.text||"").toLowerCase();if(!/combinad/.test(t)||!/punto/.test(t))return false;const n=(t.match(/\d+(\.\d+)?/g)||[]).map(Number);return n.length>0&&Math.max(...n)<=15}
 function checks(d){
   const w=[];const s=ST.settings;
   const legs=d.legs;const teams=[...new Set(legs.map(l=>l.teamId).filter(Boolean))];
@@ -564,19 +566,24 @@ function checks(d){
   if(!legs.length&&d.method!=="ragnar")w.push({e:1,t:"Agrega al menos un pick."});
   const c=num(d.cuota);
   if(!(c>1))w.push({e:1,t:"Escribe la cuota del parlay."});
-  if(d.method==="tommy"||d.method==="walter"){
+  if(d.method==="tommy"||d.method==="walter"||d.method==="cabo"){
     const a=liveAttempt(d.method);
     if(a){const bal=attemptBal(a),st=num(d.stake);
       if(!(st>0))w.push({e:1,t:"Escribe cuánto vas a meter."});
       else if(st>bal+1e-9)w.push({e:1,t:`Solo tienes ${money(bal)} en este método.`});
-      const need=minCuota(d.method,st>0?st:bal,d.date,soloOf(d));
+      const need=minCuota(d.method,st>0?st:bal,d.date,capOf(d));
       if(c>1&&c<need-1e-9)w.push({t:`La cuota ${c.toFixed(2)} no llega a la meta. Necesitas al menos ${need.toFixed(2)}.`});
       if(d.method==="walter"&&dayNum(a)>s.maxDias)w.push({t:`Ya pasaste los ${s.maxDias} días de este intento.`});
-      if(d.method==="tommy"){const es=camEstado(a);
-        if(es==="pasar")w.push({e:1,t:`Llegaste a ${money(P().k)}. Apartá ${money(P().ap)} y pasá a Cabo desde Inicio.`});
+      if(d.method==="tommy"||d.method==="cabo"){const es=camEstado(a);
+        if(es==="dividir")w.push({e:1,t:`Llegaste a ${money(P().k)}. Dividí desde Inicio: ${money(P().ca)} a Cabo y el resto sigue.`});
+        else if(es==="pasar")w.push({e:1,t:`Llegaste a ${money(P().k)}. Pasá desde Inicio.`});
         else if(es==="sinmeta")w.push({e:1,t:"Poné la meta de Cabo desde Inicio."});
         else if(es==="meta")w.push({e:1,t:`Cabo llegó a su meta. Retirá desde Inicio.`});}}
-    legs.filter(l=>l.pickId&&pick(l.pickId)?.player&&tkey(l.teamId)!=="warriors").forEach(l=>w.push({t:`“${l.text}” es estadística de jugador. Solo se permite en Rico (o de los Warriors).`}));
+    legs.filter(l=>!wPlayerOk(l)).forEach(l=>w.push({e:1,lk:1,t:`🔒 Regla 6: “${l.text}” es de jugador. Solo se permiten Puntos combinados de Warriors de 15 o menos.`}));
+    const otro=d.method==="cabo"?"tommy":d.method==="tommy"?"cabo":null;
+    if(otro&&liveAttempt(otro)){const ob=ST.bets.filter(b=>b.method===otro&&b.date===d.date),ot=new Set(ob.flatMap(b=>b.legs.map(l=>l.teamId)));
+      const rep=teams.filter(t=>ot.has(t));if(rep.length)w.push({e:1,lk:1,t:`🔒 Regla 23: ${rep.map(shn).join(", ")} ya va en la apuesta de ${M[otro].name} ese día.`});
+      if(d.method==="cabo"&&!ob.length)w.push({e:1,lk:1,t:"🔒 Regla 24: primero va la apuesta del Camino ese día."});}
     if(ST.bets.some(b=>b.method===d.method&&b.status==="perdida"&&b.date===d.date))w.push({e:1,lk:1,t:"🔒 Regla 19: hoy ya perdiste una apuesta. Ese día ya no se apuesta."});
     const pl=playingToday(d.date),npl=pl.length;
     if(!npl)w.push({e:1,lk:1,t:"🔒 Regla 12: no hay ningún principal anotado en Partidos de hoy para esa fecha. Anotalos primero."});
@@ -584,7 +591,7 @@ function checks(d){
       if(npl>=3&&aux.length)w.push({e:1,lk:1,t:`🔒 Regla 9: juegan ${npl} principales. La apuesta va solo con ellos, sin auxiliares.`});
       if(npl===2&&aux.length)w.push({e:1,lk:1,t:"🔒 Regla 10: juegan 2 principales. La apuesta va solo con esos dos."});
       if(npl===1&&aux.length>1)w.push({e:1,lk:1,t:"🔒 Regla 11: juega 1 principal. Solo se combina con un auxiliar."});
-      if(npl===1&&c>=1.12-1e-9)w.push({e:1,lk:1,t:`🔒 Regla 14: solo juega un principal. La cuota tiene que ser 1.10 o 1.11 (pusiste ${c.toFixed(2)}).`});
+      const cap=capOf(d);if(cap&&c>cap+1e-9)w.push({e:1,lk:1,t:`🔒 Regla 14: juegan ${npl} ${npl===1?"principal":"principales"} (${isWE(d.date)?"finde":"entre semana"}). La cuota máxima es ${cap.toFixed(2)} y pusiste ${c.toFixed(2)}.`});
       const fuera=prin.filter(t=>!pl.includes(t));if(fuera.length)w.push({e:1,lk:1,t:`🔒 ${fuera.map(shn).join(", ")} no está en Partidos de hoy para esa fecha.`});}
     if(aux.length>1)w.push({e:1,lk:1,t:"🔒 Regla 13: llevás dos auxiliares. Solo uno por apuesta."});
     if(legs.length>4)w.push({t:`Llevás ${legs.length} picks. Regla 21: máximo 4 por apuesta.`});
@@ -618,7 +625,22 @@ const NEW_TEAMS=[["redbull","Red Bull Racing","F1",["Victoria de Verstappen","Ve
  ["topuria","Ilia Topuria","UFC",["Victoria de Topuria","Topuria gana por KO/TKO","La pelea no llega a la decisión"]],
  ["joshua","Anthony Joshua","Boxeo",["Victoria de Joshua","Joshua gana por KO","Más de 3.5 asaltos"]]];
 function migRules(){  if(!ST.settings.rules3){ST.rules=["No meter dinero de tu bolsillo mientras haya un método vivo.", "Nunca subir una apuesta para recuperar una pérdida.", "Solo apostar picks que estén en la pestaña Picks.", "No copiar apuestas de redes sociales ni de tipsters.", "No apostar a tarjetas, córners, faltas ni mercados que no estén definidos.", "En Skipper y Kowalski, nada de estadísticas de jugadores, salvo de los Warriors y sin pasarse.", "En Rico sí se permiten estadísticas de jugadores. En Skipper, Kowalski y Cabo no (salvo de los Warriors).", "Solo apostar a equipos principales o auxiliares.", "Si juegan 3 o más principales, la apuesta lleva solo a esos principales.", "Si juegan 2 principales, la apuesta lleva solo a esos dos.", "Si juega 1 principal, se puede combinar con un auxiliar.", "Si no juega ningún principal, ese día no se apuesta.", "Nunca más de un auxiliar en la misma apuesta.", "Si ese día solo juega un equipo principal, la apuesta es a cuota 1.10 (1.12 o más queda bloqueada), aunque por el plan toque otra cuota.", "Si ninguna apuesta cumple las reglas, ese día no se apuesta.", "Paciencia y disciplina: seguir el sistema, no buscar suerte.", "El respaldo nunca se juega. Solo sirve para volver a arrancar Skipper.", "La meta de Cabo se pone antes de su primera apuesta y no se sube a medio camino. Solo se puede bajar.", "Si la apuesta del día pierde, ese día ya no se apuesta. El ciclo nuevo empieza al día siguiente.", "La apuesta se hace antes de que empiece el primer partido. Nada en vivo.", "Máximo 4 picks por apuesta.", "Un día de descanso fijo a la semana."].map((t,i)=>({id:"r3_"+i,text:t}));ST.settings.rules3=true;return true}return false}
-function migrate(){if(!ST)return false;let r=migRules();if(!ST.settings.undoAnadir){const n0=ST.moves.length;ST.moves=ST.moves.filter(mv=>!/^Añadido al intento|^Saldo de Bet365 que no estaba en la app/.test(mv.note||""));ST.settings.undoAnadir=true;r=true}if(!ST.settings.rules4){const x=ST.rules.find(q=>/En Cabo s[ií] se permiten/.test(q.text));if(x)x.text="En Rico sí se permiten estadísticas de jugadores. En Skipper, Kowalski y Cabo no (salvo de los Warriors).";ST.settings.rules4=true;r=true}return migrate0()||r}
+function migPlan5(){if(ST.settings.plan5)return false;ST.settings.plan5=true;const pl=P();pl.k=250;pl.ca=150;
+  const setR=(i,t)=>{const x=ST.rules.find(q=>q.id==="r3_"+i);if(x)x.text=t};
+  setR(5,"Estadísticas de jugadores: en el camino y en Cabo solo se permiten Puntos combinados de Warriors de 15 o menos.");
+  setR(6,"En Rico no hay reglas: monto, cuota y picks libres.");
+  setR(13,"Cuota máxima según los principales que juegan ese día (no aplica en Skipper): 1 → 1.11 · 2 → 1.13 entre semana, 1.21 finde · 3 → 1.16 entre semana, 1.21 finde · 4 o más → 1.26.");
+  setR(16,"Al llegar a $250 se divide: $150 pasan a Cabo y el resto vuelve a empezar el camino. Cuando el camino vuelve a $250, Cabo se retira esté donde esté.");
+  if(!ST.rules.some(q=>q.id==="r5_23"))ST.rules.push({id:"r5_23",text:"El camino y Cabo nunca llevan los mismos equipos el mismo día."},{id:"r5_24",text:"Primero se apuesta el camino. Cabo solo con principales que queden libres; si no hay, Cabo descansa."},{id:"r5_25",text:"Los picks nuevos se agregan desde Equipos, nunca desde Apostar."});
+  // picks: merge Warriors team points, remove picks used once, sort by use
+  const wp=ST.picks.filter(p=>tkey(p.teamId)==="warriors"&&!p.player&&/punto/i.test(p.text));
+  if(wp.length){const keep={id:"pw"+uid(),teamId:wp[0].teamId,text:"Puntos de Warriors",player:false,baseUsed:wp.reduce((x,p)=>x+(p.baseUsed||0),0),baseHit:wp.reduce((x,p)=>x+(p.baseHit||0),0)};
+    const ids=new Set(wp.map(p=>p.id));for(const b of ST.bets)for(const l of b.legs)if(ids.has(l.pickId))l.pickId=keep.id;ST.picks=ST.picks.filter(p=>!ids.has(p.id));ST.picks.push(keep)}
+  const use=p=>(p.baseUsed||0)+ST.bets.reduce((x,b)=>x+b.legs.filter(l=>l.pickId===p.id).length,0);
+  ST.picks=ST.picks.filter(p=>use(p)!==1);
+  const ord=ST.teams.map(t=>t.id);ST.picks.sort((a,b)=>(ord.indexOf(a.teamId)-ord.indexOf(b.teamId))||(use(b)-use(a)));
+  return true}
+function migrate(){if(!ST)return false;let r=migRules();if(migPlan5())r=true;if(!ST.settings.undoAnadir){const n0=ST.moves.length;ST.moves=ST.moves.filter(mv=>!/^Añadido al intento|^Saldo de Bet365 que no estaba en la app/.test(mv.note||""));ST.settings.undoAnadir=true;r=true}if(!ST.settings.rules4){const x=ST.rules.find(q=>/En Cabo s[ií] se permiten/.test(q.text));if(x)x.text="En Rico sí se permiten estadísticas de jugadores. En Skipper, Kowalski y Cabo no (salvo de los Warriors).";ST.settings.rules4=true;r=true}return migrate0()||r}
 function migrate0(){
   if(ST.settings.seedTeams2&&!ST.settings.seedTeams3){const nk=NEW_TEAMS.map(x=>x[0]);
     for(const t of ST.teams){const k=tkey(t.id);if(!nk.includes(k))continue;t.tier="principal";
@@ -651,30 +673,44 @@ function viewInicio(){
   h+=`<div class="cuenta"><div class="ledger">
     <span class="op"></span><span>Retirado de Bet365</span><button class="v vbtn" data-act="editret" aria-label="Editar retirado">${money(c.sal)}${IC.pen}</button>
     <span class="op">+</span><span>Saldo disponible</span><button class="v vbtn" data-act="editsaldo" aria-label="Editar saldo disponible">${money(c.juego)}${IC.pen}</button>
-    <span class="op">−</span><span>Agregado</span><button class="v vbtn" data-act="editag" aria-label="Editar agregado">${money(c.ent)}${IC.pen}</button>
+    ${UI.showAg?`<span class="op">−</span><span>Agregado</span><button class="v vbtn" data-act="editag" aria-label="Editar agregado">${money(c.ent)}${IC.pen}</button>
     <span class="rule"></span>
-    <span class="op">=</span><span><b>Diferencia total</b></span><span class="v res ${c.neto>=0?"pos":"neg"}">${signed(c.neto)}</span></div>
-    <div class="ledger-act" style="flex-wrap:wrap"><button class="ibtn" data-act="agregar" aria-label="Agregar dinero">${IC.add}Agregar</button><button class="ibtn" data-act="retirar" aria-label="Retirar dinero">${IC.out}Retirar</button></div></div>`;
+    <span class="op">=</span><span><b>Diferencia total</b></span><span class="v res ${c.neto>=0?"pos":"neg"}">${signed(c.neto)}</span>`:""}</div>
+    <div class="ledger-act" style="flex-wrap:wrap"><button class="ibtn" data-act="agregar" aria-label="Agregar dinero">${IC.add}Agregar</button><button class="ibtn" data-act="retirar" aria-label="Retirar dinero">${IC.out}Retirar</button><button class="ibtn" data-act="togag" aria-label="Ver agregado y diferencia">${UI.showAg?"🙈 Ocultar":"👁 Ver agregado y diferencia"}</button></div></div>`;
   const pend=ST.bets.filter(b=>b.status==="pendiente");
   if(pend.length){h+=`<h2>Por resolver</h2>`+pend.map(pendCard).join("")}
-  h+=`<h2>Métodos</h2>`+camCard()+(liveAttempt("walter")?ladderCard("walter"):"")+ragnarCard()+`<div class="row" style="margin-top:10px;gap:16px">${ST.attempts.some(a=>a.method==="walter")?`<button class="link" data-act="detail" data-id="walter">Historial de Kowalski</button>`:""}${ST.bets.some(b=>b.method==="rick")?`<button class="link" data-act="detail" data-id="rick">Historial de Cabo libre</button>`:""}</div>`;
+  h+=`<h2>Métodos</h2>`+camCard()+(liveAttempt("cabo")||lastAttempt("cabo")||P().k<350?caboCard():"")+(liveAttempt("walter")?ladderCard("walter"):"")+ragnarCard()+`<div class="row" style="margin-top:10px;gap:16px">${ST.attempts.some(a=>a.method==="walter")?`<button class="link" data-act="detail" data-id="walter">Historial de Kowalski</button>`:""}${ST.bets.some(b=>b.method==="rick")?`<button class="link" data-act="detail" data-id="rick">Historial de Cabo libre</button>`:""}</div>`;
   return h}
 
 function camCard(){const m="tommy",a=liveAttempt(m),last=lastAttempt(m),pl=P(),rf=respFund();
   let h=`<div class="met" style="--c:${a?FC[camFb(attemptBal(a),a)]:M[m].c}" data-act="detail" data-id="${m}" role="button" tabindex="0"><div class="met-h"><span class="met-name">Camino</span>`;
   if(a){const bal=attemptBal(a),f=camFb(bal,a),p=pendingOf(m)[0],es=camEstado(a),cap=camCapF(f,a);
     h+=`<span class="pill vivo">${camLabel(a)}</span></div><div class="met-bal"><span class="num">${money(bal)}</span><span class="muted small">${cap<Infinity?"hacia "+money(cap):"sin meta"}${f==="C"?` <button class="link" style="font-size:13px" data-act="cammeta">cambiar meta</button>`:""}</span></div>`;
-    if(es==="pasar")h+=`<p class="one"><b>¡Llegaste a ${money(pl.k)}!</b> Apartá ${money(pl.ap)} de respaldo y Cabo arranca con ${money(r2(bal-pl.ap))}.</p><button class="btn pri" style="margin-top:8px" data-act="camcabo">Apartar ${money(pl.ap)} y pasar a Cabo</button>`;
+    if(es==="dividir"){const cb=liveAttempt("cabo");h+=`<p class="one"><b>¡Llegaste a ${money(pl.k)}!</b> ${cb?`Primero se retira Cabo (${money(attemptBal(cb))}). Después `:""}${money(pl.ca)} pasan a Cabo y ${money(r2(bal-pl.ca))} siguen el camino.</p><button class="btn pri" style="margin-top:8px" data-act="dividir">Dividir</button>`}
+    else if(es==="pasar")h+=`<p class="one"><b>¡Llegaste a ${money(pl.k)}!</b> Apartá ${money(pl.ap)} de respaldo y Cabo arranca con ${money(r2(bal-pl.ap))}.</p><button class="btn pri" style="margin-top:8px" data-act="camcabo">Apartar ${money(pl.ap)} y pasar a Cabo</button>`;
     else if(es==="sinmeta")h+=`<p class="one">Cabo arrancó con ${money(bal)}. Poné tu meta.</p><button class="btn pri" style="margin-top:8px" data-act="cammeta">Poner meta de Cabo</button>`;
     else if(es==="meta")h+=`<p class="one"><b>¡Cabo llegó a ${money(a.meta)}!</b> Retirás todo y Skipper vuelve a empezar con ${money(pl.re)} del respaldo.</p><button class="btn pri" style="margin-top:8px" data-act="camretiro">Retirar ${money(bal)}</button>`;
     else if(p)h+=`<p class="one">En juego: ${money(p.stake)} a ${p.cuota.toFixed(2)} → meta ${money(p.target)}</p>`;
     else h+=`<p class="one">Hoy mete <b>${money(bal)}</b> → <b>${money(targetFor(m,bal))}</b> · cuota ≥ ${minCuota(m,bal).toFixed(2)}</p>`;
     const lo=f==="S"?a.capital:f==="K"?pl.s:(a.caboCap||bal),pct=cap<Infinity?Math.min(100,(bal-lo)/Math.max(1,cap-lo)*100):0;
     h+=`<div class="prog"><i style="width:${Math.max(0,pct).toFixed(0)}%"></i></div>
-     <div class="row small muted" style="margin-top:8px;gap:6px;flex-wrap:wrap">${["S","K","C"].map(x=>`<span style="${x===f?"color:"+FC[x]+";font-weight:700":""}">${FN[x]}${x==="S"?" →"+money(pl.s):x==="K"?" →"+money(pl.k):a.meta?" →"+money(a.meta):""}</span>`).join(" · ")}</div>`;
+     <div class="row small muted" style="margin-top:8px;gap:6px;flex-wrap:wrap">${(a.cabo?["S","K","C"]:["S","K"]).map(x=>`<span style="${x===f?"color:"+FC[x]+";font-weight:700":""}">${FN[x]}${x==="S"?" →"+money(pl.s):x==="K"?" →"+money(pl.k):a.meta?" →"+money(a.meta):""}</span>`).join(" · ")}</div>`;
   }else{const usaR=rf>=pl.re-1e-9;h+=`<span class="pill caido">${last?(last.status==="cerrado"?attLabel(last):"Ciclo caído"):"Sin ciclo"}</span></div>
      <p class="one">Skipper vuelve a empezar con ${money(pl.re)} ${usaR?"del respaldo":"de tu bolsillo"}.</p><div class="row" style="margin-top:8px"><button class="btn pri" data-act="camnuevo">Empezar con ${money(pl.re)} ${usaR?"del respaldo":"de mi bolsillo"}</button></div>`}
-  h+=`<p class="small muted" style="margin:8px 0 0">Respaldo apartado: <b style="color:var(--ink)">${money(rf)}</b></p>`;
+  if(rf>0.004)h+=`<p class="small muted" style="margin:8px 0 0">Respaldo apartado: <b style="color:var(--ink)">${money(rf)}</b></p>`;
+  return h+`</div>`}
+function caboCard(){const m="cabo",a=liveAttempt(m),last=lastAttempt(m),pl=P();
+  let h=`<div class="met" style="--c:var(--rick)"><div class="met-h"><span class="met-name">Cabo</span>`;
+  if(!a)return h+`<span class="pill caido">${last?(last.status==="cerrado"?"Retirado":"Caído"):"Cerrado"}</span></div><p class="one">Se abre cuando el camino llegue a ${money(pl.k)}: ${money(pl.ca)} pasan a Cabo.</p></div>`;
+  const bal=attemptBal(a),es=camEstado(a),p=pendingOf(m)[0],n=betsOfAttempt(a).length+(p?0:1);
+  h+=`<span class="pill vivo">Apuesta ${n}</span></div><div class="met-bal"><span class="num">${money(bal)}</span><span class="muted small">${a.meta?"hacia "+money(a.meta):"sin meta"} <button class="link" style="font-size:13px" data-act="cabometa">cambiar meta</button></span></div>`;
+  if(es==="sinmeta")h+=`<button class="btn pri" style="margin-top:8px" data-act="cabometa">Poner meta de Cabo</button>`;
+  else if(es==="meta")h+=`<p class="one"><b>¡Cabo llegó a ${money(a.meta)}!</b> Retirá todo.</p><button class="btn pri" style="margin-top:8px" data-act="caboretiro">Retirar ${money(bal)}</button>`;
+  else if(p)h+=`<p class="one">En juego: ${money(p.stake)} a ${p.cuota.toFixed(2)} → meta ${money(p.target)}</p>`;
+  else h+=`<p class="one">Hoy mete <b>${money(bal)}</b> → <b>${money(targetFor(m,bal))}</b> · cuota ≥ ${minCuota(m,bal).toFixed(2)}</p><p class="small muted" style="margin:4px 0 0">Primero el camino, y nunca los mismos equipos.</p>`;
+  const pct=a.meta?Math.min(100,(bal-a.capital)/Math.max(1,a.meta-a.capital)*100):0;
+  h+=`<div class="prog"><i style="width:${Math.max(0,pct).toFixed(0)}%"></i></div>`;
+  if(es!=="meta"&&!p)h+=`<button class="link small" style="margin-top:8px" data-act="caboretiro">Retirar ahora</button>`;
   return h+`</div>`}
 function ladderCard(m){
   const a=liveAttempt(m),last=lastAttempt(m),s=ST.settings;
@@ -724,7 +760,7 @@ function pendCard(b){
    <label class="f">Cobro real si ganó</label><input class="in" type="text" inputmode="decimal" autocomplete="off" value="${r.ret}" data-bind="ret" data-id="${b.id}">
    <div class="row" style="margin-top:12px"><button class="btn win" data-act="settle" data-id="${b.id}" data-v="ganada">Ganó</button><button class="btn loss" data-act="settle" data-id="${b.id}" data-v="perdida">Perdió</button><button class="link" data-act="delbet" data-id="${b.id}" style="margin-left:auto">Borrar</button></div></div>`}
 
-const INFO={"tommy": "Un solo camino por ciclos, metiendo todo. Skipper: de $50 a $150 a 1.15. Kowalski: de $150 a $350 a 1.10 entre semana y 1.15 en finde. Al llegar a $350 apartás $100 de respaldo y Cabo sigue con $250 a 1.10/1.15 hasta la meta que pongás. Al llegar, retirás todo y Skipper vuelve a empezar con $50 del respaldo. Si una apuesta pierde, Skipper arranca con $50 del respaldo (o de tu bolsillo si ya no hay).", "walter": "De $50 a $100 subes de $10 en $10; desde $100, de $20 en $20. Lo que sobra va a Rico.", "ragnar": "La caja: aquí llega lo que sobra de Skipper y Kowalski. Apuestas a tus equipos con $3, $5 o $10.", "rick": "Libre: sin meta ni cuota. Apuesta con el saldo disponible y lo ganado regresa ahí."};
+const INFO={"tommy": "Un camino que se repite. Skipper: de $50 a $150 a 1.15 (sin tope de cuota). Kowalski: de $150 a $250 a 1.10 entre semana y 1.15 en finde, sin pasar la cuota máxima del día. Al llegar a $250 se divide: $150 pasan a Cabo, que sube hasta tu meta, y el resto vuelve a empezar el camino. Cuando el camino vuelve a $250, Cabo se retira esté donde esté y se divide otra vez. Si cae Cabo, el camino sigue; si cae el camino, Cabo sigue.", "walter": "De $50 a $100 subes de $10 en $10; desde $100, de $20 en $20. Lo que sobra va a Rico.", "ragnar": "La caja: aquí llega lo que sobra de Skipper y Kowalski. Apuestas a tus equipos con $3, $5 o $10.", "rick": "Libre: sin meta ni cuota. Apuesta con el saldo disponible y lo ganado regresa ahí."};
 function viewDetail(m){
   let h=`<button class="back" data-act="back">‹ Inicio</button><h1 style="color:${M[m].c}">${M[m].name}</h1><p class="muted small" style="margin:6px 0 12px">${INFO[m]}</p>`;
   if(m==="rick")return h+rickDetail();
@@ -765,17 +801,17 @@ function ragnarDetail(){
 function newDraft(m){return{method:m==="rick"?"tommy":(m||"tommy"),date:todayISO(),cuota:"",stake:"",legs:[],team:null,custom:""}}
 function viewApostar(){
   const d=UI.draft||(UI.draft=newDraft());const m=d.method;
-  let h=`<h1>Nueva apuesta</h1>${viewHoy()}${viewGamesToday()}<div class="seg" style="margin-top:14px;grid-template-columns:repeat(${liveAttempt("walter")?3:2},1fr)">${["tommy",...(liveAttempt("walter")?["walter"]:[]),"ragnar"].map(k=>`<button style="--c:${M[k].c}" class="${m===k?"on":""}" data-act="dm" data-id="${k}">${M[k].name.split(" ")[0]}</button>`).join("")}</div>`;
+  let h=`<h1>Nueva apuesta</h1>${viewHoy()}${viewGamesToday()}<div class="seg" style="margin-top:14px;grid-template-columns:repeat(${2+(liveAttempt("walter")?1:0)+(liveAttempt("cabo")?1:0)},1fr)">${["tommy",...(liveAttempt("walter")?["walter"]:[]),...(liveAttempt("cabo")?["cabo"]:[]),"ragnar"].map(k=>`<button style="--c:${M[k].c}" class="${m===k?"on":""}" data-act="dm" data-id="${k}">${M[k].name.split(" ")[0]}</button>`).join("")}</div>`;
   if(m==="rick")h+=`<p class="muted small" style="margin:12px 0 0">Método libre: sin meta ni cuota fija. El dinero sale de tu saldo disponible (libre: <b style="color:var(--ink)">${money(ragnarFree())}</b>) y lo que ganes vuelve ahí.</p>
      <label class="f">Cuánto vas a meter</label><input class="in" type="text" inputmode="decimal" autocomplete="off" value="${esc(d.stake)}" data-bind="stake">`;
   else if(m!=="ragnar"){const a=liveAttempt(m);
     if(!a)return h+`<div class="card"><p style="margin:0">${M[m].name} no tiene un intento vivo. Puedes empezar uno desde Inicio.</p></div>`;
     if(pendingOf(m).length)return h+`<div class="card"><p style="margin:0">Ya tienes la apuesta del día en juego. Resuélvela en Inicio antes de meter otra.</p></div>`;
     const bal=attemptBal(a);if(d.stake==="")d.stake=String(suggestStake(m,bal)||bal);
-    h+=`<p class="muted small" style="margin:12px 0 0">${m==="tommy"?camLabel(a)+` · cuota ≥ ${minCuota(m,attemptBal(a),d.date,soloOf(d)).toFixed(2)}${soloOf(d)?" (solo juega 1 principal)":camFb(attemptBal(a),a)!=="S"?(isWE(d.date)?" (finde)":" (entre semana)"):""}`:"Día "+dayNum(a)} · tu saldo en ${M[m].name.split(" ")[0]}: <b style="color:var(--ink)">${money(bal)}</b></p>
+    h+=`<p class="muted small" style="margin:12px 0 0">${m==="tommy"?camLabel(a)+` · cuota ≥ ${minCuota(m,attemptBal(a),d.date,capOf(d)).toFixed(2)}${capOf(d)?` (máx ${capOf(d).toFixed(2)})`:camFb(attemptBal(a),a)!=="S"?(isWE(d.date)?" (finde)":" (entre semana)"):""}`:"Día "+dayNum(a)} · tu saldo en ${M[m].name.split(" ")[0]}: <b style="color:var(--ink)">${money(bal)}</b></p>
      <label class="f">Cuánto vas a meter</label><input class="in" type="text" inputmode="decimal" autocomplete="off" value="${esc(d.stake)}" data-bind="stake">`}
   else h+=`<label class="f">Cuánto vas a meter (Rico tiene ${money(ragnarFree())})</label><input class="in" type="text" inputmode="decimal" autocomplete="off" value="${esc(d.stake)}" data-bind="stake">`;
-  if((m==="tommy"||m==="walter")&&liveAttempt(m)){const pl=playingToday(d.date);h+=`<p class="small muted" style="margin:10px 0 0">Principales que juegan ese día: <b style="color:var(--ink)">${pl.length?pl.map(x=>esc(shn(x))).join(", "):"ninguno anotado"}</b>${pl.length===1?" · regla 14: cuota 1.10":""}</p>`}
+  if((m==="tommy"||m==="walter"||m==="cabo")&&liveAttempt(m)){const pl=playingToday(d.date);h+=`<p class="small muted" style="margin:10px 0 0">Principales que juegan ese día: <b style="color:var(--ink)">${pl.length?pl.map(x=>esc(shn(x))).join(", "):"ninguno anotado"}</b>${capOf(d)?` · cuota máxima <b style="color:var(--ink)">${capOf(d).toFixed(2)}</b>`:(m==="tommy"?" · Skipper: sin tope, cuota 1.15":"")}</p>`}
   h+=`<div class="row" style="gap:10px"><div style="flex:1"><label class="f">Cuota del parlay</label><input class="in" type="text" inputmode="decimal" autocomplete="off" placeholder="${m==="ragnar"?"":"1.15"}" value="${esc(d.cuota)}" data-bind="cuota"></div>
    <div style="flex:1"><label class="f">Fecha</label><input class="in" type="date" value="${esc(d.date)}" data-bind="date"></div></div>`;
   h+=`<div id="dynpay">${dynPay(d)}</div>`;
@@ -788,13 +824,13 @@ function viewApostar(){
   if(d.team){const ps=ST.picks.filter(p=>p.teamId===d.team).map(p=>({p,s:pickStats(p)})).sort((a,b)=>(b.s.u-a.s.u)||((b.s.pct??-1)-(a.s.pct??-1)));
     h+=`<div class="team"><div class="team-h"><h3>${tname(d.team)}</h3><span class="muted small">toca para agregar</span></div>`+
      ps.map(({p,s})=>{const used=d.legs.some(l=>l.pickId===p.id);return`<button class="pk" data-act="addleg" data-id="${p.id}" ${used?"disabled":""}><span class="tx">${used?"✓ ":""}${esc(p.text)}${p.player?`<span class="tag">jugador</span>`:""}</span><span class="rec small muted">${s.u?s.h+"/"+s.u:"nuevo"}</span></button>`}).join("")+
-     `<div style="padding:10px 14px;border-top:1px solid var(--line)" class="row"><input class="in" style="flex:1" placeholder="Pick nuevo para ${esc(team(d.team).name)}" value="${esc(d.custom)}" data-bind="custom"><button class="btn" data-act="addcustom">Agregar</button></div></div>`}
+     `<p class="small muted" style="padding:10px 14px;margin:0;border-top:1px solid var(--line)">Los picks nuevos se agregan desde Equipos.</p></div>`}
   h+=`<div id="dyncheck">${dynCheck(d)}</div>`;
   return h}
 
 function dynPay(d){const m=d.method;const stake=num(d.stake);const c=num(d.cuota);let h="";
   if(m!=="ragnar"&&liveAttempt(m)&&stake>0){const bal=attemptBal(liveAttempt(m)),sob=r2(bal-stake);
-    h+=`<div class="facts"><div class="fact"><small>Meta</small><span class="num">${money(targetFor(m,stake,d.date,soloOf(d)))}</span></div><div class="fact"><small>Cuota mínima</small><span class="num">${minCuota(m,stake,d.date,soloOf(d)).toFixed(2)}</span></div></div>`;
+    h+=`<div class="facts"><div class="fact"><small>Meta</small><span class="num">${money(targetFor(m,stake,d.date,capOf(d)))}</span></div><div class="fact"><small>Cuota mínima</small><span class="num">${minCuota(m,stake,d.date,capOf(d)).toFixed(2)}</span></div></div>`;
     if(sob>0.004)h+=`<p class="small muted" style="margin:6px 0 0">Sobran ${money(sob)}: pasan al fondo de Rico al guardar.</p>`}
   return h+(stake>0&&c>1?`<p class="small muted" style="margin:6px 0 0">Si gana te paga <b class="num" style="color:var(--ink);font-size:17px">${money(stake*c)}</b></p>`:"")}
 function dynCheck(d){const c=num(d.cuota);let h="";const w=checks(d);const real=w.filter(x=>!x.e);
@@ -855,7 +891,7 @@ function viewStats(){
   if(UI.st==="combos")return h+viewCombos();
   h+=`<h2>Por método</h2><div class="card"><table class="t"><tr><th>Método</th><th class="r">Apuestas</th><th class="r">Ganó</th><th class="r">Perdió</th><th class="r">Acierto</th></tr>`;
   const camA=new Set(ST.attempts.filter(a=>a.camino).map(a=>a.id));const rowF=(lbl,c,f)=>{const b=ST.bets.filter(x=>settled(x)&&f(x)),w=b.filter(x=>x.status==="ganada").length;return`<tr><td style="color:${c};font-weight:600">${lbl}</td><td class="r">${b.length}</td><td class="r">${w}</td><td class="r">${b.length-w}</td><td class="r num">${b.length?Math.round(w/b.length*100)+"%":"—"}</td></tr>`};
-  for(const f of["S","K","C"])h+=rowF(FN[f],FC[f],x=>x.method==="tommy"&&camA.has(x.attemptId)&&betFase(x)===f);
+  for(const f of["S","K","C"])h+=rowF(FN[f],FC[f],x=>(x.method==="tommy"&&camA.has(x.attemptId)&&betFase(x)===f)||(f==="C"&&x.method==="cabo"));
   h+=`<tr><td colspan="5" class="small muted" style="padding-top:10px">Antes del camino</td></tr>`;
   h+=rowF("Skipper",M.tommy.c,x=>x.method==="tommy"&&!camA.has(x.attemptId));
   for(const m of["walter","ragnar","rick"]){const s=by(m);h+=`<tr><td style="color:${M[m].c};font-weight:600">${M[m].name}</td><td class="r">${s.n}</td><td class="r">${s.w}</td><td class="r">${s.l}</td><td class="r num">${s.n?Math.round(s.w/s.n*100)+"%":"—"}</td></tr>`}
@@ -883,7 +919,7 @@ function viewMas(){return`<h1>Más</h1><div class="menu">
   <button data-tab="dinero">Entradas y salidas de dinero <span>${ST.moves.length}</span></button>
   <button data-tab="ajustes">Ajustes <span>plan del camino, día de pago</span></button>
   <button data-tab="drive">Google Drive <span>${DRIVE?"conectado":"sin conectar"}</span></button>
-  <button data-tab="respaldo">Respaldo <span>exportar o importar</span></button></div><p class="small muted" style="text-align:center;margin-top:16px">Versión 26 · Editar saldo del método</p>`}
+  <button data-tab="respaldo">Respaldo <span>exportar o importar</span></button></div><p class="small muted" style="text-align:center;margin-top:16px">Versión 28 · Agregado oculto</p>`}
 function viewDrive(){const bk=ST?back:`<button class="back" data-tab="inicio">‹ Volver</button>`;
   return bk+`<h1>Google Drive</h1><p class="muted">Tus datos se guardan en tu Drive, en la carpeta “Operación Sueldo extra”, con una copia de respaldo por día. Si pierdes el celular, instalas la app en otro y te conectas con estos mismos datos.</p>
   <label class="f">Dirección del script (termina en /exec)</label><input class="in" id="durl" autocomplete="off" value="${esc(DRIVE?.url||"")}" placeholder="https://script.google.com/macros/s/…/exec">
@@ -901,7 +937,7 @@ function viewAjustes(){const s=ST.settings,pl=P();return back+`<h1>Ajustes</h1><
   <label class="f">Kowalski llega hasta</label><input class="in" type="text" inputmode="decimal" data-set="plan.k" value="${pl.k}">
   <label class="f">Cuota entre semana (Kowalski y Cabo)</label><input class="in" type="text" inputmode="decimal" data-set="plan.wk" value="${pl.wk}">
   <label class="f">Cuota sábado y domingo (Kowalski y Cabo)</label><input class="in" type="text" inputmode="decimal" data-set="plan.we" value="${pl.we}">
-  <label class="f">Respaldo que se aparta al pasar a Cabo</label><input class="in" type="text" inputmode="decimal" data-set="plan.ap" value="${pl.ap}">
+  <label class="f">Lo que pasa a Cabo al dividir</label><input class="in" type="text" inputmode="decimal" data-set="plan.ca" value="${pl.ca}">
   <label class="f">Skipper vuelve a empezar con</label><input class="in" type="text" inputmode="decimal" data-set="plan.re" value="${pl.re}">
   <h2>Otros</h2>
   <label class="f">Capital inicial de Skipper</label><input class="in" type="number" inputmode="decimal" data-set="capital.tommy" value="${s.capital.tommy}">
@@ -953,7 +989,7 @@ function toBolsa(mv){const meth=mv.orig;mv.type="entrada";mv.method=meth;mv.note
 function closeToRagnar(m){const a=liveAttempt(m);if(!a)return;const q=attemptBal(a);
   if(q>0.004)ST.moves.push({id:uid(),date:todayISO(),type:"traspaso",method:"ragnar",from:a.id,amount:q,note:`Resto de ${M[m].name.split(" ")[0]} al reiniciar`});
   a.status="cerrado";a.how="repartido";a.end=todayISO()}
-function attLabel(a){if(a.status!=="cerrado")return"Caído";if(a.how==="repartido"||ST.moves.some(m=>m.from===a.id&&/al reiniciar|al repartir/.test(m.note||"")))return"Repartido";return"Cobrado"}
+function attLabel(a){if(a.status!=="cerrado")return"Caído";if(a.how==="dividido")return"Dividido";if(a.how==="repartido"||ST.moves.some(m=>m.from===a.id&&/al reiniciar|al repartir/.test(m.note||"")))return"Repartido";return"Cobrado"}
 function camStart(){const pl=P(),d=todayISO(),n=ST.attempts.filter(x=>x.method==="tommy").length+1,id="tommy"+uid(),usaR=respFund()>=pl.re-1e-9;
   ST.attempts.push({id,method:"tommy",n,start:d,capital:pl.re,status:"vivo",end:null,camino:true,...(usaR?{fuente:"saldo"}:{})});
   if(usaR)ST.moves.push({id:uid(),date:d,type:"uso",method:"respaldo",to:id,amount:pl.re,note:`Inicio ciclo ${n} con el respaldo`});
@@ -1133,6 +1169,23 @@ const A={
       if(src==="saldo")ST.moves.push({id:uid(),date:d,type:"uso",method:"ragnar",to:id,amount:amt,note:`Activado con saldo (${M[m].name})`});
       else ST.moves.push({id:uid(),date:d,type:"entrada",method:m,amount:amt,note:`Inicio intento ${n}`});
       commit();toast(`${M[m].name} activado con ${money(amt)}`)})},
+  togag(){UI.showAg=!UI.showAg;render()},
+  dividir(){const a=liveAttempt("tommy");if(!a||camEstado(a)!=="dividir"||pendingOf("tommy").length)return;const pl=P(),bal=attemptBal(a),rest=r2(bal-pl.ca),cb=liveAttempt("cabo");
+    if(pendingOf("cabo").length){toast("Primero resuelve la apuesta de Cabo");return}
+    formSheet("Dividir",`<p class="small muted">${cb?`Cabo se retira con ${money(attemptBal(cb))}. `:""}${money(pl.ca)} pasan a un Cabo nuevo y ${money(rest)} vuelven a empezar el camino.</p><label class="f">Meta del Cabo nuevo</label><input class="in" name="a" type="text" inputmode="decimal" autocomplete="off" value="${cb&&cb.meta||""}" placeholder="Ej: 550">`,"Dividir",v=>{
+      const mt=r2(num(v.a));if(!(mt>pl.ca)){toast(`La meta tiene que ser más de ${money(pl.ca)}`);return false}const d=todayISO();
+      if(cb){const cbal=attemptBal(cb);ST.moves.push({id:uid(),date:d,type:"salida",method:"cabo",from:cb.id,amount:cbal,note:`Retiro de Cabo ${cb.n} (el camino llegó a ${money(pl.k)})`});cb.status="cerrado";cb.how="cobrado";cb.end=d}
+      ST.moves.push({id:uid(),date:d,type:"traspaso",method:"ragnar",from:a.id,amount:bal,note:`División del ciclo ${a.n}`});a.status="cerrado";a.how="dividido";a.end=d;
+      const nc=ST.attempts.filter(x=>x.method==="cabo").length+1,cid="cabo"+uid();ST.attempts.push({id:cid,method:"cabo",n:nc,start:d,capital:pl.ca,status:"vivo",end:null,meta:mt,fuente:"saldo"});
+      ST.moves.push({id:uid(),date:d,type:"uso",method:"ragnar",to:cid,amount:pl.ca,note:`Cabo ${nc} arranca`});
+      const nt=ST.attempts.filter(x=>x.method==="tommy").length+1,tid="tommy"+uid();ST.attempts.push({id:tid,method:"tommy",n:nt,start:d,capital:rest,status:"vivo",end:null,camino:true,fuente:"saldo"});
+      ST.moves.push({id:uid(),date:d,type:"uso",method:"ragnar",to:tid,amount:rest,note:`Ciclo ${nt} arranca con ${money(rest)}`});
+      commit();toast(`Cabo con ${money(pl.ca)} · camino con ${money(rest)}`)})},
+  cabometa(){const a=liveAttempt("cabo");if(!a)return;const bal=attemptBal(a);
+    formSheet("Meta de Cabo",`<label class="f">Meta (Cabo tiene ${money(bal)})</label><input class="in" name="a" type="text" inputmode="decimal" autocomplete="off" value="${a.meta||""}">`,"Guardar",v=>{
+      const mt=r2(num(v.a));if(!(mt>0)){toast("Escribe la meta");return false}if(a.meta&&mt>a.meta&&betsOfAttempt(a).length){toast("Regla 18: la meta de Cabo no se sube a medio camino");return false}a.meta=mt;commit();toast(`Meta: ${money(mt)}`)})},
+  caboretiro(){const a=liveAttempt("cabo");if(!a||pendingOf("cabo").length)return;const bal=attemptBal(a);
+    confirmSheet(`Retirar ${money(bal)}`,`<p>Retirás todo lo de Cabo y se cierra como cobrado.</p>`,"Retirar",()=>{const d=todayISO();ST.moves.push({id:uid(),date:d,type:"salida",method:"cabo",from:a.id,amount:bal,note:`Retiro de Cabo ${a.n}`});a.status="cerrado";a.how="cobrado";a.end=d;commit();toast(`Retiraste ${money(bal)}`)})},
   camcabo(){const a=liveAttempt("tommy");if(!a||camEstado(a)!=="pasar")return;const pl=P(),bal=attemptBal(a),cab=r2(bal-pl.ap);
     formSheet("Pasar a Cabo",`<p class="small muted">Apartás ${money(pl.ap)} de respaldo (siguen en Bet365, pero no se juegan) y Cabo arranca con ${money(cab)}.</p><label class="f">Meta de Cabo</label><input class="in" name="a" type="text" inputmode="decimal" autocomplete="off" placeholder="Ej: 550">`,"Pasar a Cabo",v=>{
       const mt=r2(num(v.a));if(!(mt>cab)){toast(`La meta tiene que ser más de ${money(cab)}`);return false}
@@ -1169,9 +1222,9 @@ const A={
   addcustom(){const d=UI.draft,t=d.custom.trim();if(!t||!d.team)return;
     const p={id:"p"+uid(),teamId:d.team,text:t,player:false,baseUsed:0,baseHit:0};ST.picks.push(p);d.legs.push({pickId:p.id,text:t,teamId:d.team,ok:null});d.custom="";commit();toast("Pick agregado a tu lista")},
   savebet(){const d=UI.draft,m=d.method;let stake,attemptId=null,target;
-    if(m==="tommy"||m==="walter"){const a=liveAttempt(m),bal=attemptBal(a);stake=num(d.stake);attemptId=a.id;target=targetFor(m,stake,d.date,soloOf(d));
+    if(m==="tommy"||m==="walter"||m==="cabo"){const a=liveAttempt(m),bal=attemptBal(a);stake=num(d.stake);attemptId=a.id;target=targetFor(m,stake,d.date,capOf(d));
       const sob=r2(bal-stake);var bid="b"+uid();if(sob>0.004)ST.moves.push({id:uid(),date:d.date||todayISO(),type:"traspaso",method:"ragnar",from:a.id,betId:bid,amount:sob,note:`Sobrante de ${M[m].name.split(" ")[0]}`})}else{stake=num(d.stake);target=r2(stake*num(d.cuota))}
-    const fase=m==="tommy"?camFb(attemptBal(liveAttempt("tommy")),liveAttempt("tommy")):undefined;
+    const fase=m==="tommy"?camFb(attemptBal(liveAttempt("tommy")),liveAttempt("tommy")):m==="cabo"?"C":undefined;
     ST.bets.push({id:(typeof bid!=="undefined"&&bid)||"b"+uid(),method:m,attemptId,...(fase?{fase}:{}),date:d.date||todayISO(),stake:r2(stake),cuota:num(d.cuota),target,legs:d.legs.map(l=>({...l})),status:"pendiente",ret:0,...(m==="ragnar"&&d.sonadora?{sonadora:true}:{})});
     UI.draft=null;UI.tab="inicio";commit();scrollTo(0,0);toast("Apuesta guardada")},
   toggleteam(e){const t=e.dataset.id,tier=team(t).tier;UI.open[t]=!(UI.open[t]??(tier==="principal"));render()},
