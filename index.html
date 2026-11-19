@@ -663,6 +663,7 @@ function cuotaDia(date,ids,qualy){date=date||todayISO();const pl=ids&&ids.length
   const base=ot.length?cu["c"+Math.min(ot.length,4)][use.join("")]:null;
   if(rb.length){const cap=ot.length?cu.rb[Math.min(ot.length,4)]:(qualy?cu.rb.q:cu.rb.s);return{cap,n:pl.length,cols,unk:raw.filter(c=>!c).length,rb:true,sinRB:base}}
   return{cap:base,n:ot.length,cols,unk:raw.filter(c=>!c).length,rb:false,sinRB:null}}
+const fmtC=x=>String(+(+x).toFixed(4));
 function capTxt(q){if(!q)return"";const c=q.cols.map(x=>COLN[x]).join(", ");return q.rb?`Red Bull${q.n>1?" + "+(q.n-1)+(q.n-1===1?" principal":" principales"):""}`:`${q.n} ${q.n===1?"principal":"principales"}${c?" ("+c+")":""}`}
 function dayHero(date,link){const q=cuotaDia(date),dt=parseISO(date||todayISO());const dl=dt.toLocaleDateString("es-SV",{weekday:"long",day:"numeric"});
   const desc=ST.settings.descanso!=null&&ST.settings.descanso!==""&&dt.getDay()===+ST.settings.descanso;
@@ -773,7 +774,9 @@ function checks(d){
     else{if(legs.length&&!prin.length)w.push({e:1,lk:1,t:"🔒 La apuesta no lleva ningún principal."});
       const fuera=prin.filter(t=>!pl.includes(t));if(fuera.length)w.push({e:1,lk:1,t:`🔒 ${fuera.map(shn).join(", ")} no juega ese día.`});
       const q=cuotaDia(d.date,prin.length?prin:null,d.qualy);
-      if(q&&c>1&&c>=q.cap-1e-9)w.push({e:1,lk:1,t:`🔒 Regla 14: con ${capTxt(q)} la cuota tiene que ser menos de ${q.cap.toFixed(2)} (pusiste ${c.toFixed(2)}).`});
+      if(q&&c>1){const mg=+ST.settings.margen||0,lim=q.cap+mg;
+        if(c>=lim-1e-9){if(ST.settings.r14modo==="avisar")w.push({t:`Regla 14: te pasás del tope de hoy (menos de ${q.cap.toFixed(2)}${mg?` + margen ${mg}`:""}). Pusiste ${fmtC(c)}.`});
+          else w.push({e:1,lk:1,t:`🔒 Regla 14: con ${capTxt(q)} la cuota tiene que ser menos de ${mg?fmtC(lim)+` (tope ${q.cap.toFixed(2)} + margen ${mg})`:q.cap.toFixed(2)} (pusiste ${fmtC(c)}).`})}}
       if(q&&q.rb&&q.sinRB&&q.sinRB>q.cap+1e-9)w.push({t:`Sin Red Bull podés llegar a menos de ${q.sinRB.toFixed(2)}.`});
       if(q&&q.unk)w.push({t:`${q.unk===1?"Un rival no tiene":"Hay rivales sin"} color: cuenta como amarillo. Podés ponérselo en Inicio.`});}
     if(aux.length===1)w.push({t:"Llevás un auxiliar: no cambia la cuota del día."});
@@ -849,7 +852,14 @@ function migPicks32(){const s=ST.settings;if(s.picks32)return false;s.picks32=tr
     for(const b of ST.bets)for(const l of b.legs)if(ids.has(l.pickId)){if(l.linea==null&&lnOf[l.pickId]!=null&&l.text&&(l.text.match(NUM)||[]).length===1)l.linea=+(l.text.match(NUM)[0]);l.pickId=keep.id}
     ST.picks=ST.picks.filter(p=>p===keep||!ids.has(p.id))}
   return true}
-function migrate(){if(!ST)return false;let r=migRules();if(migRules8())r=true;if(migPicks32())r=true;if(migPlan5())r=true;if(migRules6())r=true;if(migRules7())r=true;if(!ST.settings.undoAnadir){const n0=ST.moves.length;ST.moves=ST.moves.filter(mv=>!/^Añadido al intento|^Saldo de Bet365 que no estaba en la app/.test(mv.note||""));ST.settings.undoAnadir=true;r=true}if(!ST.settings.rules4){const x=ST.rules.find(q=>/En Cabo s[ií] se permiten/.test(q.text));if(x)x.text="En Rico sí se permiten estadísticas de jugadores. En Skipper, Kowalski y Cabo no (salvo de los Warriors).";ST.settings.rules4=true;r=true}return migrate0()||r}
+function migPicks33(){const s=ST.settings;if(s.picks33)return false;s.picks33=true;
+  for(const t of ST.teams){if(t.tier!=="principal"||ttype(t.id)!=="team")continue;const k=tkey(t.id),nm=shn(t.id);
+    const u=["warriors","chiefs"].includes(k)?"puntos":k==="dodgers"?"carreras":k==="oilers"?"puntos":"goles";
+    const mine=ST.picks.filter(p=>p.teamId===t.id&&isTpl(p));
+    if(!mine.some(p=>ptipo(p)==="ata"))ST.picks.push({id:"p"+uid(),teamId:t.id,text:`Más de __ ${u} de ${nm}`,tipo:"ata",player:false,lineas:[],baseUsed:0,baseHit:0});
+    if(!mine.some(p=>ptipo(p)==="hcp"))ST.picks.push({id:"p"+uid(),teamId:t.id,text:`Handicap +__ ${nm}`,tipo:"hcp",player:false,lineas:[],baseUsed:0,baseHit:0});}
+  return true}
+function migrate(){if(!ST)return false;let r=migRules();if(migPicks33())r=true;if(migRules8())r=true;if(migPicks32())r=true;if(migPlan5())r=true;if(migRules6())r=true;if(migRules7())r=true;if(!ST.settings.undoAnadir){const n0=ST.moves.length;ST.moves=ST.moves.filter(mv=>!/^Añadido al intento|^Saldo de Bet365 que no estaba en la app/.test(mv.note||""));ST.settings.undoAnadir=true;r=true}if(!ST.settings.rules4){const x=ST.rules.find(q=>/En Cabo s[ií] se permiten/.test(q.text));if(x)x.text="En Rico sí se permiten estadísticas de jugadores. En Skipper, Kowalski y Cabo no (salvo de los Warriors).";ST.settings.rules4=true;r=true}return migrate0()||r}
 function migrate0(){
   if(ST.settings.seedTeams2&&!ST.settings.seedTeams3){const nk=NEW_TEAMS.map(x=>x[0]);
     for(const t of ST.teams){const k=tkey(t.id);if(!nk.includes(k))continue;t.tier="principal";
@@ -1133,7 +1143,7 @@ function viewMas(){return`<h1>Más</h1><div class="menu">
   <button data-tab="dinero">Entradas y salidas de dinero <span>${ST.moves.length}</span></button>
   <button data-tab="ajustes">Ajustes <span>tema, cuotas del día, calendario</span></button>
   <button data-tab="drive">Google Drive <span>${DRIVE?"conectado":"sin conectar"}</span></button>
-  <button data-tab="respaldo">Respaldo <span>exportar o importar</span></button></div><p class="small muted" style="text-align:center;margin-top:16px">Versión 32 · Cuota del día</p>`}
+  <button data-tab="respaldo">Respaldo <span>exportar o importar</span></button></div><p class="small muted" style="text-align:center;margin-top:16px">Versión 33 · Margen y plantillas</p>`}
 function viewDrive(){const bk=ST?back:`<button class="back" data-tab="inicio">‹ Volver</button>`;
   return bk+`<h1>Google Drive</h1><p class="muted">Tus datos se guardan en tu Drive, en la carpeta “Operación Sueldo extra”, con una copia de respaldo por día. Si pierdes el celular, instalas la app en otro y te conectas con estos mismos datos.</p>
   <label class="f">Dirección del script (termina en /exec)</label><input class="in" id="durl" autocomplete="off" value="${esc(DRIVE?.url||"")}" placeholder="https://script.google.com/macros/s/…/exec">
@@ -1141,7 +1151,15 @@ function viewDrive(){const bk=ST?back:`<button class="back" data-tab="inicio">�
   <button class="btn pri full" style="margin-top:14px" data-act="dconnect">${DRIVE?"Guardar y probar":"Conectar"}</button>
   ${DRIVE?`<div class="row" style="margin-top:10px"><button class="btn" data-act="dpush">Subir ahora</button><button class="link" style="margin-left:auto" data-act="dclear">Desconectar</button></div>`:""}`}
 const back=`<button class="back" data-tab="mas">‹ Más</button>`;
-function viewReglas(){return back+`<h1>Reglas</h1><p class="muted small">Toca una para editarla.</p><ol class="rules">${ST.rules.map(r=>`<li><button class="link" style="color:var(--ink);text-decoration:none;text-align:left;font-size:16px" data-act="editrule" data-id="${r.id}">${esc(r.text)}</button></li>`).join("")}</ol><button class="btn full" style="margin-top:14px" data-act="newrule">+ Agregar regla</button>`}
+function viewReglas(){const s=ST.settings,mg=+s.margen||0,md=s.r14modo==="avisar"?"avisar":"bloquear",ej=CU().c1.V;
+  return back+`<h1>Reglas</h1>
+  <div class="card"><h3>Cuota del día (regla 14)</h3>
+   <p class="small muted" style="margin:6px 0 8px">Si la cuota que ponés pasa el tope del día:</p>
+   <div class="seg2"><button class="${md==="bloquear"?"on":""}" data-act="r14modo" data-id="bloquear">Bloquear</button><button class="${md==="avisar"?"on":""}" data-act="r14modo" data-id="avisar">Solo avisar</button></div>
+   <label class="f" for="mg">Margen extra sobre el tope</label><input class="in" id="mg" type="text" inputmode="decimal" data-set="margen" value="${mg||""}" placeholder="0.005">
+   <p class="small muted" style="margin:6px 0 0">${mg?`Ejemplo: con tope ${ej.toFixed(2)} y margen ${mg}, te deja hasta ${fmtC(ej+mg-0.0001)}.`:`Sin margen: con tope ${ej.toFixed(2)} lo más alto es ${fmtC(ej-0.0001)}. Con margen 0.005 te dejaría hasta ${fmtC(ej+0.0049)}.`}</p>
+   <button class="btn full" style="margin-top:12px" data-tab="ajustes">Cambiar las cuotas de cada combinación</button></div>
+  <p class="muted small">Toca una para editarla.</p><ol class="rules">${ST.rules.map(r=>`<li><button class="link" style="color:var(--ink);text-decoration:none;text-align:left;font-size:16px" data-act="editrule" data-id="${r.id}">${esc(r.text)}</button></li>`).join("")}</ol><button class="btn full" style="margin-top:14px" data-act="newrule">+ Agregar regla</button>`}
 function viewDinero(){const c=cuenta();return back+`<h1>Entradas y salidas</h1><p class="muted small">Entrada es dinero que metes; salida es lo que retiras de Bet365. Toca una entrada para cambiar de dónde salió el dinero.</p>
   <div class="facts"><div class="fact"><small>Agregado</small><span class="num">${money(c.ent)}</span></div><div class="fact"><small>Retirado</small><span class="num">${money(c.sal)}</span></div></div>
   <div class="card scroll"><table class="t"><tr><th>Fecha</th><th>Método</th><th>Nota</th><th class="r">Monto</th></tr>${ST.moves.slice().reverse().map(m=>`<tr ${m.type==="entrada"||(m.type==="uso"&&m.orig)?`data-act="origen" data-id="${m.id}" style="cursor:pointer"`:""}><td class="small">${esc(fmtDate(m.date))}</td><td class="small">${esc(M[m.method]?.name.split(" ")[0]||(m.method==="previo"?"Antes":m.method==="respaldo"?"Respaldo":m.method))}</td><td class="small">${esc(m.note||"")}${m.type==="entrada"?`<div class="muted" style="font-size:12px">${m.fuente==="previa"?"de ganancias anteriores":"de tu bolsa"}</div>`:m.type==="uso"?`<div class="muted" style="font-size:12px">del saldo disponible</div>`:""}</td><td class="r num ${m.type==="entrada"?"neg":m.type==="salida"?"pos":"muted"}">${m.type==="entrada"?"−$"+fmt(m.amount):m.type==="salida"?"+$"+fmt(m.amount):m.type==="traspaso"?(m.amount>=0?"→ Rico $"+fmt(m.amount):"Rico → $"+fmt(-m.amount)):m.type==="uso"?"Rico → $"+fmt(m.amount):m.type==="ajag"?"agregado "+signed(m.amount):m.type==="ajret"?"retirado "+signed(m.amount):"ajuste "+signed(m.amount)}</td></tr>`).join("")}</table></div>`}
@@ -1392,6 +1410,10 @@ const A={
       const n=(v.n||"").trim(),t=(v.t||"").trim();if(!n||!t){toast("Escribí el equipo y el pick");return false}
       UI.draft.legs.push({text:t,teamId:null,vname:n,vsport:v.s||"",vparent:null,ok:null});render()})},
   togag(){UI.showAg=!UI.showAg;render()},
+  ptpl(e){const f=e.closest(".sheet")||document;const i=f.querySelector('[name="text"]'),s=f.querySelector('[name="tipo"]');if(i)i.value=e.dataset.v;if(s)s.value=e.dataset.t;if(i)i.focus()},
+  pnum(e){const f=e.closest(".sheet")||document;const i=f.querySelector('[name="text"]');if(!i)return;if(/__/.test(i.value)){toast("Ya tiene __");return}
+    const a=i.selectionStart??i.value.length,m=/\d+(?:\.\d+)?/.exec(i.value);if(m&&document.activeElement!==i){i.value=i.value.replace(m[0],"__")}else{i.value=i.value.slice(0,a)+(a&&i.value[a-1]!==" "?" ":"")+"__"+(i.value[a]&&i.value[a]!==" "?" ":"")+i.value.slice(a)}i.focus()},
+  r14modo(e){ST.settings.r14modo=e.dataset.id;commit();toast(e.dataset.id==="avisar"?"Regla 14: solo aviso":"Regla 14: bloquea")},
   theme(e){ST.settings.theme=e.dataset.id;applyTheme();commit()},
   refresh(){toast("Actualizando…");fetchSports(true).then(()=>toast(spState===""?"Listo":"No se pudo actualizar"))},
   tbl(e){UI.tbl=UI.tbl===e.dataset.id?null:e.dataset.id;render()},
@@ -1465,7 +1487,7 @@ const A={
   editpick(e){const p=pick(e.dataset.id);formSheet("Configurar pick",pickFields(p),"Guardar",v=>{if(!v.text)return false;Object.assign(p,pickVals(v));commit()},
     `<button class="link" style="margin-right:auto;color:var(--loss)" id="delp">Borrar</button>`);
     document.getElementById("delp").onclick=()=>{ST.picks=ST.picks.filter(x=>x!==p);closeSheet();commit()}},
-  newpick(e){const t=e.dataset.id;formSheet(`Nuevo pick para ${team(t).name}`,pickFields({text:"",tipo:"",player:false,lineas:[]}),"Agregar",v=>{if(!v.text)return false;ST.picks.push({id:"p"+uid(),teamId:t,baseUsed:0,baseHit:0,...pickVals(v)});commit()})},
+  newpick(e){const t=e.dataset.id;formSheet(`Nuevo pick para ${team(t).name}`,pickTplBtns(t)+pickFields({text:"",tipo:"",player:false,lineas:[]}),"Agregar",v=>{if(!v.text)return false;ST.picks.push({id:"p"+uid(),teamId:t,baseUsed:0,baseHit:0,...pickVals(v)});commit()})},
   editteam(e){const t=team(e.dataset.id);formSheet("Editar equipo",teamFields(t),"Guardar",v=>{if(!v.name)return false;Object.assign(t,{name:v.name,sport:v.sport,tier:v.tier});commit()},`<button class="link" style="margin-right:auto;color:var(--loss)" id="delt">Borrar</button>`);
     document.getElementById("delt").onclick=()=>{closeSheet();confirmSheet(`Borrar ${t.name}`,"<p>También se borran sus picks de la lista. Las apuestas ya hechas se quedan.</p>","Borrar",()=>{ST.teams=ST.teams.filter(x=>x!==t);ST.picks=ST.picks.filter(p=>p.teamId!==t.id);commit()})}},
   newteam(){formSheet("Nuevo equipo",teamFields({name:"",sport:"Fútbol",tier:"auxiliar"}),"Agregar",v=>{if(!v.name)return false;ST.teams.push({id:"t"+uid(),name:v.name,sport:v.sport,tier:v.tier});commit()})},
@@ -1490,8 +1512,11 @@ const A={
     confirmSheet("Restaurar copia","<p>Todo lo actual se reemplaza por la copia.</p>","Restaurar",go)},
   closesheet(e,ev){if(ev.target===e||e.tagName==="BUTTON")closeSheet()}
 };
+function pickTplBtns(t){const nm=shn(t),k=tkey(t),u=["warriors","chiefs","oilers"].includes(k)?"puntos":k==="dodgers"?"carreras":"goles";
+  const xs=[[`Más de __ ${u} de ${nm}`,"ata"],[`Menos de __ ${u} del rival`,"def"],[`Más de __ ${u} en el partido`,"total"],[`Handicap +__ ${nm}`,"hcp"],[`Victoria de ${nm}`,"res"]];
+  return ttype(t)==="f1"?"":`<p class="small muted" style="margin:0 0 6px">Tocá uno para empezar, o escribilo vos:</p><div class="lines" style="margin-bottom:6px">${xs.map(([x,tp])=>`<button type="button" class="chip" data-act="ptpl" data-v="${esc(x)}" data-t="${tp}">${esc(x)}</button>`).join("")}</div>`}
 function pickFields(p){const tp=p.tipo||(p.text?guessTipo(p.text,p.player):"ata");
-  return`<label class="f">Pick</label><input class="in" name="text" value="${esc(p.text)}" placeholder="Más de __ goles del Barça"><p class="small muted" style="margin:6px 0 0">Poné <b>__</b> donde va el número y lo elegís al apostar.</p>
+  return`<label class="f">Pick</label><input class="in" name="text" value="${esc(p.text)}" placeholder="Más de __ goles del Barça"><div class="row" style="margin-top:6px;flex-wrap:nowrap"><button type="button" class="btn" style="padding:6px 12px;font-size:13px" data-act="pnum">+ Número (__)</button><span class="small muted">El <b>__</b> es donde va el número: lo elegís al apostar. Sin <b>__</b>, el pick va fijo.</span></div>
   <label class="f">Grupo</label><select class="in" name="tipo">${PGRP.map(([k,l])=>`<option value="${k}" ${tp===k?"selected":""}>${l}</option>`).join("")}</select>
   <label class="f">Números rápidos (separados por coma)</label><input class="in" name="lineas" inputmode="decimal" value="${esc((p.lineas||[]).join(", "))}" placeholder="0.5, 1.5, 2.5">
   <label class="row" style="margin-top:12px"><input type="checkbox" name="player" ${p.player?"checked":""}> Es estadística de jugador</label>`}
@@ -1516,6 +1541,7 @@ document.addEventListener("change",ev=>{const e=ev.target;
   if(k==="ragnarMontos"){const a=e.value.split(",").map(x=>parseFloat(x)).filter(x=>x>0);if(a.length)s.ragnarMontos=a}
   else if(k==="weekendShift")s.weekendShift=e.value;
   else if(k==="descanso")s.descanso=e.value===""?"":+e.value;
+  else if(k==="margen"){const v=e.value.trim()===""?0:num(e.value);if(!(v>=0&&v<0.2)){toast("Escribí un margen como 0.005");return}s.margen=v}
   else if(k==="autoGames"){s.autoGames=!!e.checked;if(s.autoGames)fetchSports(true)}
   else if(k.startsWith("cuotas.")){const[,g,q]=k.split("."),v=num(e.value);if(!(v>1)){toast("Escribí una cuota mayor que 1");return}CU()[g][q]=v}
   else{const n=parseFloat(e.value);if(!(n>0))return;if(k.startsWith("capital."))s.capital[k.split(".")[1]]=n;else if(k.startsWith("plan."))P()[k.split(".")[1]]=n;else s[k]=n}
