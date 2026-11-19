@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Operación Sueldo extra</title>
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#17202A">
+<meta name="theme-color" content="#0E1217">
+<script>try{var t=localStorage.getItem("ose-theme")||"oscuro";if(t!=="auto")document.documentElement.dataset.theme=t==="claro"?"light":"dark"}catch(e){}</script>
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -14,15 +15,12 @@
 <style>
 :root{
   --bg:#E6EAEE;--surface:#FFFFFF;--surface2:#F2F4F7;--ink:#17202A;--muted:#5C6875;--line:#D2D8DE;
-  --tommy:#3D5A80;--walter:#13827F;--ragnar:#A0631F;--rick:#5E6B2F;--win:#2B7A4B;--loss:#B4233A;--warn:#9A6A10;--warnbg:#FBF1DC;
+  --tommy:#3D5A80;--walter:#13827F;--ragnar:#A0631F;--rick:#5E6B2F;--win:#2B7A4B;--loss:#B4233A;--warn:#8A5E0C;--warnbg:#FBF1DC;--hero:#17202A;--heroInk:#FFFFFF;--heroMu:#C9D1D9;--me:#E3ECF7;
   --cond:"Barlow Condensed","Arial Narrow",Arial,sans-serif;--body:"Barlow","Segoe UI",Roboto,Arial,sans-serif;
   box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
 }
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#0F1318;--surface:#192028;--surface2:#212A33;--ink:#E6EBF0;--muted:#97A3AF;--line:#2D3742;
-  --tommy:#86A9D6;--walter:#45C4BF;--ragnar:#DDA05C;--rick:#B5C27A;--win:#5DC48B;--loss:#F2697F;--warn:#E6B54E;--warnbg:#2E2717;}}
-:root[data-theme="dark"]{--bg:#0F1318;--surface:#192028;--surface2:#212A33;--ink:#E6EBF0;--muted:#97A3AF;--line:#2D3742;
-  --tommy:#86A9D6;--walter:#45C4BF;--ragnar:#DDA05C;--rick:#B5C27A;--win:#5DC48B;--loss:#F2697F;--warn:#E6B54E;--warnbg:#2E2717;}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0E1217;--surface:#171D25;--surface2:#202833;--ink:#EDF1F5;--muted:#9AA6B2;--line:#2A3441;--tommy:#7FA8E0;--walter:#45C4BF;--ragnar:#DDA05C;--rick:#B5C27A;--win:#4FCB86;--loss:#FF6B81;--warn:#F0B94B;--warnbg:#2B2416;--hero:#1B2B44;--heroInk:#EDF1F5;--heroMu:#A9BAD0;--me:#1B2B44;}}
+:root[data-theme="dark"]{--bg:#0E1217;--surface:#171D25;--surface2:#202833;--ink:#EDF1F5;--muted:#9AA6B2;--line:#2A3441;--tommy:#7FA8E0;--walter:#45C4BF;--ragnar:#DDA05C;--rick:#B5C27A;--win:#4FCB86;--loss:#FF6B81;--warn:#F0B94B;--warnbg:#2B2416;--hero:#1B2B44;--heroInk:#EDF1F5;--heroMu:#A9BAD0;--me:#1B2B44;}
 *,*::before,*::after{box-sizing:inherit}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.45;-webkit-tap-highlight-color:transparent}
@@ -223,6 +221,16 @@ nav.tabs .plus span{width:46px;height:46px;border-radius:14px;background:var(--i
 .sync{font-size:12px;color:var(--muted);text-align:center;margin-top:30px}
 .back{background:none;border:0;padding:0;font-size:15px;color:var(--muted);margin-bottom:10px}
 .empty{text-align:center;padding:40px 10px}
+.hero{background:var(--hero);color:var(--heroInk);border-radius:14px;padding:12px 14px;margin-top:12px;display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;border:0;text-align:left;font:inherit}
+.hero small{color:var(--heroMu);font-size:13px}.hero .big{font-family:var(--cond);font-size:32px;font-weight:700;line-height:1}.c{font-family:var(--cond)}
+.dot{display:inline-block;width:16px;height:16px;border-radius:50%;flex:none;border:0;padding:0;vertical-align:middle}button.dot{width:22px;height:22px;box-shadow:inset 0 0 0 2px var(--surface)}
+.gm{padding:12px 0;border-top:1px solid var(--line)}.gm .l1{font-size:12px;color:var(--muted);display:flex;justify-content:space-between;gap:8px}
+.gm .l2{display:flex;align-items:center;gap:8px;margin-top:6px}.gm .tn{font-family:var(--cond);font-size:21px;font-weight:700;flex:1;line-height:1.1;min-width:0}.gm .h2h{font-size:13px;color:var(--muted);margin:6px 0 0}
+.ficha{background:var(--surface2);border-radius:10px;padding:8px 10px;font-size:14px;margin-top:10px}.ficha div{display:flex;justify-content:space-between;gap:8px;padding:3px 0}.ficha span{color:var(--muted)}
+.sem{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-top:8px}.sem.hoyd{border:2px solid var(--tommy)}.sem.off{background:var(--surface2);border-style:dashed}
+table.tb td,table.tb th{padding:6px 4px;font-size:14px}table.tb tr.me td{background:var(--me)}table.tb tr.riv td{background:var(--warnbg)}
+.grp{font-family:var(--cond);font-size:15px;color:var(--muted);padding:10px 14px 2px;margin:0;border-top:1px solid var(--line);font-weight:600}
+.lines{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
 @media (prefers-reduced-motion:reduce){.toast{transition:none}}
 </style>
 </head>
@@ -288,11 +296,15 @@ async function pull(){if(!DRIVE)return;
   renderSync()}
 async function boot(){
   let local=null;try{local=JSON.parse(localStorage.getItem(KEY))}catch(e){}
-  ST=local;render();await pull();if(!ST)render();fixExcess();
+  ST=local;applyTheme();render();await pull();if(!ST)render();applyTheme();fixExcess();fetchSports();
   addEventListener("online",pull);
-  document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")pull()});
+  document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"){pull().then(()=>fetchSports())}});
+  setInterval(()=>{if(document.visibilityState==="visible")fetchSports()},15*60e3);
   if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
 }
+function applyTheme(){const t=(ST&&ST.settings&&ST.settings.theme)||localStorage.getItem("ose-theme")||"oscuro";try{localStorage.setItem("ose-theme",t)}catch(e){}
+  const r=document.documentElement;if(t==="auto")delete r.dataset.theme;else r.dataset.theme=t==="claro"?"light":"dark";
+  const m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute("content",t==="claro"?"#E6EAEE":"#0E1217")}
 function freshState(){return{v:1,updatedAt:0,settings:{capital:{tommy:50,walter:50,ragnar:25},tommyCuota:1.15,maxDias:30,ragnarMontos:[3,5,10],payDay:22,weekendShift:"antes"},teams:[],picks:[],rules:[],attempts:[],bets:[],moves:[]}}
 
 /* ---------- colores de equipos principales ---------- */
@@ -370,34 +382,56 @@ function viewHoy(){const t=todayISO(),bs=ST.bets.filter(b=>b.date===t);
 const SKEY="ose-sports";let SP=null;try{SP=JSON.parse(localStorage.getItem(SKEY))}catch(e){}
 let spState="";
 const AUTO=["barca","argentina","miami","warriors","dodgers","oilers","chiefs","redbull"];
-async function fetchSports(force){if(!DRIVE)return;if(!force&&SP&&Date.now()-SP.at<30*60e3){attachScores();return}
-  try{const r=await fetch(DRIVE.url+(DRIVE.url.includes("?")?"&":"?")+"clave="+encodeURIComponent(DRIVE.key)+"&accion=deportes&t="+Date.now());
-    const j=await r.json();let dep=j.deportes;
-    const empty=d=>!d||!Object.values(d).some(o=>o.record||(o.events&&o.events.length));
-    if(empty(dep)){const dd=await espnDirect();if(!empty(dd))dep=dd}
-    if(!dep){spState="viejo";return}
-    if(empty(dep)){spState="vacio";return}
-    SP={at:Date.now(),teams:dep};spState="";try{localStorage.setItem(SKEY,JSON.stringify(SP))}catch(e){}
-    attachScores();if(UI.tab==="picks"||UI.tab==="inicio")render()}catch(e){spState="error"}}
+const SPORT_EMPTY=d=>!d||!Object.values(d).some(o=>o&&(o.record||(o.events&&o.events.length)));
+async function fetchSports(force){if(!ST)return;if(!force&&SP&&SP.v===4&&Date.now()-SP.at<15*60e3){afterSports(false);return}
+  spState="cargando";if(force)render();
+  try{let[dep,tab]=await Promise.all([espnDirect(),tablasDirect()]);
+    if((SPORT_EMPTY(dep)||!Object.keys(tab).length)&&DRIVE){try{const r=await fetch(DRIVE.url+(DRIVE.url.includes("?")?"&":"?")+"clave="+encodeURIComponent(DRIVE.key)+"&accion=deportes"+(force?"&fresco=1":"")+"&t="+Date.now());const j=await r.json();
+      if(SPORT_EMPTY(dep)&&!SPORT_EMPTY(j.deportes))dep=j.deportes;if(!Object.keys(tab).length&&j.tablas&&Object.keys(j.tablas).length)tab=j.tablas}catch(e){}}
+    if(SPORT_EMPTY(dep)){spState="vacio";render();return}
+    const teams={};for(const[k,o]of Object.entries(dep))teams[k]={...o,events:(o.events||[]).map(evNorm)};
+    SP={v:4,at:Date.now(),teams,tablas:Object.keys(tab).length?tab:((SP&&SP.tablas)||{})};spState="";try{localStorage.setItem(SKEY,JSON.stringify(SP))}catch(e){}
+    afterSports(true)}catch(e){spState="error";render()}}
+function afterSports(rr){const a=document.activeElement;if(a&&a.dataset&&(a.dataset.bind||a.dataset.gs)){setTimeout(()=>afterSports(rr),4000);return}
+  const ch=syncGames(),c2=autoLegs();if(ch||c2){commit();return}if(rr)render()}
 const ESPN="https://site.api.espn.com/apis/site/v2/sports/";
-const EQ={barca:[["soccer","esp.1","83"],["soccer","uefa.champions","83"],["soccer","esp.copa_del_rey","83"]],argentina:[["soccer","fifa.friendly","202"],["soccer","fifa.worldq.conmebol","202"]],
+const EQ={barca:[["soccer","esp.1","83"],["soccer","uefa.champions","83"],["soccer","esp.copa_del_rey","83"],["soccer","esp.super_cup","83"]],argentina:[["soccer","fifa.friendly","202"],["soccer","fifa.worldq.conmebol","202"]],
  miami:[["soccer","usa.1","20232"],["soccer","concacaf.champions","20232"]],warriors:[["basketball","nba","gs"]],dodgers:[["baseball","mlb","lad"]],oilers:[["hockey","nhl","edm"]],chiefs:[["football","nfl","kc"]]};
-async function espnDirect(){const out={},now=Date.now(),desde=now-8*864e5,hasta=now+8*864e5,jobs=[];
+async function espnDirect(){const out={},now=Date.now(),desde=now-240*864e5,hasta=now+10*864e5,jobs=[];
   const get=u=>fetch(u).then(r=>r.ok?r.json():null).catch(()=>null);
-  for(const [k,list] of Object.entries(EQ)){const o=out[k]={events:[]};
+  const sc=x=>x&&x.score!=null?(typeof x.score==="object"?x.score.displayValue:x.score):null;
+  for(const[k,list]of Object.entries(EQ)){const o=out[k]={events:[]};
     list.forEach((c,i)=>{const u=ESPN+c[0]+"/"+c[1]+"/teams/"+c[2];
-      if(i===0)jobs.push(get(u).then(j=>{const t=j&&j.team;if(!t)return;const it=t.record&&t.record.items&&t.record.items[0];if(it&&it.summary)o.record=it.summary;if(t.standingSummary)o.standing=t.standingSummary}));
+      if(i===0)jobs.push(get(u).then(j=>{const t=j&&j.team;if(!t)return;if(t.id)o.tid=String(t.id);const it=t.record&&t.record.items&&t.record.items[0];if(it&&it.summary)o.record=it.summary;if(t.standingSummary)o.standing=t.standingSummary}));
       const urls=[u+"/schedule"];if(c[0]==="soccer")urls.push(u+"/schedule?fixture=true");
-      urls.forEach(su=>jobs.push(get(su).then(j=>{if(!j)return;(j.events||[]).forEach(ev=>{const ms=new Date(ev.date).getTime();if(ms<desde||ms>hasta||o.events.some(x=>x.id===ev.id))return;
-        const comp=(ev.competitions||[])[0]||{},st=((comp.status||ev.status||{}).type)||{};
-        o.events.push({id:ev.id,date:ev.date,name:ev.shortName||ev.name,league:(ev.league&&(ev.league.shortName||ev.league.name))||"",completed:!!st.completed,
-          comps:(comp.competitors||[]).map(x=>({name:(x.team&&(x.team.shortDisplayName||x.team.displayName))||"",score:x.score&&typeof x.score==="object"?x.score.displayValue:x.score,home:x.homeAway==="home",winner:x.winner,mine:!!(x.team&&j.team&&String(x.team.id)===String(j.team.id))}))})})})))})}
-  await Promise.all(jobs);return out}
+      urls.forEach(su=>jobs.push(get(su).then(j=>{if(!j)return;const mi=j.team&&String(j.team.id);if(mi&&!o.tid)o.tid=mi;
+        (j.events||[]).forEach(ev=>{const ms=new Date(ev.date).getTime();if(ms<desde||ms>hasta||o.events.some(x=>x.id===ev.id))return;
+          const comp=(ev.competitions||[])[0]||{},st=((comp.status||ev.status||{}).type)||{},cs=comp.competitors||[];
+          const yo=cs.find(x=>x.team&&String(x.team.id)===mi)||null,el=cs.find(x=>x!==yo)||null;
+          o.events.push({id:ev.id,date:ev.date,name:ev.shortName||ev.name,lc:c[1],lg:(ev.league&&(ev.league.shortName||ev.league.name))||"",done:!!st.completed,home:yo?yo.homeAway==="home":false,
+            ms:sc(yo),os:sc(el),on:el&&el.team?(el.team.shortDisplayName||el.team.displayName||""):"",oid:el&&el.team?String(el.team.id):null})})})))})}
+  const d1=toISO(new Date(now-8*864e5)).replace(/-/g,""),d2=toISO(new Date(now+10*864e5)).replace(/-/g,"");
+  jobs.push(get(ESPN+"racing/f1/scoreboard?dates="+d1+"-"+d2).then(j=>{if(!j)return;const o=out.redbull={events:[]};
+    (j.events||[]).forEach(ev=>{const cs=ev.competitions||[],race=cs.find(x=>x.type&&x.type.abbreviation==="Race")||cs[cs.length-1]||{},st=((race.status||ev.status||{}).type)||{};let pos="";
+      (race.competitors||[]).forEach(x=>{if(x.athlete&&/Verstappen/.test(x.athlete.displayName||""))pos="Verstappen P"+x.order});
+      o.events.push({id:ev.id,date:race.date||ev.date,name:ev.shortName||ev.name,lg:"F1",lc:"f1",done:!!st.completed,res:pos})})}));
+  await Promise.all(jobs);for(const o of Object.values(out))o.events.sort((a,b)=>a.date<b.date?-1:1);return out}
+const TABLAS_ESPN={"esp.1":"soccer/esp.1","uefa.champions":"soccer/uefa.champions",nba:"basketball/nba",mlb:"baseball/mlb",nhl:"hockey/nhl",nfl:"football/nfl",f1:"racing/f1"};
+function filaT(en){const t=en.team||en.athlete||{},st=en.stats||[];
+  const s=(...ns)=>{for(const n of ns){const x=st.find(z=>z.name===n||z.type===n||z.abbreviation===n);if(x){const v=x.value!=null?x.value:parseFloat(x.displayValue);if(v!=null&&!isNaN(v))return v}}return null};
+  const ra=st.find(z=>z.name==="streak");
+  return{id:String(t.id||""),n:t.shortDisplayName||t.displayName||t.name||"",ab:t.abbreviation||"",r:s("rank","playoffSeed")||null,gp:s("gamesPlayed"),w:s("wins"),d:s("ties","draws"),l:s("losses"),
+    otl:s("otLosses","overtimeLosses"),pts:s("points","championshipPts"),pf:s("pointsFor","goalsFor"),pa:s("pointsAgainst","goalsAgainst"),pfg:s("avgPointsFor"),pag:s("avgPointsAgainst"),pct:s("winPercent"),st:ra?ra.displayValue:""}}
+async function tablasDirect(){const out={};
+  await Promise.all(Object.entries(TABLAS_ESPN).map(([lc,path])=>fetch("https://site.api.espn.com/apis/v2/sports/"+path+"/standings").then(r=>r.ok?r.json():null).catch(()=>null).then(j=>{if(!j)return;const grupos=[];
+    const rec=n=>{if(!n)return;if(n.standings&&n.standings.entries&&n.standings.entries.length)grupos.push({name:n.name||n.abbreviation||"",rows:n.standings.entries.map(filaT).sort((a,b)=>(a.r||999)-(b.r||999))});(n.children||[]).forEach(rec)};
+    rec(j);if(grupos.length)out[lc]={name:j.name||j.abbreviation||lc,groups:grupos}})));
+  return out}
 const locDate=iso=>toISO(new Date(iso));
 function evText(e,k){const c=e.comps||[];if(c.length<2)return e.name+(e.res?" · "+e.res:"");
   const h=c.find(x=>x.home)||c[0],a=c.find(x=>!x.home)||c[1];return `${h.name} ${h.score??""}-${a.score??""} ${a.name}`.replace(/ -  /," vs ")}
 function evMine(e,k){const c=(e.comps||[]).find(x=>x.mine);return c?c.winner===true?"G":c.winner===false&&(e.comps||[]).some(x=>x.winner)?"P":"E":""}
-function attachScores(){if(!SP||!ST)return;let ch=false;
+function attachScores(){return;if(!SP||!ST)return;let ch=false;
   for(const b of ST.bets){if(!b.date)continue;for(const l of b.legs){const k=tkey(l.teamId);const T=SP.teams[k];if(!T||!T.events)continue;
     if(b.scores&&b.scores[l.teamId])continue;
     const nx=toISO(new Date(parseISO(b.date).getTime()+864e5));
@@ -516,7 +550,7 @@ const FN={S:"Skipper",K:"Kowalski",C:"Cabo"},FC={S:"var(--tommy)",K:"var(--walte
 function isWE(date){const w=parseISO(date||todayISO()).getDay();return w===0||w===6}
 function camFb(bal,a){if(a&&(a.cabo||a.method==="cabo"))return"C";if(a&&a.forceK)return"K";return bal<P().s-1e-9?"S":"K"}
 function camCapF(f,a){return f==="S"?P().s:f==="K"?P().k:(a&&a.meta||Infinity)}
-function camCuota(bal,date,a,cap){const c=camFb(bal,a)==="S"?P().cs:(isWE(date)?P().we:P().wk);return cap?Math.min(c,cap):c}
+function camCuota(bal,date,a,cap){const c=cap||(cuotaDia(date)||{}).cap;return c?r2(c-0.01):P().cs}
 function cupoMax(n,date){const we=isWE(date);if(n<=0)return null;if(n===1)return 1.11;if(n===2)return we?1.21:1.13;if(n===3)return we?1.21:1.16;return 1.26}
 function camTarget(bal,date,a,solo){a=a||liveAttempt("tommy");const cap=camCapF(camFb(bal,a),a),x=bal*camCuota(bal,date,a,solo);return r2(x>=cap-5?Math.max(cap,bal):x)}
 const betFase=b=>b.fase||(b.stake<P().s-1e-9?"S":"K");
@@ -557,9 +591,156 @@ function restartAdvice(m){
     if(last&&parseISO(last).getDate()>20)out.push(`<p class="small">Los tres cayeron después del día 20: según tus reglas, el próximo mes arrancan solo Skipper y Kowalski con $50.</p>`)}
   return{html:out.join(""),ready:paidSince&&!o.length}}
 
+/* ---------- v32: datos de ESPN, colores, cuota del día ---------- */
+const TL={barca:["esp.1","uefa.champions"],warriors:["nba"],dodgers:["mlb"],oilers:["nhl"],chiefs:["nfl"],redbull:["f1"]};
+const COLN={V:"verde",A:"amarillo",R:"rojo"};
+const ORD={V:0,A:1,R:2};
+const CUO0={c1:{V:1.12,A:1.08,R:1.08},c2:{VV:1.21,VA:1.16,VR:1.16,AA:1.12,AR:1.12,RR:1.12},
+ c3:{VVV:1.21,VVA:1.16,VVR:1.16,VAA:1.15,VAR:1.14,VRR:1.13,AAA:1.13,AAR:1.12,ARR:1.12,RRR:1.11},
+ c4:{VVVV:1.25,VVVA:1.23,VVVR:1.21,VVAA:1.20,VVAR:1.19,VVRR:1.17,VAAA:1.17,VAAR:1.17,VARR:1.17,VRRR:1.17,AAAA:1.16,AAAR:1.16,AARR:1.16,ARRR:1.16,RRRR:1.16},
+ rb:{s:1.08,q:1.09,1:1.12,2:1.16,3:1.20,4:1.22}};
+function CU(){const s=ST.settings;if(!s.cuotas)s.cuotas=JSON.parse(JSON.stringify(CUO0));
+  for(const g in CUO0){s.cuotas[g]=s.cuotas[g]||{};for(const k in CUO0[g])if(!(s.cuotas[g][k]>0))s.cuotas[g][k]=CUO0[g][k]}return s.cuotas}
+const teamIdOfKey=k=>(ST.teams.find(t=>t.tier==="principal"&&tkey(t.id)===k)||{}).id;
+const hhmm=iso=>{const d=new Date(iso);return pad(d.getHours())+":"+pad(d.getMinutes())};
+function hm12(t){if(!t)return"";const[h,m]=t.split(":").map(Number);return`${h%12||12}:${pad(m)} ${h<12?"a. m.":"p. m."}`}
+const LCN={"esp.1":"LaLiga","uefa.champions":"Champions League","esp.copa_del_rey":"Copa del Rey","esp.super_cup":"Supercopa","fifa.friendly":"Amistoso","fifa.worldq.conmebol":"Eliminatorias","usa.1":"MLS","concacaf.champions":"Concacaf Champions Cup",nba:"NBA",mlb:"MLB",nhl:"NHL",nfl:"NFL",f1:"Fórmula 1"};
+function mapComp(tid,e){const cs=compsOf(tid);let c=LCN[e.lc]||"";const n=(e.lg||"").toLowerCase();
+  if(!c){if(/champions/.test(n))c="Champions League";else if(/copa del rey/.test(n))c="Copa del Rey";else if(/supercopa|super cup/.test(n))c="Supercopa";else if(/laliga|la liga|primera/.test(n))c="LaLiga";else if(/friendly|amistos/.test(n))c="Amistoso";else if(/qualif|eliminat/.test(n))c="Eliminatorias"}
+  if(!c)return cs[0];if(!cs.includes(c)){if(tkey(tid)==="argentina"&&c==="Amistoso"&&cs.includes("Amistosos"))return"Amistosos";cs.push(c);ST.comps[tid]=cs}return c}
+function evNorm(e){if(!e)return e;if("ms" in e||"on" in e)return e;const c=e.comps||[],mi=c.find(x=>x.mine)||null,op=c.find(x=>!x.mine)||null;
+  return{id:e.id,date:e.date,name:e.name,lg:e.league||"",lc:e.lc||"",done:!!e.completed,home:mi?!!mi.home:false,ms:mi?mi.score:null,os:op?op.score:null,on:op?op.name:"",oid:null,res:e.res||""}}
+const numv=v=>v===""||v==null||isNaN(+v)?null:+v;
+function syncGames(){if(!SP||!ST||ST.settings.autoGames===false)return false;ST.games=ST.games||[];let ch=false;
+  const lo=toISO(new Date(Date.now()-3*864e5)),hi=toISO(new Date(Date.now()+8*864e5));
+  for(const[k,T]of Object.entries(SP.teams||{})){const tid=teamIdOfKey(k);if(!tid)continue;const f1=ttype(tid)==="f1";
+    for(const e of T.events||[]){if(!e||!e.date)continue;const d=locDate(e.date);if(d<lo||d>hi)continue;const eid=String(e.id);
+      let g=ST.games.find(x=>x.espn===eid);
+      if(!g){g=ST.games.find(x=>!x.espn&&!x.arch&&x.teamId===tid&&Math.abs(parseISO(x.date)-parseISO(d))<=864e5);if(g){g.espn=eid;ch=true}}
+      if(!g){g={id:"g"+uid(),espn:eid,auto:true,teamId:tid,date:d,time:hhmm(e.date),rival:f1?(e.name||"Gran Premio"):(e.on||"Rival"),home:!!e.home,comp:mapComp(tid,e),gf:"",ga:"",pos:"",res:""};ST.games.push(g);ch=true}
+      if(g.auto&&(g.date!==d||g.time!==hhmm(e.date))&&!e.done){g.date=d;g.time=hhmm(e.date);ch=true}
+      if(e.done){let up=false;
+        if(f1){const m=/P(\d+)/.exec(e.res||"");if(m&&!g.pos&&!g.dnf){g.pos=m[1];up=true}}
+        else if((g.gf===""||g.gf==null)&&numv(e.ms)!=null&&numv(e.os)!=null){g.gf=String(e.ms);g.ga=String(e.os);const r=+g.gf>+g.ga?"G":+g.gf<+g.ga?"P":"E";if(!(r==="P"&&g.res==="OT"))g.res=r;up=true}
+        if(up){attachGame(g);ch=true}}}}
+  return ch}
+function evalLeg(text,gf,ga){const t=(text||"").toLowerCase();if(gf==null||ga==null)return null;
+  if(/hits?\b|minuto|primer|tiempo|cuarto|periodo|per[ií]odo|tarjeta|c[oó]rner|curry|yaxe|podz|ohtani|santos|verstappen|rebote|asistencia|triple/.test(t))return null;
+  const m=/(m[aá]s|menos) de (\d+(?:\.\d+)?)/.exec(t);
+  if(m){const n=+m[2],mas=m[1]!=="menos";const v=/en el partido|puntuaci[oó]n|^m[aá]s de [\d.]+ puntos\.?$|^menos de [\d.]+ puntos\.?$/.test(t)?gf+ga:/del rival|en contra/.test(t)?ga:gf;return mas?v>n:v<n}
+  const h=/h[aá]ndicap \+?(-?\d+(?:\.\d+)?)/.exec(t);if(h)return gf+(+h[1])>ga;
+  if(/victoria|gana/.test(t))return gf>ga;
+  return null}
+function autoLegs(){let ch=false;
+  for(const b of ST.bets){if(b.status!=="pendiente"||!b.date)continue;
+    for(const l of b.legs){if(l.ok!=null||!l.teamId||l.vname)continue;const p=pick(l.pickId);if(p&&p.player)continue;
+      const nx=toISO(new Date(parseISO(b.date).getTime()+864e5));
+      const g=(ST.games||[]).find(x=>x.teamId===l.teamId&&(x.date===b.date||x.date===nx)&&numv(x.gf)!=null&&numv(x.ga)!=null&&ttype(x.teamId)==="team");if(!g)continue;
+      const r=evalLeg(l.text,+g.gf,+g.ga);if(r==null)continue;l.ok=r;l.auto=true;ch=true}}
+  return ch}
+function tablaRows(lc){const T=SP&&SP.tablas&&SP.tablas[lc];return T?T.groups||[]:[]}
+function findRow(lc,id,name){if(!id&&!name)return null;for(const g of tablaRows(lc)){const r=g.rows.find(x=>(id&&String(x.id)===String(id))||(name&&(x.n===name||x.ab===name)));if(r)return{row:r,group:g}}return null}
+function perGame(r,k){if(!r)return null;const avg=r[k+"g"];if(avg!=null)return avg;const v=r[k],gp=r.gp||((r.w||0)+(r.l||0)+(r.d||0)+(r.otl||0));return v!=null&&gp?v/gp:null}
+function colorCalc(f,lc){const rows=f.group.rows,N=rows.length;if(!N)return null;const r=f.row.r||rows.indexOf(f.row)+1,pct=r/N;
+  let c=pct<=0.3?"R":pct>0.6?"V":"A";
+  const all=tablaRows(lc).flatMap(g=>g.rows).map(x=>({x,pa:perGame(x,"pa")})).filter(o=>o.pa!=null).sort((a,b)=>a.pa-b.pa);
+  const i=all.findIndex(o=>o.x===f.row);if(c==="V"&&i>=0&&i<Math.max(1,Math.round(all.length*0.2)))c="A";return c}
+function evOf(g){const k=tkey(g.teamId),T=SP&&SP.teams&&SP.teams[k];if(!T||!g.espn)return null;return(T.events||[]).find(x=>String(x.id)===g.espn)||null}
+function rivalInfo(g){if(!g||ttype(g.teamId)==="f1")return null;const k=tkey(g.teamId),e=evOf(g);
+  const lcs=[...(e&&e.lc?[e.lc]:[]),...(TL[k]||[])];
+  for(const lc of lcs){const f=findRow(lc,e&&e.oid,g.rival);if(f){const me=findRow(lc,SP.teams[k]&&SP.teams[k].tid,null);return{lc,...f,me,color:colorCalc(f,lc)}}}
+  return null}
+function colorOf(g){if(!g||ttype(g.teamId)==="f1")return null;if(g.color)return g.color;const ri=rivalInfo(g);return ri?ri.color:null}
+function gameOn(id,date){return(ST.games||[]).find(g=>g.teamId===id&&g.date===date&&!g.arch)}
+function h2h(g){const k=tkey(g.teamId),T=SP&&SP.teams&&SP.teams[k];if(!T)return"";const e=evOf(g),oid=e&&e.oid,riv=(g.rival||"").toLowerCase();
+  const past=(T.events||[]).filter(x=>x.done&&numv(x.ms)!=null&&locDate(x.date)<g.date&&((oid&&String(x.oid)===String(oid))||(!oid&&(x.on||"").toLowerCase()===riv)));
+  const x=past[past.length-1];if(!x)return"";const nm=shn(g.teamId),d=locDate(x.date);
+  return`Último enfrentamiento: ${x.home?`${nm} ${x.ms}-${x.os} ${x.on}`:`${x.on} ${x.os}-${x.ms} ${nm}`} · ${sdate(d)}`}
+function cuotaDia(date,ids,qualy){date=date||todayISO();const pl=ids&&ids.length?ids:playingToday(date);if(!pl.length)return null;const cu=CU();
+  const rb=pl.filter(id=>ttype(id)==="f1"),ot=pl.filter(id=>ttype(id)!=="f1");
+  const raw=ot.map(id=>{const g=gameOn(id,date);return(g&&colorOf(g))||null}),cols=raw.map(c=>c||"A").sort((a,b)=>ORD[a]-ORD[b]);
+  let use=cols;if(use.length>4)use=use.slice().sort((a,b)=>ORD[b]-ORD[a]).slice(0,4).sort((a,b)=>ORD[a]-ORD[b]);
+  const base=ot.length?cu["c"+Math.min(ot.length,4)][use.join("")]:null;
+  if(rb.length){const cap=ot.length?cu.rb[Math.min(ot.length,4)]:(qualy?cu.rb.q:cu.rb.s);return{cap,n:pl.length,cols,unk:raw.filter(c=>!c).length,rb:true,sinRB:base}}
+  return{cap:base,n:ot.length,cols,unk:raw.filter(c=>!c).length,rb:false,sinRB:null}}
+function capTxt(q){if(!q)return"";const c=q.cols.map(x=>COLN[x]).join(", ");return q.rb?`Red Bull${q.n>1?" + "+(q.n-1)+(q.n-1===1?" principal":" principales"):""}`:`${q.n} ${q.n===1?"principal":"principales"}${c?" ("+c+")":""}`}
+function dayHero(date,link){const q=cuotaDia(date),dt=parseISO(date||todayISO());const dl=dt.toLocaleDateString("es-SV",{weekday:"long",day:"numeric"});
+  const desc=ST.settings.descanso!=null&&ST.settings.descanso!==""&&dt.getDay()===+ST.settings.descanso;
+  const tag=link?`button class="hero" data-tab="semana" aria-label="Ver la semana"`:`div class="hero"`;
+  return`<${tag}><span><small>${esc(dl.charAt(0).toUpperCase()+dl.slice(1))}${desc?" · descanso":""}${link?" · ver semana ›":""}</small><br><b class="c" style="font-size:21px">${q?esc(capTxt(q)):"No juega ningún principal"}</b></span><span style="text-align:right"><small>Cuota del día</small><br><span class="big">${q?"&lt; "+q.cap.toFixed(2):"—"}</span></span></${link?"button":"div"}>`}
+function gameRow(g){const t=team(g.teamId);if(!t)return"";const f1=ttype(g.teamId)==="f1",col=colorOf(g),r=gRes(g);
+  const dc=col==="V"?"var(--win)":col==="A"?"var(--warn)":col==="R"?"var(--loss)":"var(--line)";const hh=f1?"":h2h(g);
+  return`<div class="gm"><div class="l1"><span>${g.time?esc(hm12(g.time))+" · ":""}${esc(gComp(g))}${f1?"":" · "+(g.home?"En casa":"De visita")}${g.date!==todayISO()?" · "+esc(fmtDate(g.date)):""}</span><button class="link" style="font-size:12px" data-act="editgame" data-id="${g.id}">Editar</button></div>
+   <div class="l2">${badge(g.teamId)}<span class="tn">${esc(shn(g.teamId))} <span class="muted" style="font-weight:600">${f1?"·":g.home?"vs":"en"}</span> ${esc(g.rival)}</span>${r?`<b class="num ${r==="G"||r==="P1"?"pos":r==="P"||r==="DNF"||r==="OT"?"neg":""}">${esc(gShort(g)||r)}</b>`:""}${f1?"":`<button class="dot" style="background:${dc}" data-act="gcolor" data-id="${g.id}" aria-label="Rival ${col?COLN[col]:"sin color"}${g.color?" (a mano)":""}. Tocá para cambiar"></button>`}</div>
+   ${hh?`<p class="h2h">${esc(hh)}</p>`:""}${!f1&&!col?`<p class="h2h">Sin datos del rival: tocá el punto para ponerle color (cuenta como amarillo).</p>`:""}${g.color?`<p class="h2h">Color puesto a mano.</p>`:""}</div>`}
+function partidosCard(){const t=todayISO(),gs=(ST.games||[]).filter(g=>!g.arch&&team(g.teamId)?.tier==="principal"&&(g.date===t||(!gRes(g)&&g.date<t&&g.date>=toISO(new Date(Date.now()-3*864e5))))).sort((x,y)=>(x.date+(x.time||"")).localeCompare(y.date+(y.time||"")));
+  const st=spState==="vacio"?"ESPN no respondió. Probá Actualizar en un rato.":spState==="cargando"?"Actualizando…":spState==="error"?"No se pudo actualizar":SP&&SP.at?`ESPN · hace ${Math.max(0,Math.round((Date.now()-SP.at)/6e4))} min`:"";
+  return`<div class="card"><div class="met-h"><h3>Partidos de hoy</h3><span class="row" style="gap:6px"><button class="btn" style="padding:6px 10px;font-size:13px" data-act="refresh">Actualizar</button><button class="btn" style="padding:6px 10px;font-size:13px" data-act="addgame">+ Partido</button></span></div>
+   <p class="small muted" style="margin:2px 0 0">${esc(st)}</p>
+   ${gs.length?gs.map(gameRow).join(""):`<p class="small muted" style="margin:8px 0 0">Hoy no juega ningún principal.</p>`}
+   <div class="row small muted" style="gap:12px;margin-top:8px"><span><i class="dot" style="background:var(--win);width:10px;height:10px"></i> Favorable</span><span><i class="dot" style="background:var(--warn);width:10px;height:10px"></i> Parejo</span><span><i class="dot" style="background:var(--loss);width:10px;height:10px"></i> Rival duro</span></div></div>`}
+function viewSemana(){let h=`<button class="back" data-tab="inicio">‹ Inicio</button><h1>Semana</h1><p class="muted small" style="margin:4px 0 0">Quién juega cada día y con qué cuota apostás. Se actualiza sola.</p>`;
+  for(let i=0;i<7;i++){const dt=new Date(Date.now()+i*864e5),ds=toISO(dt),pl=playingToday(ds),q=cuotaDia(ds);
+    const desc=ST.settings.descanso!=null&&ST.settings.descanso!==""&&dt.getDay()===+ST.settings.descanso;
+    const dl=dt.toLocaleDateString("es-SV",{weekday:"long",day:"numeric"});
+    h+=`<div class="sem${i===0?" hoyd":""}${!pl.length||desc?" off":""}"><div class="row" style="justify-content:space-between;align-items:flex-start;flex-wrap:nowrap"><span><b class="c" style="font-size:20px">${esc(dl.charAt(0).toUpperCase()+dl.slice(1))}</b><br><span class="small muted">${i===0?"Hoy":i===1?"Mañana":""}${desc?(i<2?" · ":"")+"Descanso (regla 22)":""}</span></span><span style="text-align:right"><b class="c" style="font-size:26px">${q?"&lt; "+q.cap.toFixed(2):"—"}</b><br><span class="small muted">${q?esc(capTxt(q)):"Ningún principal"}</span></span></div>
+     <div class="chips" style="margin-top:8px">${pl.map(id=>{const g=gameOn(id,ds),c=g&&colorOf(g);return`<span class="chip" style="padding:3px 10px 3px 4px">${badge(id)}${ttype(id)==="f1"?esc(g?g.rival:"Carrera"):(g&&g.home?"vs ":"en ")+esc(g?g.rival:"")}${c?` <i class="dot" style="margin-left:6px;width:10px;height:10px;background:${c==="V"?"var(--win)":c==="A"?"var(--warn)":"var(--loss)"}"></i>`:""}</span>`}).join("")}</div>
+     ${!pl.length?`<p class="small muted" style="margin:6px 0 0">No juega ningún principal: ese día no se apuesta.</p>`:desc?`<p class="small" style="margin:6px 0 0;color:var(--warn);font-weight:600">Día de descanso: si apostás, la app te avisa.</p>`:""}</div>`}
+  return h}
+const TCOLS={"esp.1":[["gp","PJ"],["pts","Pts"],["pf","GF"],["pa","GC"]],"uefa.champions":[["gp","PJ"],["pts","Pts"],["pf","GF"],["pa","GC"]],nhl:[["gp","PJ"],["pts","Pts"],["pf","GF"],["pa","GC"]],nba:[["w","G"],["l","P"],["pfg","Anota"],["pag","Recibe"]],mlb:[["w","G"],["l","P"],["pf","CA"],["pa","CR"]],nfl:[["w","G"],["l","P"],["pf","PF"],["pa","PC"]],f1:[["pts","Pts"]]};
+function tablaCard(id){const k=tkey(id),lcs=TL[k];
+  if(!lcs)return k==="argentina"?`<div class="card"><h3>Tabla</h3><p class="small muted" style="margin:6px 0 0">En amistosos no hay tabla. Antes de elegir un pick te muestro lo del rival, y si viene un torneo con grupos la tabla aparece sola.</p></div>`:"";
+  if(!SP||!SP.tablas||!lcs.some(lc=>SP.tablas[lc]))return`<div class="card"><h3>Tabla</h3><p class="small muted" style="margin:6px 0 0">Todavía no llegó la tabla. Tocá Actualizar en Partidos de hoy (Inicio).</p></div>`;
+  const nx=(ST.games||[]).filter(g=>g.teamId===id&&g.date>=todayISO()&&!gRes(g)).sort((a,b)=>a.date.localeCompare(b.date))[0],ne=nx&&evOf(nx);
+  let h="";for(const lc of lcs){const T=SP.tablas[lc];if(!T)continue;const tid=SP.teams[k]&&SP.teams[k].tid;
+    let grp=T.groups.find(g=>g.rows.some(r=>String(r.id)===String(tid)))||(k==="redbull"?T.groups.find(g=>g.rows.some(r=>/verstappen/i.test(r.n)))||T.groups[0]:null);if(!grp)continue;
+    const cols=TCOLS[lc]||[["w","G"],["l","P"]],open=UI.tbl===lc,rows=open?grp.rows:grp.rows.slice(0,Math.min(grp.rows.length,10));
+    const isMe=r=>String(r.id)===String(tid)||(k==="redbull"&&/verstappen|red bull/i.test(r.n)),isRiv=r=>ne&&ne.oid&&String(r.id)===String(ne.oid);
+    const fmtv=(r,c)=>{const v=c==="pfg"||c==="pag"?perGame(r,c.slice(0,2)):r[c];return v==null?"":c.endsWith("g")?(+v).toFixed(1):Math.round(v)};
+    h+=`<div class="card"><div class="met-h"><h3>${esc(T.name||LCN[lc]||lc)}${grp.name&&T.groups.length>1?` · ${esc(grp.name)}`:""}</h3><span class="small muted">${grp.rows.length} ${k==="redbull"?"pilotos":"equipos"}</span></div>
+     <div class="scroll"><table class="t tb"><tr><th>#</th><th>${k==="redbull"?"Piloto":"Equipo"}</th>${cols.map(c=>`<th class="r">${c[1]}</th>`).join("")}</tr>
+     ${rows.map((r,i)=>`<tr class="${isMe(r)?"me":isRiv(r)?"riv":""}"><td class="num">${r.r||i+1}</td><td>${esc(r.n)}</td>${cols.map(c=>`<td class="r num">${fmtv(r,c[0])}</td>`).join("")}</tr>`).join("")}</table></div>
+     ${grp.rows.length>10?`<button class="link small" style="margin-top:6px" data-act="tbl" data-id="${lc}">${open?"Ver menos":"Ver tabla completa"}</button>`:""}
+     <p class="small muted" style="margin:6px 0 0">${ne&&ne.oid?"Resaltado: tu equipo y el próximo rival.":"Resaltado: tu equipo."}</p></div>`}
+  return h}
+/* ---------- picks agrupados ---------- */
+const PGRP=[["res","Resultado"],["ata","Goles o puntos de tu equipo"],["def","Del rival"],["total","Total del partido"],["hcp","Hándicap"],["jug","Jugadores"],["otro","Otros"]];
+function guessTipo(text,player){const t=(text||"").toLowerCase();
+  if(player||/curry|yaxe|podz|ohtani|santos|verstappen|rebote|asistencia/.test(t))return"jug";
+  if(/h[aá]ndicap/.test(t))return"hcp";if(/victoria|gana/.test(t))return"res";
+  if(/en el partido|puntuaci[oó]n final|^m[aá]s de [\d_.]+ puntos\.?$/.test(t))return"total";
+  if(/del rival/.test(t))return"def";if(/(goles?|puntos|carreras|hits)/.test(t))return"ata";return"otro"}
+const ptipo=p=>p.tipo||guessTipo(p.text,p.player);
+const isTpl=p=>/__/.test(p.text||"");
+function lineStats(p,ln){let u=0,h=0;const b=p.baseLines&&p.baseLines[ln];if(b){u+=b.u||0;h+=b.h||0}
+  for(const bt of ST.bets){if(!settled(bt))continue;for(const l of bt.legs)if(l.pickId===p.id&&String(l.linea)===String(ln)&&!l.imp){u++;if(l.ok===true)h++}}return{u,h}}
+function seasonRate(p,ln){const k=tkey(p.teamId),T=SP&&SP.teams&&SP.teams[k];if(!T)return null;const txt=(p.text||"").replace("__",ln);let n=0,y=0;
+  for(const e of T.events||[]){if(!e.done)continue;const a=numv(e.ms),b=numv(e.os);if(a==null||b==null)continue;const r=evalLeg(txt,a,b);if(r==null)return null;n++;if(r)y++}return n?{n,y}:null}
+function pickStatsHtml(p,ln){const d=UI.draft,g=d&&gameOn(p.teamId,d.date),ri=g&&rivalInfo(g),tp=ptipo(p),txt=isTpl(p)?p.text.replace("__",ln):p.text;let h="";
+  const ys=isTpl(p)?lineStats(p,ln):pickStats(p);h+=`<div><span>Tu acierto${isTpl(p)?" con "+esc(ln):""}</span><b>${ys.u?`${ys.h}/${ys.u}`:"sin datos"}</b></div>`;
+  const sr=seasonRate(p,ln);if(sr)h+=`<div><span>En la temporada se cumplió</span><b>${sr.y} de ${sr.n} partidos</b></div>`;
+  const al=[];
+  if(ri){const rp=perGame(ri.row,"pa"),rf=perGame(ri.row,"pf"),mf=ri.me&&perGame(ri.me.row,"pf"),N=ri.group.rows.length;const u=ri.lc==="nba"||ri.lc==="nfl"?"pts":ri.lc==="mlb"?"carreras":"goles";
+    h+=`<div><span>${esc(g.rival)}</span><b>${ri.row.r||""}º de ${N}${ri.color?" · "+COLN[ri.color]:""}</b></div>`;
+    if(rp!=null)h+=`<div><span>${esc(g.rival)} recibe</span><b>${rp.toFixed(1)} ${u} por partido</b></div>`;
+    if(rf!=null)h+=`<div><span>${esc(g.rival)} anota</span><b>${rf.toFixed(1)} ${u} por partido</b></div>`;
+    if(mf!=null)h+=`<div><span>${esc(shn(p.teamId))} anota</span><b>${mf.toFixed(1)} ${u} por partido</b></div>`;
+    const m=/(m[aá]s|menos) de (\d+(?:\.\d+)?)/.exec(txt.toLowerCase()),n=m?+m[2]:null;
+    if(m&&tp==="ata"&&m[1]!=="menos"&&rp!=null&&n>rp)al.push(`${g.rival} recibe ${rp.toFixed(1)} por partido: tu línea de ${n} está ${(n-rp).toFixed(1)} arriba.`);
+    if(m&&tp==="def"&&m[1]==="menos"&&rf!=null&&n<rf)al.push(`${g.rival} anota ${rf.toFixed(1)} por partido: tu línea de ${n} está por debajo.`);
+    if(tp==="res"&&ri.color==="R")al.push(`${g.rival} está arriba de la tabla: rival duro.`)}
+  else if(g&&ttype(p.teamId)!=="f1")h+=`<div><span>Rival</span><b>${esc(g.rival)} · sin datos de tabla</b></div>`;
+  else if(!g)h+=`<div><span>Partido</span><b>No juega ese día</b></div>`;
+  const hh=g?h2h(g):"";if(hh)h+=`<div><span>${esc(hh)}</span></div>`;
+  return`<div class="ficha">${h}</div>${al.length?`<div class="checks" style="margin-top:10px"><h3>Aviso del rival</h3><ul>${al.map(x=>`<li>${esc(x)}</li>`).join("")}</ul><p class="small muted" style="margin:6px 0 0">Es solo un aviso: podés elegirlo igual.</p></div>`:""}`}
+function defLines(p){const t=(p.text||"").toLowerCase();if(/puntos/.test(t)&&ttype(p.teamId)==="team"&&/warriors|chiefs|nba|nfl/.test((team(p.teamId)?.sport||"")+tkey(p.teamId)))return tkey(p.teamId)==="chiefs"?[13.5,16.5,20.5,23.5]:[100.5,105.5,110.5,115.5];
+  if(/carreras/.test(t))return[0.5,1.5,2.5,3.5];if(/hits/.test(t))return[2.5,4.5,6.5];if(/h[aá]ndicap/.test(t))return[1.5,2.5,3.5,4.5];return[0.5,1.5,2.5,3.5]}
+function pickGroupsHtml(ps,act,teamView){let h="";for(const[k,lbl]of PGRP){const xs=ps.filter(x=>ptipo(x.p)===k);if(!xs.length)continue;h+=`<p class="grp">${lbl}</p>`;
+  h+=xs.map(({p,s})=>{const used=!teamView&&UI.draft&&UI.draft.legs.some(l=>l.pickId===p.id&&!isTpl(p));return`<button class="pk" data-act="${act}" data-id="${p.id}" ${used?"disabled":""}><span class="tx">${used?"✓ ":""}${esc(p.text)}${p.player?`<span class="tag">jugador</span>`:""}${isTpl(p)?`<span class="tag">con número</span>`:""}${teamView&&s.u?`<div class="bar"><i style="width:${s.pct}%"></i></div>`:""}</span><span class="rec ${teamView?"num":"small muted"}">${s.u?s.h+"/"+s.u:teamView?"—":"nuevo"}</span></button>`}).join("")}return h}
+
 /* ---------- reglas automáticas ---------- */
 function auxOf(legs){const ts=[...new Set(legs.map(l=>l.teamId).filter(t=>t&&team(t)?.tier==="auxiliar"))];return ts.length+new Set(legs.filter(l=>l.vname).map(l=>l.vname.toLowerCase())).size}
-function capOf(d){if(!["tommy","walter","cabo"].includes(d.method))return null;if(!playingToday(d.date).length){const n=auxOf(d.legs||[]);return n<=1?1.05:cupoMax(n,d.date)}if(d.method==="tommy"){const a=liveAttempt("tommy");if(!a||camFb(attemptBal(a),a)==="S")return null}return cupoMax(playingToday(d.date).length,d.date)}
+function capOf(d){if(!["tommy","walter","cabo"].includes(d.method))return null;const prin=[...new Set((d.legs||[]).map(l=>l.teamId).filter(t=>t&&team(t)?.tier==="principal"))];const q=cuotaDia(d.date,prin.length?prin:null,d.qualy);return q?q.cap:null}
 function wPlayerOk(l){const p=pick(l.pickId);if(!p||!p.player)return true;if(tkey(l.teamId)!=="warriors")return false;const t=(p.text||l.text||"").toLowerCase();if(!/combinad/.test(t)||!/punto/.test(t))return false;const n=(t.match(/\d+(\.\d+)?/g)||[]).map(Number);return n.length>0&&Math.max(...n)<=15}
 function checks(d){
   const w=[];const s=ST.settings;
@@ -588,16 +769,16 @@ function checks(d){
       if(d.method==="cabo"&&!ob.length)w.push({e:1,lk:1,t:"🔒 Regla 24: primero va la apuesta del Camino ese día."});}
     if(ST.bets.some(b=>b.method===d.method&&b.status==="perdida"&&b.date===d.date))w.push({e:1,lk:1,t:"🔒 Regla 19: hoy ya perdiste una apuesta. Ese día ya no se apuesta."});
     const pl=playingToday(d.date),npl=pl.length;
-    if(!npl){if(prin.length)w.push({e:1,lk:1,t:`🔒 ${prin.map(shn).join(", ")} no está en Partidos de hoy para esa fecha.`});
-      else if(legs.length&&!aux.length)w.push({e:1,lk:1,t:"🔒 Regla 12: si no juega ningún principal, la apuesta va con auxiliares."});
-      const cp=capOf(d);if(cp&&c>cp+1e-9)w.push({e:1,lk:1,t:aux.length<=1?`🔒 Regla 12: no juega ningún principal. Con un solo auxiliar la cuota tiene que ser 1.05 o menos (pusiste ${c.toFixed(2)}).`:`🔒 Regla 12: no juega ningún principal. Con ${aux.length} auxiliares (${isWE(d.date)?"finde":"entre semana"}) la cuota máxima es ${cp.toFixed(2)} (pusiste ${c.toFixed(2)}).`});}
-    else{if((teams.length||aux.length)&&!prin.length)w.push({e:1,lk:1,t:"🔒 Regla 12: la apuesta no lleva ningún principal."});
-      if(npl>=3&&aux.length)w.push({e:1,lk:1,t:`🔒 Regla 9: juegan ${npl} principales. La apuesta va solo con ellos, sin auxiliares.`});
-      if(npl===2&&aux.length)w.push({e:1,lk:1,t:"🔒 Regla 10: juegan 2 principales. La apuesta va solo con esos dos."});
-      if(npl===1&&aux.length>1)w.push({e:1,lk:1,t:"🔒 Regla 11: juega 1 principal. Solo se combina con un auxiliar."});
-      const cap=capOf(d);if(cap&&c>cap+1e-9)w.push({e:1,lk:1,t:`🔒 Regla 14: juegan ${npl} ${npl===1?"principal":"principales"} (${isWE(d.date)?"finde":"entre semana"}). La cuota máxima es ${cap.toFixed(2)} y pusiste ${c.toFixed(2)}.`});
-      const fuera=prin.filter(t=>!pl.includes(t));if(fuera.length)w.push({e:1,lk:1,t:`🔒 ${fuera.map(shn).join(", ")} no está en Partidos de hoy para esa fecha.`});}
-    if(aux.length>1&&npl>0)w.push({e:1,lk:1,t:"🔒 Regla 13: llevás dos auxiliares. Solo uno por apuesta cuando juega algún principal."});
+    if(!npl)w.push({e:1,lk:1,t:"🔒 Regla 12: ese día no juega ningún principal ni corre Red Bull. No se apuesta."});
+    else{if(legs.length&&!prin.length)w.push({e:1,lk:1,t:"🔒 La apuesta no lleva ningún principal."});
+      const fuera=prin.filter(t=>!pl.includes(t));if(fuera.length)w.push({e:1,lk:1,t:`🔒 ${fuera.map(shn).join(", ")} no juega ese día.`});
+      const q=cuotaDia(d.date,prin.length?prin:null,d.qualy);
+      if(q&&c>1&&c>=q.cap-1e-9)w.push({e:1,lk:1,t:`🔒 Regla 14: con ${capTxt(q)} la cuota tiene que ser menos de ${q.cap.toFixed(2)} (pusiste ${c.toFixed(2)}).`});
+      if(q&&q.rb&&q.sinRB&&q.sinRB>q.cap+1e-9)w.push({t:`Sin Red Bull podés llegar a menos de ${q.sinRB.toFixed(2)}.`});
+      if(q&&q.unk)w.push({t:`${q.unk===1?"Un rival no tiene":"Hay rivales sin"} color: cuenta como amarillo. Podés ponérselo en Inicio.`});}
+    if(aux.length===1)w.push({t:"Llevás un auxiliar: no cambia la cuota del día."});
+    if(aux.length>1)w.push({e:1,lk:1,t:"🔒 Solo un auxiliar por apuesta."});
+    {const ds=ST.settings.descanso;if(ds!=null&&ds!==""&&parseISO(d.date).getDay()===+ds)w.push({t:"Regla 22: ese día es tu descanso."});}
     if(legs.length>4)w.push({t:`Llevás ${legs.length} picks. Regla 21: máximo 4 por apuesta.`});
   }else if(d.method==="rick"){
     const amt=num(d.stake);
@@ -648,7 +829,27 @@ function migRules7(){if(ST.settings.rules7)return false;ST.settings.rules7=true;
   const b=ST.rules.find(q=>q.id==="r3_12");if(b)b.text="Nunca más de un auxiliar en la misma apuesta cuando juega algún principal.";return true}
 function migRules6(){if(ST.settings.rules6)return false;ST.settings.rules6=true;const x=ST.rules.find(q=>q.id==="r3_11");if(x)x.text="Si no juega ningún principal, solo se apuesta a un auxiliar, con cuota de 1.05 o menos.";
   if(!ST.rules.some(q=>q.id==="r6_26"))ST.rules.push({id:"r6_26",text:"Los equipos variantes (Femenino, Futsal, otros deportes) solo se usan cuando no juega ningún principal o juega solo uno, para apoyar la cuota. Cuentan como auxiliar."});return true}
-function migrate(){if(!ST)return false;let r=migRules();if(migPlan5())r=true;if(migRules6())r=true;if(migRules7())r=true;if(!ST.settings.undoAnadir){const n0=ST.moves.length;ST.moves=ST.moves.filter(mv=>!/^Añadido al intento|^Saldo de Bet365 que no estaba en la app/.test(mv.note||""));ST.settings.undoAnadir=true;r=true}if(!ST.settings.rules4){const x=ST.rules.find(q=>/En Cabo s[ií] se permiten/.test(q.text));if(x)x.text="En Rico sí se permiten estadísticas de jugadores. En Skipper, Kowalski y Cabo no (salvo de los Warriors).";ST.settings.rules4=true;r=true}return migrate0()||r}
+function migRules8(){const s=ST.settings;if(s.rules8)return false;s.rules8=true;CU();if(s.descanso==null)s.descanso=5;if(!s.theme)s.theme="oscuro";if(s.autoGames==null)s.autoGames=true;
+  const setR=(id,t)=>{const x=ST.rules.find(q=>q.id===id);if(x)x.text=t};
+  setR("r3_10","Si juega 1 principal, la apuesta va solo con él.");
+  setR("r3_11","Si no juega ningún principal ni corre Red Bull, ese día no se apuesta.");
+  setR("r3_13","Todos (Skipper, Kowalski y Cabo) apuestan a la cuota del día, siempre por debajo del tope. El tope sale de cuántos principales van y del color de cada rival (verde, amarillo, rojo); ya no cambia el finde. Red Bull va aparte: solo, menos de 1.08 (clasificación 1.09); con otros, +1 → 1.12, +2 → 1.16, +3 → 1.20, +4 → 1.22. Los topes están en Ajustes.");
+  setR("r3_21","Un día de descanso fijo a la semana (viernes).");
+  setR("r3_2","Solo apostar picks que estén en Equipos.");
+  ST.rules=ST.rules.filter(q=>q.id!=="r3_12"&&q.id!=="r6_26");
+  if(!ST.rules.some(q=>q.id==="r8_27"))ST.rules.push({id:"r8_27",text:"El color del rival lo pone la app según la tabla (arriba rojo, abajo verde, en medio amarillo). Se puede cambiar a mano tocando el punto."});
+  return true}
+function migPicks32(){const s=ST.settings;if(s.picks32)return false;s.picks32=true;const NUM=/\d+(?:\.\d+)?/g;
+  const groups={};for(const p of ST.picks){p.tipo=p.tipo||guessTipo(p.text,p.player);const ms=(p.text||"").match(NUM);if(!ms||ms.length!==1||/\//.test(p.text))continue;
+    const tpl=p.text.replace(NUM,"__"),k=p.teamId+"|"+tpl.toLowerCase();(groups[k]=groups[k]||[]).push({p,ln:+ms[0],tpl})}
+  for(const arr of Object.values(groups)){const keep=arr[0].p;const ids=new Set(arr.map(x=>x.p.id));const lnOf={};arr.forEach(x=>lnOf[x.p.id]=x.ln);
+    keep.baseLines={};arr.forEach(x=>{if(x.p.baseUsed){const b=keep.baseLines[x.ln]||(keep.baseLines[x.ln]={u:0,h:0});b.u+=x.p.baseUsed||0;b.h+=x.p.baseHit||0}});
+    keep.baseUsed=arr.reduce((a,x)=>a+(x.p.baseUsed||0),0);keep.baseHit=arr.reduce((a,x)=>a+(x.p.baseHit||0),0);
+    keep.lineas=[...new Set(arr.map(x=>x.ln))].sort((a,b)=>a-b);keep.text=arr[0].tpl;keep.player=arr.some(x=>x.p.player);
+    for(const b of ST.bets)for(const l of b.legs)if(ids.has(l.pickId)){if(l.linea==null&&lnOf[l.pickId]!=null&&l.text&&(l.text.match(NUM)||[]).length===1)l.linea=+(l.text.match(NUM)[0]);l.pickId=keep.id}
+    ST.picks=ST.picks.filter(p=>p===keep||!ids.has(p.id))}
+  return true}
+function migrate(){if(!ST)return false;let r=migRules();if(migRules8())r=true;if(migPicks32())r=true;if(migPlan5())r=true;if(migRules6())r=true;if(migRules7())r=true;if(!ST.settings.undoAnadir){const n0=ST.moves.length;ST.moves=ST.moves.filter(mv=>!/^Añadido al intento|^Saldo de Bet365 que no estaba en la app/.test(mv.note||""));ST.settings.undoAnadir=true;r=true}if(!ST.settings.rules4){const x=ST.rules.find(q=>/En Cabo s[ií] se permiten/.test(q.text));if(x)x.text="En Rico sí se permiten estadísticas de jugadores. En Skipper, Kowalski y Cabo no (salvo de los Warriors).";ST.settings.rules4=true;r=true}return migrate0()||r}
 function migrate0(){
   if(ST.settings.seedTeams2&&!ST.settings.seedTeams3){const nk=NEW_TEAMS.map(x=>x[0]);
     for(const t of ST.teams){const k=tkey(t.id);if(!nk.includes(k))continue;t.tier="principal";
@@ -669,7 +870,7 @@ function render(){
     <p style="margin-top:24px"><button class="link" data-act="fresh">Empezar desde cero</button></p></div>`;return}
   let h="";
   if(UI.detail)h=viewDetail(UI.detail);
-  else h={inicio:viewInicio,apostar:viewApostar,picks:viewPicks,stats:viewStats,mas:viewMas,reglas:viewReglas,drive:viewDrive,dinero:viewDinero,ajustes:viewAjustes,respaldo:viewRespaldo}[UI.tab]();
+  else h={semana:viewSemana,inicio:viewInicio,apostar:viewApostar,picks:viewPicks,stats:viewStats,mas:viewMas,reglas:viewReglas,drive:viewDrive,dinero:viewDinero,ajustes:viewAjustes,respaldo:viewRespaldo}[UI.tab]();
   v.innerHTML=h+`<p class="sync" id="sync">${syncText()}</p>`}
 
 const IC={add:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>',pen:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>',
@@ -685,6 +886,7 @@ function viewInicio(){
     <span class="rule"></span>
     <span class="op">=</span><span><b>Diferencia total</b></span><span class="v res ${c.neto>=0?"pos":"neg"}">${signed(c.neto)}</span>`:""}</div>
     <div class="ledger-act" style="flex-wrap:wrap"><button class="ibtn" data-act="agregar" aria-label="Agregar dinero">${IC.add}Agregar</button><button class="ibtn" data-act="retirar" aria-label="Retirar dinero">${IC.out}Retirar</button><button class="ibtn" data-act="togag" aria-label="Ver agregado y diferencia">${UI.showAg?"🙈 Ocultar":"👁 Ver agregado y diferencia"}</button></div></div>`;
+  h+=dayHero(todayISO(),true)+partidosCard();
   const pend=ST.bets.filter(b=>b.status==="pendiente");
   if(pend.length){h+=`<h2>Por resolver</h2>`+pend.map(pendCard).join("")}
   h+=`<h2>Métodos</h2>`+camCard()+(liveAttempt("cabo")||lastAttempt("cabo")||P().k<350?caboCard():"")+(liveAttempt("walter")?ladderCard("walter"):"")+ragnarCard()+`<div class="row" style="margin-top:10px;gap:16px">${ST.attempts.some(a=>a.method==="walter")?`<button class="link" data-act="detail" data-id="walter">Historial de Kowalski</button>`:""}${ST.bets.some(b=>b.method==="rick")?`<button class="link" data-act="detail" data-id="rick">Historial de Cabo libre</button>`:""}</div>`;
@@ -699,7 +901,7 @@ function camCard(){const m="tommy",a=liveAttempt(m),last=lastAttempt(m),pl=P(),r
     else if(es==="sinmeta")h+=`<p class="one">Cabo arrancó con ${money(bal)}. Poné tu meta.</p><button class="btn pri" style="margin-top:8px" data-act="cammeta">Poner meta de Cabo</button>`;
     else if(es==="meta")h+=`<p class="one"><b>¡Cabo llegó a ${money(a.meta)}!</b> Retirás todo y Skipper vuelve a empezar con ${money(pl.re)} del respaldo.</p><button class="btn pri" style="margin-top:8px" data-act="camretiro">Retirar ${money(bal)}</button>`;
     else if(p)h+=`<p class="one">En juego: ${money(p.stake)} a ${p.cuota.toFixed(2)} → meta ${money(p.target)}</p>`;
-    else h+=`<p class="one">Hoy mete <b>${money(bal)}</b> → <b>${money(targetFor(m,bal))}</b> · cuota ≥ ${minCuota(m,bal).toFixed(2)}</p>`;
+    else{const q=cuotaDia(todayISO());h+=q?`<p class="one">Hoy mete <b>${money(bal)}</b> → <b>${money(targetFor(m,bal))}</b> · cuota del día <b>&lt; ${q.cap.toFixed(2)}</b></p>`:`<p class="one">Hoy no juega ningún principal: no se apuesta.</p>`}
     const lo=f==="S"?a.capital:f==="K"?pl.s:(a.caboCap||bal),pct=cap<Infinity?Math.min(100,(bal-lo)/Math.max(1,cap-lo)*100):0;
     h+=`<div class="prog"><i style="width:${Math.max(0,pct).toFixed(0)}%"></i></div>
      <div class="row small muted" style="margin-top:8px;gap:6px;flex-wrap:wrap">${(a.cabo?["S","K","C"]:["S","K"]).map(x=>`<span style="${x===f?"color:"+FC[x]+";font-weight:700":""}">${FN[x]}${x==="S"?" →"+money(pl.s):x==="K"?" →"+money(pl.k):a.meta?" →"+money(a.meta):""}</span>`).join(" · ")}</div>`;
@@ -715,7 +917,7 @@ function caboCard(){const m="cabo",a=liveAttempt(m),last=lastAttempt(m),pl=P();
   if(es==="sinmeta")h+=`<button class="btn pri" style="margin-top:8px" data-act="cabometa">Poner meta de Cabo</button>`;
   else if(es==="meta")h+=`<p class="one"><b>¡Cabo llegó a ${money(a.meta)}!</b> Retirá todo.</p><button class="btn pri" style="margin-top:8px" data-act="caboretiro">Retirar ${money(bal)}</button>`;
   else if(p)h+=`<p class="one">En juego: ${money(p.stake)} a ${p.cuota.toFixed(2)} → meta ${money(p.target)}</p>`;
-  else h+=`<p class="one">Hoy mete <b>${money(bal)}</b> → <b>${money(targetFor(m,bal))}</b> · cuota ≥ ${minCuota(m,bal).toFixed(2)}</p><p class="small muted" style="margin:4px 0 0">Primero el camino, y nunca los mismos equipos.</p>`;
+  else{const q=cuotaDia(todayISO());h+=`<p class="one">Hoy mete <b>${money(bal)}</b> → <b>${money(targetFor(m,bal))}</b>${q?` · cuota del día <b>&lt; ${q.cap.toFixed(2)}</b>`:""}</p><p class="small muted" style="margin:4px 0 0">Primero el camino, y nunca los mismos equipos.</p>`}
   const pct=a.meta?Math.min(100,(bal-a.capital)/Math.max(1,a.meta-a.capital)*100):0;
   h+=`<div class="prog"><i style="width:${Math.max(0,pct).toFixed(0)}%"></i></div>`;
   if(es!=="meta"&&!p)h+=`<button class="link small" style="margin-top:8px" data-act="caboretiro">Retirar ahora</button>`;
@@ -768,7 +970,7 @@ function pendCard(b){
    <label class="f">Cobro real si ganó</label><input class="in" type="text" inputmode="decimal" autocomplete="off" value="${r.ret}" data-bind="ret" data-id="${b.id}">
    <div class="row" style="margin-top:12px"><button class="btn win" data-act="settle" data-id="${b.id}" data-v="ganada">Ganó</button><button class="btn loss" data-act="settle" data-id="${b.id}" data-v="perdida">Perdió</button><button class="link" data-act="delbet" data-id="${b.id}" style="margin-left:auto">Borrar</button></div></div>`}
 
-const INFO={"tommy": "Un camino que se repite. Skipper: de $50 a $150 a 1.15 (sin tope de cuota). Kowalski: de $150 a $250 a 1.10 entre semana y 1.15 en finde, sin pasar la cuota máxima del día. Al llegar a $250 se divide: $150 pasan a Cabo, que sube hasta tu meta, y el resto vuelve a empezar el camino. Cuando el camino vuelve a $250, Cabo se retira esté donde esté y se divide otra vez. Si cae Cabo, el camino sigue; si cae el camino, Cabo sigue.", "walter": "De $50 a $100 subes de $10 en $10; desde $100, de $20 en $20. Lo que sobra va a Rico.", "ragnar": "La caja: aquí llega lo que sobra de Skipper y Kowalski. Apuestas a tus equipos con $3, $5 o $10.", "rick": "Libre: sin meta ni cuota. Apuesta con el saldo disponible y lo ganado regresa ahí."};
+const INFO={"tommy": "Un camino que se repite. Skipper: de $50 a $150. Kowalski: de $150 a $250. Los dos apuestan a la cuota del día (según cuántos principales juegan y el color de cada rival). Al llegar a $250 se divide: $150 pasan a Cabo, que sube hasta tu meta, y el resto vuelve a empezar el camino. Cuando el camino vuelve a $250, Cabo se retira esté donde esté y se divide otra vez. Si cae Cabo, el camino sigue; si cae el camino, Cabo sigue.", "walter": "De $50 a $100 subes de $10 en $10; desde $100, de $20 en $20. Lo que sobra va a Rico.", "ragnar": "La caja: aquí llega lo que sobra de Skipper y Kowalski. Apuestas a tus equipos con $3, $5 o $10.", "rick": "Libre: sin meta ni cuota. Apuesta con el saldo disponible y lo ganado regresa ahí."};
 function viewDetail(m){
   let h=`<button class="back" data-act="back">‹ Inicio</button><h1 style="color:${M[m].c}">${M[m].name}</h1><p class="muted small" style="margin:6px 0 12px">${INFO[m]}</p>`;
   if(m==="rick")return h+rickDetail();
@@ -782,7 +984,7 @@ function viewDetail(m){
     h+=`<p class="muted">Intento ${a.n} desde ${esc(fmtDate(a.start))}. Saldo ${money(bal)}.</p><ul class="lad" style="--c:${M[m].c}">`;
     bs.forEach((b,i)=>{h+=`<li><span class="d">${i+1}</span><div>${money(b.stake)} → ${money(b.status==="ganada"?b.ret:b.stake*b.cuota)} <span class="muted small">cuota ${b.cuota.toFixed(2)}</span><div class="det">${esc(b.legs.map(l=>l.text).join(" · "))||"sin picks"}</div></div><span class="${b.status==="ganada"?"pos":b.status==="perdida"?"neg":"muted"} small">${b.status==="ganada"?"Ganó":b.status==="perdida"?"Perdió":"En juego"}</span></li>`});
     let cur=bal;const start=bs.length+1;
-    if(m==="tommy"){const end=a.cabo?(a.meta||cur):P().k;if(!pendingOf(m).length){let dt=parseISO(todayISO()),d=start;while(cur<end-1e-9&&d<start+60){if(dt.getDay()===5){dt.setDate(dt.getDate()+1);continue}const ds=toISO(dt),tg=camTarget(cur,ds,a);h+=`<li class="fut"><span class="d">${d}</span><div>${money(cur)} → ${money(tg)} <span class="small">cuota ${Math.min(camCuota(cur,ds,a),ceil2(tg/cur)).toFixed(2)} · ${FN[camFb(cur,a)]} · ${esc(dt.toLocaleDateString("es-SV",{weekday:"short",day:"numeric"}))}</span></div><span class="small">meta</span></li>`;cur=tg;d++;dt.setDate(dt.getDate()+1)}}}
+    if(m==="tommy"){const end=a.cabo?(a.meta||cur):P().k;if(!pendingOf(m).length){let dt=parseISO(todayISO()),d=start;while(cur<end-1e-9&&d<start+60){if(ST.settings.descanso!=null&&ST.settings.descanso!==""&&dt.getDay()===+ST.settings.descanso){dt.setDate(dt.getDate()+1);continue}const ds=toISO(dt),tg=camTarget(cur,ds,a);h+=`<li class="fut"><span class="d">${d}</span><div>${money(cur)} → ${money(tg)} <span class="small">cuota ${Math.min(camCuota(cur,ds,a),ceil2(tg/cur)).toFixed(2)} · ${FN[camFb(cur,a)]} · ${esc(dt.toLocaleDateString("es-SV",{weekday:"short",day:"numeric"}))}</span></div><span class="small">meta</span></li>`;cur=tg;d++;dt.setDate(dt.getDate()+1)}}}
     else if(!pendingOf(m).length)for(let d=start;d<=ST.settings.maxDias;d++){const tg=targetFor(m,cur);h+=`<li class="fut"><span class="d">${d}</span><div>${money(cur)} → ${money(tg)} <span class="small">cuota ${minCuota(m,cur).toFixed(2)}</span></div><span class="small">meta</span></li>`;cur=tg}
     h+=`</ul>`}
   const prev=ST.attempts.filter(x=>x.method===m&&x!==a).reverse();
@@ -809,17 +1011,18 @@ function ragnarDetail(){
 function newDraft(m){return{method:m==="rick"?"tommy":(m||"tommy"),date:todayISO(),cuota:"",stake:"",legs:[],team:null,custom:""}}
 function viewApostar(){
   const d=UI.draft||(UI.draft=newDraft());const m=d.method;
-  let h=`<h1>Nueva apuesta</h1>${viewHoy()}${viewGamesToday()}<div class="seg" style="margin-top:14px;grid-template-columns:repeat(${2+(liveAttempt("walter")?1:0)+(liveAttempt("cabo")?1:0)},1fr)">${["tommy",...(liveAttempt("walter")?["walter"]:[]),...(liveAttempt("cabo")?["cabo"]:[]),"ragnar"].map(k=>`<button style="--c:${M[k].c}" class="${m===k?"on":""}" data-act="dm" data-id="${k}">${M[k].name.split(" ")[0]}</button>`).join("")}</div>`;
+  let h=`<h1>Nueva apuesta</h1>${dayHero(d.date,false)}${viewHoy()}<div class="seg" style="margin-top:14px;grid-template-columns:repeat(${2+(liveAttempt("walter")?1:0)+(liveAttempt("cabo")?1:0)},1fr)">${["tommy",...(liveAttempt("walter")?["walter"]:[]),...(liveAttempt("cabo")?["cabo"]:[]),"ragnar"].map(k=>`<button style="--c:${M[k].c}" class="${m===k?"on":""}" data-act="dm" data-id="${k}">${M[k].name.split(" ")[0]}</button>`).join("")}</div>`;
   if(m==="rick")h+=`<p class="muted small" style="margin:12px 0 0">Método libre: sin meta ni cuota fija. El dinero sale de tu saldo disponible (libre: <b style="color:var(--ink)">${money(ragnarFree())}</b>) y lo que ganes vuelve ahí.</p>
      <label class="f">Cuánto vas a meter</label><input class="in" type="text" inputmode="decimal" autocomplete="off" value="${esc(d.stake)}" data-bind="stake">`;
   else if(m!=="ragnar"){const a=liveAttempt(m);
     if(!a)return h+`<div class="card"><p style="margin:0">${M[m].name} no tiene un intento vivo. Puedes empezar uno desde Inicio.</p></div>`;
     if(pendingOf(m).length)return h+`<div class="card"><p style="margin:0">Ya tienes la apuesta del día en juego. Resuélvela en Inicio antes de meter otra.</p></div>`;
     const bal=attemptBal(a);if(d.stake==="")d.stake=String(suggestStake(m,bal)||bal);
-    h+=`<p class="muted small" style="margin:12px 0 0">${m==="tommy"?camLabel(a)+` · cuota ≥ ${minCuota(m,attemptBal(a),d.date,capOf(d)).toFixed(2)}${capOf(d)?` (máx ${capOf(d).toFixed(2)})`:camFb(attemptBal(a),a)!=="S"?(isWE(d.date)?" (finde)":" (entre semana)"):""}`:"Día "+dayNum(a)} · tu saldo en ${M[m].name.split(" ")[0]}: <b style="color:var(--ink)">${money(bal)}</b></p>
+    h+=`<p class="muted small" style="margin:12px 0 0">${m==="tommy"||m==="cabo"?(m==="tommy"?camLabel(a):"Cabo")+(capOf(d)?` · cuota del día menos de ${capOf(d).toFixed(2)}`:""):"Día "+dayNum(a)} · tu saldo en ${M[m].name.split(" ")[0]}: <b style="color:var(--ink)">${money(bal)}</b></p>
      <label class="f">Cuánto vas a meter</label><input class="in" type="text" inputmode="decimal" autocomplete="off" value="${esc(d.stake)}" data-bind="stake">`}
   else h+=`<label class="f">Cuánto vas a meter (Rico tiene ${money(ragnarFree())})</label><input class="in" type="text" inputmode="decimal" autocomplete="off" value="${esc(d.stake)}" data-bind="stake">`;
-  if((m==="tommy"||m==="walter"||m==="cabo")&&liveAttempt(m)){const pl=playingToday(d.date);h+=`<p class="small muted" style="margin:10px 0 0">Principales que juegan ese día: <b style="color:var(--ink)">${pl.length?pl.map(x=>esc(shn(x))).join(", "):"ninguno anotado"}</b>${capOf(d)?` · cuota máxima <b style="color:var(--ink)">${capOf(d).toFixed(2)}</b>`:(m==="tommy"?" · Skipper: sin tope, cuota 1.15":"")}</p>`}
+  if((m==="tommy"||m==="walter"||m==="cabo")&&liveAttempt(m)){const pl=playingToday(d.date);h+=`<p class="small muted" style="margin:10px 0 0">Principales que juegan ese día: <b style="color:var(--ink)">${pl.length?pl.map(x=>esc(shn(x))).join(", "):"ninguno"}</b>${capOf(d)?` · menos de <b style="color:var(--ink)">${capOf(d).toFixed(2)}</b>`:""}</p>`;
+    if(pl.some(x=>ttype(x)==="f1"))h+=`<div class="row" style="margin-top:8px"><button class="chip ${d.qualy?"on":""}" data-act="qualy">Red Bull: clasificación</button><span class="small muted">${d.qualy?"Clasificación: menos de "+CU().rb.q.toFixed(2):"Carrera"}</span></div>`}
   h+=`<div class="row" style="gap:10px"><div style="flex:1"><label class="f">Cuota del parlay</label><input class="in" type="text" inputmode="decimal" autocomplete="off" placeholder="${m==="ragnar"?"":"1.15"}" value="${esc(d.cuota)}" data-bind="cuota"></div>
    <div style="flex:1"><label class="f">Fecha</label><input class="in" type="date" value="${esc(d.date)}" data-bind="date"></div></div>`;
   h+=`<div id="dynpay">${dynPay(d)}</div>`;
@@ -827,15 +1030,13 @@ function viewApostar(){
   if(m==="ragnar"&&d.sonadora){h+=`<div id="dyncheck">${dynCheck(d)}</div>`;return h}
   h+=`<label class="f">Picks del parlay (${d.legs.length})</label>`;
   if(d.legs.length)h+=`<ul class="legs" style="margin:0 0 8px">${d.legs.map((l,i)=>`<li><span>${esc(l.text)}<br><span class="muted small">${lname(l)}</span></span><button class="tog" data-act="rmleg" data-i="${i}" aria-label="Quitar">−</button></li>`).join("")}</ul>`;
-  const tierChips=tier=>ST.teams.filter(t=>t.tier===tier).map(t=>`<button class="chip ${tier==="principal"?"prin":""} ${d.team===t.id?"on":""}" data-act="dteam" data-id="${t.id}">${badge(t.id)}${esc(t.name)}</button>`).join("");
-  h+=`<p class="small muted" style="margin:4px 0 6px">Principales</p><div class="chips">${tierChips("principal")}</div><p class="small muted" style="margin:10px 0 6px">Auxiliares</p><div class="chips">${tierChips("auxiliar")}</div>`;
-  if(m==="ragnar"||playingToday(d.date).length<=1)h+=`<button class="link" style="margin-top:10px" data-act="addvar">+ Equipo variante (Femenino, Futsal, otro deporte…)</button>`;
-  else h+=`<p class="small muted" style="margin:10px 0 0">Equipos variantes: solo cuando no juega ningún principal o juega uno (regla 26).</p>`;
+  const plD=playingToday(d.date),showT=ST.teams.filter(t=>t.tier==="principal"&&(m==="ragnar"||!plD.length||plD.includes(t.id)));
+  h+=`<p class="small muted" style="margin:4px 0 6px">${m==="ragnar"||!plD.length?"Principales":"Principales que juegan ese día"}</p><div class="chips">${showT.map(t=>`<button class="chip prin ${d.team===t.id?"on":""}" data-act="dteam" data-id="${t.id}">${badge(t.id)}${esc(t.name)}</button>`).join("")}</div>`;
   if(d.team){const ps=ST.picks.filter(p=>p.teamId===d.team).map(p=>({p,s:pickStats(p)})).sort((a,b)=>(b.s.u-a.s.u)||((b.s.pct??-1)-(a.s.pct??-1)));
-    h+=`<div class="team"><div class="team-h"><h3>${tname(d.team)}</h3><span class="muted small">toca para agregar</span></div>`+
-     ps.map(({p,s})=>{const used=d.legs.some(l=>l.pickId===p.id);return`<button class="pk" data-act="addleg" data-id="${p.id}" ${used?"disabled":""}><span class="tx">${used?"✓ ":""}${esc(p.text)}${p.player?`<span class="tag">jugador</span>`:""}</span><span class="rec small muted">${s.u?s.h+"/"+s.u:"nuevo"}</span></button>`}).join("")+
+    h+=`<div class="team"><div class="team-h"><h3>${tname(d.team)}</h3><span class="muted small">tocá un pick para ver sus datos</span></div>`+pickGroupsHtml(ps,"pickinfo",false)+
      `<p class="small muted" style="padding:10px 14px;margin:0;border-top:1px solid var(--line)">Los picks nuevos se agregan desde Equipos.</p></div>`}
   h+=`<div id="dyncheck">${dynCheck(d)}</div>`;
+  if(m!=="ragnar")h+=`<p style="text-align:center;margin:18px 0 0"><button class="link small" style="opacity:.6" data-act="addvar">Auxiliar</button></p>`;
   return h}
 
 function dynPay(d){const m=d.method;const stake=num(d.stake);const c=num(d.cuota);let h="";
@@ -858,6 +1059,7 @@ function viewPicks(){if(UI.team&&team(UI.team))return viewTeam(UI.team);
   if(false)h+=`<div class="checks"><h3>Sin resultados automáticos</h3><ul><li>La fuente de resultados no respondió. Puedes anotar récords y resultados a mano mientras tanto.</li></ul></div>`;
   for(const tier of["principal","auxiliar"]){const ts=ST.teams.filter(t=>t.tier===tier);if(!ts.length)continue;
     h+=`<p class="tierlbl">${tier==="principal"?"Principales":"Auxiliares"}</p>`;
+    if(tier==="auxiliar")h+=`<p class="small muted" style="margin:0 0 4px">No aparecen al apostar.</p>`;
     ts.forEach(t=>{const r=recordOf(t.id);h+=`<button class="trow" data-act="team" data-id="${t.id}">${badge(t.id)}<span class="nm">${esc(t.name)}<div class="muted small" style="font-weight:400">${esc(t.sport)}</div></span><span class="rc">${r?esc(r.txt):""}</span></button>`})}
   return h+`<button class="btn full" style="margin-top:16px" data-act="newteam">+ Agregar equipo</button>`}
 function scoreCard(g){const t=ttype(g.teamId),nm=team(g.teamId)?.name||"",r=gRes(g),fut=/fútbol|futbol|rugby/.test((team(g.teamId)?.sport||"").toLowerCase());
@@ -877,6 +1079,7 @@ function viewGamesToday(){const t=todayISO(),gs=(ST.games||[]).filter(g=>!g.arch
    ${gs.length?gs.map(scoreCard).join(""):`<p class="small muted" style="margin:8px 0 0">Anota quién juega hoy, aunque no le apuestes. El resultado suma a su récord.</p>`}</div>`}
 function viewTeam(id){const t=team(id),r=recCalc(id),note=ST.records&&ST.records[id]&&ST.records[id].txt,gs=gamesOf(id).slice().sort((x,y)=>y.date.localeCompare(x.date));
   let h=`<button class="back" data-act="teamback">‹ Tus equipos</button><h1 style="display:flex;align-items:center;gap:6px">${badge(id)}${esc(t.name)}</h1><p class="muted small" style="margin:4px 0 0">${esc(t.sport)} · ${t.tier==="principal"?"Principal":"Auxiliar"}</p>`;
+  h+=tablaCard(id);
   h+=`<div class="card"><div class="met-h"><h3>Temporada</h3><button class="link" data-act="addcomp" data-id="${id}">+ Competición</button></div>
     ${compsOf(id).map(c=>{const rr=recCalc(id,c),p=posOf(id,c);return`<button class="trow" style="margin-top:8px" data-act="editrec" data-id="${id}" data-c="${esc(c)}"><span class="nm">${esc(c)}<div class="muted small" style="font-weight:400">${rr.sub}</div></span><span class="num" style="font-size:20px">${esc(rr.txt)}</span>${p?`<span class="pill" style="margin-left:6px">${esc(p)}</span>`:""}</button>`}).join("")}
     <div class="row" style="margin-top:10px"><button class="btn" data-act="addgame2" data-id="${id}">+ Partido</button><button class="link" style="margin-left:auto" data-act="newseason" data-id="${id}">Nueva temporada</button></div></div>`;
@@ -890,7 +1093,7 @@ function viewTeam(id){const t=team(id),r=recCalc(id),note=ST.records&&ST.records
       <div class="muted" style="font-size:12px">${esc(M[b.method]?.name||"")} · ${sc?esc(sc):`<button class="link" style="font-size:12px" data-act="setscore" data-id="${b.id}" data-t="${id}">anotar resultado</button>`}</div></span>
       <b class="${b.status==="ganada"?"pos":b.status==="perdida"?"neg":"muted"} small">${b.status==="ganada"?"Ganó":b.status==="perdida"?"Perdió":"En juego"}</b></div>`}).join("")}</div>`:`<p class="muted">Todavía no le has apostado.</p>`;
   const ps=ST.picks.filter(p=>p.teamId===id).map(p=>({p,s:pickStats(p)})).sort((a,b)=>(b.s.u-a.s.u)||((b.s.pct??-1)-(a.s.pct??-1)));
-  h+=`<h2>Picks</h2><div class="team">${ps.map(({p,s})=>`<button class="pk" data-act="editpick" data-id="${p.id}"><span class="tx">${esc(p.text)}${p.player?`<span class="tag">jugador</span>`:""}${s.u?`<div class="bar"><i style="width:${s.pct}%"></i></div>`:""}</span><span class="rec num">${s.u?s.h+"/"+s.u:"—"}</span></button>`).join("")}
+  h+=`<h2>Picks</h2><div class="team">${pickGroupsHtml(ps,"editpick",true)}
     <div class="row" style="padding:10px 14px;border-top:1px solid var(--line)"><button class="btn" data-act="newpick" data-id="${id}">+ Pick</button><button class="link" data-act="editteam" data-id="${id}" style="margin-left:auto">Editar equipo</button></div></div>`;
   return h}
 
@@ -925,11 +1128,12 @@ function viewStats(){
 
 /* ---- más ---- */
 function viewMas(){return`<h1>Más</h1><div class="menu">
+  <button data-tab="semana">Semana <span>quién juega y cuotas</span></button>
   <button data-tab="reglas">Reglas <span>${ST.rules.length}</span></button>
   <button data-tab="dinero">Entradas y salidas de dinero <span>${ST.moves.length}</span></button>
-  <button data-tab="ajustes">Ajustes <span>plan del camino, día de pago</span></button>
+  <button data-tab="ajustes">Ajustes <span>tema, cuotas del día, calendario</span></button>
   <button data-tab="drive">Google Drive <span>${DRIVE?"conectado":"sin conectar"}</span></button>
-  <button data-tab="respaldo">Respaldo <span>exportar o importar</span></button></div><p class="small muted" style="text-align:center;margin-top:16px">Versión 31 · Dos auxiliares</p>`}
+  <button data-tab="respaldo">Respaldo <span>exportar o importar</span></button></div><p class="small muted" style="text-align:center;margin-top:16px">Versión 32 · Cuota del día</p>`}
 function viewDrive(){const bk=ST?back:`<button class="back" data-tab="inicio">‹ Volver</button>`;
   return bk+`<h1>Google Drive</h1><p class="muted">Tus datos se guardan en tu Drive, en la carpeta “Operación Sueldo extra”, con una copia de respaldo por día. Si pierdes el celular, instalas la app en otro y te conectas con estos mismos datos.</p>
   <label class="f">Dirección del script (termina en /exec)</label><input class="in" id="durl" autocomplete="off" value="${esc(DRIVE?.url||"")}" placeholder="https://script.google.com/macros/s/…/exec">
@@ -941,23 +1145,25 @@ function viewReglas(){return back+`<h1>Reglas</h1><p class="muted small">Toca un
 function viewDinero(){const c=cuenta();return back+`<h1>Entradas y salidas</h1><p class="muted small">Entrada es dinero que metes; salida es lo que retiras de Bet365. Toca una entrada para cambiar de dónde salió el dinero.</p>
   <div class="facts"><div class="fact"><small>Agregado</small><span class="num">${money(c.ent)}</span></div><div class="fact"><small>Retirado</small><span class="num">${money(c.sal)}</span></div></div>
   <div class="card scroll"><table class="t"><tr><th>Fecha</th><th>Método</th><th>Nota</th><th class="r">Monto</th></tr>${ST.moves.slice().reverse().map(m=>`<tr ${m.type==="entrada"||(m.type==="uso"&&m.orig)?`data-act="origen" data-id="${m.id}" style="cursor:pointer"`:""}><td class="small">${esc(fmtDate(m.date))}</td><td class="small">${esc(M[m.method]?.name.split(" ")[0]||(m.method==="previo"?"Antes":m.method==="respaldo"?"Respaldo":m.method))}</td><td class="small">${esc(m.note||"")}${m.type==="entrada"?`<div class="muted" style="font-size:12px">${m.fuente==="previa"?"de ganancias anteriores":"de tu bolsa"}</div>`:m.type==="uso"?`<div class="muted" style="font-size:12px">del saldo disponible</div>`:""}</td><td class="r num ${m.type==="entrada"?"neg":m.type==="salida"?"pos":"muted"}">${m.type==="entrada"?"−$"+fmt(m.amount):m.type==="salida"?"+$"+fmt(m.amount):m.type==="traspaso"?(m.amount>=0?"→ Rico $"+fmt(m.amount):"Rico → $"+fmt(-m.amount)):m.type==="uso"?"Rico → $"+fmt(m.amount):m.type==="ajag"?"agregado "+signed(m.amount):m.type==="ajret"?"retirado "+signed(m.amount):"ajuste "+signed(m.amount)}</td></tr>`).join("")}</table></div>`}
-function viewAjustes(){const s=ST.settings,pl=P();return back+`<h1>Ajustes</h1><h2>Plan del camino</h2>
+function viewAjustes(){const s=ST.settings,pl=P(),cu=CU(),th=s.theme||"oscuro";
+  const ci=(g,k)=>`<input class="in num" style="text-align:center;font-size:18px;padding:8px 4px" type="text" inputmode="decimal" data-set="cuotas.${g}.${k}" value="${cu[g][k]}" aria-label="Cuota ${g} ${k}">`;
+  const lab=k=>k.split("").map(x=>`<i class="dot" style="width:12px;height:12px;margin-right:2px;background:${x==="V"?"var(--win)":x==="A"?"var(--warn)":"var(--loss)"}"></i>`).join("");
+  const grid=(g,title)=>`<p class="tierlbl">${title}</p><div class="card" style="margin-top:6px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 12px">${Object.keys(CUO0[g]).map(k=>`<label class="row" style="flex-wrap:nowrap;gap:8px"><span style="min-width:62px">${lab(k)}</span>${ci(g,k)}</label>`).join("")}</div>`;
+  const days=["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
+  return back+`<h1>Ajustes</h1><h2>Apariencia</h2><div class="seg2" style="grid-template-columns:repeat(3,1fr)">${[["oscuro","Oscuro"],["claro","Claro"],["auto","Como el celular"]].map(([k,l])=>`<button class="${th===k?"on":""}" data-act="theme" data-id="${k}">${l}</button>`).join("")}</div>
+  <h2>Cuotas del día</h2><p class="small muted" style="margin:0">Siempre menos de este número. 🟢 verde · 🟡 amarillo · 🔴 rojo, según el rival.</p>
+  ${grid("c1","1 principal")}${grid("c2","2 principales")}${grid("c3","3 principales")}${grid("c4","4 o más principales")}
+  <p class="tierlbl">Red Bull</p><div class="card" style="margin-top:6px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 12px">${[["s","Solo, carrera"],["q","Solo, clasificación"],["1","+1 principal"],["2","+2 principales"],["3","+3 principales"],["4","+4 o más"]].map(([k,l])=>`<label class="small" style="display:block">${l}${ci("rb",k)}</label>`).join("")}</div>
+  <h2>Calendario</h2><label class="f">Día de descanso</label><select class="in" data-set="descanso">${days.map((x,i)=>`<option value="${i}" ${+s.descanso===i?"selected":""}>${x}</option>`).join("")}<option value="" ${s.descanso===""?"selected":""}>Ninguno</option></select>
+  <label class="row" style="margin-top:14px;flex-wrap:nowrap"><input type="checkbox" data-set="autoGames" ${s.autoGames!==false?"checked":""} style="width:20px;height:20px"> <span>Llenar "Partidos de hoy" solo desde ESPN</span></label>
+  <label class="f">Día de pago del sueldo</label><input class="in" type="number" inputmode="numeric" data-set="payDay" value="${s.payDay}">
+  <label class="f">Si cae fin de semana, te pagan</label><select class="in" data-set="weekendShift"><option value="antes" ${s.weekendShift==="antes"?"selected":""}>El viernes anterior</option><option value="despues" ${s.weekendShift==="despues"?"selected":""}>El lunes siguiente</option></select>
+  <h2>Plan del camino</h2>
   <label class="f">Skipper llega hasta</label><input class="in" type="text" inputmode="decimal" data-set="plan.s" value="${pl.s}">
-  <label class="f">Cuota de Skipper</label><input class="in" type="text" inputmode="decimal" data-set="plan.cs" value="${pl.cs}">
   <label class="f">Kowalski llega hasta</label><input class="in" type="text" inputmode="decimal" data-set="plan.k" value="${pl.k}">
-  <label class="f">Cuota entre semana (Kowalski y Cabo)</label><input class="in" type="text" inputmode="decimal" data-set="plan.wk" value="${pl.wk}">
-  <label class="f">Cuota sábado y domingo (Kowalski y Cabo)</label><input class="in" type="text" inputmode="decimal" data-set="plan.we" value="${pl.we}">
   <label class="f">Lo que pasa a Cabo al dividir</label><input class="in" type="text" inputmode="decimal" data-set="plan.ca" value="${pl.ca}">
   <label class="f">Skipper vuelve a empezar con</label><input class="in" type="text" inputmode="decimal" data-set="plan.re" value="${pl.re}">
-  <h2>Otros</h2>
-  <label class="f">Capital inicial de Skipper</label><input class="in" type="number" inputmode="decimal" data-set="capital.tommy" value="${s.capital.tommy}">
-  <label class="f">Capital inicial de Kowalski</label><input class="in" type="number" inputmode="decimal" data-set="capital.walter" value="${s.capital.walter}">
-  <label class="f">Recarga del fondo de Rico</label><input class="in" type="number" inputmode="decimal" data-set="capital.ragnar" value="${s.capital.ragnar}">
-  <label class="f">Cuota diaria de Skipper</label><input class="in" type="number" inputmode="decimal" step="0.01" data-set="tommyCuota" value="${s.tommyCuota}">
-  <label class="f">Máximo de días por intento</label><input class="in" type="number" inputmode="numeric" data-set="maxDias" value="${s.maxDias}">
-  <label class="f">Montos permitidos en Rico (separados por coma)</label><input class="in" data-set="ragnarMontos" value="${s.ragnarMontos.join(", ")}">
-  <label class="f">Día de pago del sueldo</label><input class="in" type="number" inputmode="numeric" data-set="payDay" value="${s.payDay}">
-  <label class="f">Si cae fin de semana, te pagan</label><select class="in" data-set="weekendShift"><option value="antes" ${s.weekendShift==="antes"?"selected":""}>El viernes anterior</option><option value="despues" ${s.weekendShift==="despues"?"selected":""}>El lunes siguiente</option></select>`}
+  <h2>Rico</h2><label class="f">Recarga del fondo de Rico</label><input class="in" type="number" inputmode="decimal" data-set="capital.ragnar" value="${s.capital.ragnar}">`}
 function viewRespaldo(){return back+`<h1>Respaldo</h1><p class="muted">Guarda una copia de todo por si cambias de teléfono o algo falla.</p>
   <p class="muted small">Con Drive conectado ya tienes respaldo automático. Esto es una copia extra en tu celular.</p><div class="row"><button class="btn pri" data-act="export">Descargar copia</button><button class="btn" data-act="copy">Copiar al portapapeles</button></div>
   <h2>Restaurar una copia</h2><p class="muted small">Elige el archivo de la copia o pega su contenido. Reemplaza todo lo que hay ahora.</p><input type="file" accept=".json,application/json" id="impfile" class="in"><textarea class="in" id="imp" style="margin-top:8px" placeholder='{"v":1,...}'></textarea>
@@ -1179,14 +1385,24 @@ const A={
       if(src==="saldo")ST.moves.push({id:uid(),date:d,type:"uso",method:"ragnar",to:id,amount:amt,note:`Activado con saldo (${M[m].name})`});
       else ST.moves.push({id:uid(),date:d,type:"entrada",method:m,amount:amt,note:`Inicio intento ${n}`});
       commit();toast(`${M[m].name} activado con ${money(amt)}`)})},
-  addvar(){const pr=ST.teams.filter(t=>t.tier==="principal");
-    formSheet("Pick de equipo variante",`<p class="small muted">Para equipos que no están en tu lista (Barça Femenino, Barça Futsal…). Cuenta como auxiliar: máximo uno por apuesta. Es solo para esta apuesta, no se guarda en Equipos.</p>
-     <label class="f">Es variante de</label><select class="in" name="p"><option value="">Ninguno / otro</option>${pr.map(t=>`<option value="${t.id}">${esc(t.name)}</option>`).join("")}</select>
-     <label class="f">Nombre del equipo</label><input class="in" name="n" autocomplete="off" placeholder="Ej: Barça Femenino">
-     <label class="f">Pick</label><input class="in" name="t" autocomplete="off" placeholder="Ej: Victoria del Barça Femenino">`,"Agregar a la apuesta",v=>{
-      const n=(v.n||"").trim(),t=(v.t||"").trim();if(!n||!t){toast("Escribe el equipo y el pick");return false}
-      UI.draft.legs.push({text:t,teamId:null,vname:n,vparent:v.p||null,ok:null});render()})},
+  addvar(){formSheet("Auxiliar",`<p class="small muted">Para un equipo que no es de tus principales. Solo sirve para esta apuesta: no se guarda en Equipos. Máximo uno por apuesta.</p>
+     <label class="f">Equipo</label><input class="in" name="n" autocomplete="off" placeholder="Barça Femenino">
+     <label class="f">Deporte o liga</label><input class="in" name="s" autocomplete="off" placeholder="Liga F">
+     <label class="f">Pick</label><input class="in" name="t" autocomplete="off" placeholder="Más de 1.5 goles del Barça Femenino">`,"Agregar a la apuesta",v=>{
+      const n=(v.n||"").trim(),t=(v.t||"").trim();if(!n||!t){toast("Escribí el equipo y el pick");return false}
+      UI.draft.legs.push({text:t,teamId:null,vname:n,vsport:v.s||"",vparent:null,ok:null});render()})},
   togag(){UI.showAg=!UI.showAg;render()},
+  theme(e){ST.settings.theme=e.dataset.id;applyTheme();commit()},
+  refresh(){toast("Actualizando…");fetchSports(true).then(()=>toast(spState===""?"Listo":"No se pudo actualizar"))},
+  tbl(e){UI.tbl=UI.tbl===e.dataset.id?null:e.dataset.id;render()},
+  qualy(){UI.draft.qualy=!UI.draft.qualy;render()},
+  gcolor(e){const g=(ST.games||[]).find(x=>x.id===e.dataset.id);if(!g)return;const seq=[undefined,"V","A","R"],i=seq.indexOf(g.color);g.color=seq[(i+1)%4];if(!g.color)delete g.color;commit();toast(g.color?"Rival "+COLN[g.color]+" (a mano)":"Color automático")},
+  pickinfo(e){const p=pick(e.dataset.id);if(!p)return;const tpl=isTpl(p),lines=tpl?[...new Set([...(p.lineas||[]),...defLines(p)])].sort((a,b)=>a-b):[];const ln=tpl?String((p.lineas&&p.lineas[0])??lines[0]):"";
+    sheet(`<h3>${esc(shn(p.teamId))} · ${esc(p.text.replace("__","…"))}</h3>${tpl?`<label class="f" for="plin">Número</label><div class="lines">${lines.map(x=>`<button class="chip" data-act="plset" data-v="${x}">${x}</button>`).join("")}</div><input class="in" id="plin" type="text" inputmode="decimal" autocomplete="off" value="${esc(ln)}" data-pid="${p.id}" style="margin-top:8px">`:""}
+      <div id="pist">${pickStatsHtml(p,ln)}</div><div class="row end" style="margin-top:16px"><button class="btn ghost" data-act="closesheet">Cancelar</button><button class="btn pri" id="okbtn">Elegir</button></div>`);
+    document.getElementById("okbtn").onclick=()=>{let txt=p.text,lv;if(tpl){const v=num((document.getElementById("plin")||{}).value);if(!(v>=0)){toast("Escribí el número");return}lv=v;txt=p.text.replace("__",String(v))}
+      UI.draft.legs.push({pickId:p.id,text:txt,teamId:p.teamId,...(tpl?{linea:lv}:{}),ok:null});closeSheet();render()}},
+  plset(e){const i=document.getElementById("plin");if(!i)return;i.value=e.dataset.v;const p=pick(i.dataset.pid);if(p)document.getElementById("pist").innerHTML=pickStatsHtml(p,i.value)},
   dividir(){const a=liveAttempt("tommy");if(!a||camEstado(a)!=="dividir"||pendingOf("tommy").length)return;const pl=P(),bal=attemptBal(a),rest=r2(bal-pl.ca),cb=liveAttempt("cabo");
     if(pendingOf("cabo").length){toast("Primero resuelve la apuesta de Cabo");return}
     formSheet("Dividir",`<p class="small muted">${cb?`Cabo se retira con ${money(attemptBal(cb))}. `:""}${money(pl.ca)} pasan a un Cabo nuevo y ${money(rest)} vuelven a empezar el camino.</p><label class="f">Meta del Cabo nuevo</label><input class="in" name="a" type="text" inputmode="decimal" autocomplete="off" value="${cb&&cb.meta||""}" placeholder="Ej: 550">`,"Dividir",v=>{
@@ -1234,7 +1450,7 @@ const A={
   dm(e){const m=e.dataset.id;UI.draft.method=m;UI.draft.stake="";render()},
   amt(e){UI.draft.stake=e.dataset.id;render()},
   dteam(e){UI.draft.team=UI.draft.team===e.dataset.id?null:e.dataset.id;render()},
-  addleg(e){const p=pick(e.dataset.id);UI.draft.legs.push({pickId:p.id,text:p.text,teamId:p.teamId,ok:null});render()},
+  addleg(e){return A.pickinfo(e);const p=pick(e.dataset.id);UI.draft.legs.push({pickId:p.id,text:p.text,teamId:p.teamId,ok:null});render()},
   rmleg(e){UI.draft.legs.splice(+e.dataset.i,1);render()},
   addcustom(){const d=UI.draft,t=d.custom.trim();if(!t||!d.team)return;
     const p={id:"p"+uid(),teamId:d.team,text:t,player:false,baseUsed:0,baseHit:0};ST.picks.push(p);d.legs.push({pickId:p.id,text:t,teamId:d.team,ok:null});d.custom="";commit();toast("Pick agregado a tu lista")},
@@ -1243,12 +1459,13 @@ const A={
       const sob=r2(bal-stake);var bid="b"+uid();if(sob>0.004)ST.moves.push({id:uid(),date:d.date||todayISO(),type:"traspaso",method:"ragnar",from:a.id,betId:bid,amount:sob,note:`Sobrante de ${M[m].name.split(" ")[0]}`})}else{stake=num(d.stake);target=r2(stake*num(d.cuota))}
     const fase=m==="tommy"?camFb(attemptBal(liveAttempt("tommy")),liveAttempt("tommy")):m==="cabo"?"C":undefined;
     ST.bets.push({id:(typeof bid!=="undefined"&&bid)||"b"+uid(),method:m,attemptId,...(fase?{fase}:{}),date:d.date||todayISO(),stake:r2(stake),cuota:num(d.cuota),target,legs:d.legs.map(l=>({...l})),status:"pendiente",ret:0,...(m==="ragnar"&&d.sonadora?{sonadora:true}:{})});
+    for(const l of d.legs){if(l.linea==null)continue;const p=pick(l.pickId);if(p&&isTpl(p)){p.lineas=p.lineas||[];if(!p.lineas.includes(l.linea)){p.lineas.push(l.linea);p.lineas.sort((a,b)=>a-b)}}}
     UI.draft=null;UI.tab="inicio";commit();scrollTo(0,0);toast("Apuesta guardada")},
   toggleteam(e){const t=e.dataset.id,tier=team(t).tier;UI.open[t]=!(UI.open[t]??(tier==="principal"));render()},
-  editpick(e){const p=pick(e.dataset.id);formSheet("Editar pick",`<label class="f">Pick</label><input class="in" name="text" value="${esc(p.text)}"><label class="row" style="margin-top:12px"><input type="checkbox" name="player" ${p.player?"checked":""}> Es estadística de jugador</label>`,"Guardar",v=>{if(!v.text)return false;p.text=v.text;p.player=v.player;commit()},
+  editpick(e){const p=pick(e.dataset.id);formSheet("Configurar pick",pickFields(p),"Guardar",v=>{if(!v.text)return false;Object.assign(p,pickVals(v));commit()},
     `<button class="link" style="margin-right:auto;color:var(--loss)" id="delp">Borrar</button>`);
     document.getElementById("delp").onclick=()=>{ST.picks=ST.picks.filter(x=>x!==p);closeSheet();commit()}},
-  newpick(e){const t=e.dataset.id;formSheet(`Nuevo pick para ${team(t).name}`,`<label class="f">Pick</label><input class="in" name="text"><label class="row" style="margin-top:12px"><input type="checkbox" name="player"> Es estadística de jugador</label>`,"Agregar",v=>{if(!v.text)return false;ST.picks.push({id:"p"+uid(),teamId:t,text:v.text,player:v.player,baseUsed:0,baseHit:0});commit()})},
+  newpick(e){const t=e.dataset.id;formSheet(`Nuevo pick para ${team(t).name}`,pickFields({text:"",tipo:"",player:false,lineas:[]}),"Agregar",v=>{if(!v.text)return false;ST.picks.push({id:"p"+uid(),teamId:t,baseUsed:0,baseHit:0,...pickVals(v)});commit()})},
   editteam(e){const t=team(e.dataset.id);formSheet("Editar equipo",teamFields(t),"Guardar",v=>{if(!v.name)return false;Object.assign(t,{name:v.name,sport:v.sport,tier:v.tier});commit()},`<button class="link" style="margin-right:auto;color:var(--loss)" id="delt">Borrar</button>`);
     document.getElementById("delt").onclick=()=>{closeSheet();confirmSheet(`Borrar ${t.name}`,"<p>También se borran sus picks de la lista. Las apuestas ya hechas se quedan.</p>","Borrar",()=>{ST.teams=ST.teams.filter(x=>x!==t);ST.picks=ST.picks.filter(p=>p.teamId!==t.id);commit()})}},
   newteam(){formSheet("Nuevo equipo",teamFields({name:"",sport:"Fútbol",tier:"auxiliar"}),"Agregar",v=>{if(!v.name)return false;ST.teams.push({id:"t"+uid(),name:v.name,sport:v.sport,tier:v.tier});commit()})},
@@ -1273,6 +1490,12 @@ const A={
     confirmSheet("Restaurar copia","<p>Todo lo actual se reemplaza por la copia.</p>","Restaurar",go)},
   closesheet(e,ev){if(ev.target===e||e.tagName==="BUTTON")closeSheet()}
 };
+function pickFields(p){const tp=p.tipo||(p.text?guessTipo(p.text,p.player):"ata");
+  return`<label class="f">Pick</label><input class="in" name="text" value="${esc(p.text)}" placeholder="Más de __ goles del Barça"><p class="small muted" style="margin:6px 0 0">Poné <b>__</b> donde va el número y lo elegís al apostar.</p>
+  <label class="f">Grupo</label><select class="in" name="tipo">${PGRP.map(([k,l])=>`<option value="${k}" ${tp===k?"selected":""}>${l}</option>`).join("")}</select>
+  <label class="f">Números rápidos (separados por coma)</label><input class="in" name="lineas" inputmode="decimal" value="${esc((p.lineas||[]).join(", "))}" placeholder="0.5, 1.5, 2.5">
+  <label class="row" style="margin-top:12px"><input type="checkbox" name="player" ${p.player?"checked":""}> Es estadística de jugador</label>`}
+function pickVals(v){const ls=String(v.lineas||"").split(",").map(x=>num(x)).filter(x=>x>=0);return{text:v.text,tipo:v.tipo,player:!!v.player,lineas:[...new Set(ls)].sort((a,b)=>a-b)}}
 function teamFields(t){return`<label class="f">Nombre</label><input class="in" name="name" value="${esc(t.name)}"><label class="f">Deporte o liga</label><input class="in" name="sport" value="${esc(t.sport)}">
   <label class="f">Tipo</label><select class="in" name="tier"><option value="principal" ${t.tier==="principal"?"selected":""}>Principal</option><option value="auxiliar" ${t.tier==="auxiliar"?"selected":""}>Auxiliar</option></select>`}
 
@@ -1280,6 +1503,7 @@ document.addEventListener("click",ev=>{
   const tb=ev.target.closest("[data-tab]");if(tb){if(tb.dataset.tab!==UI.tab||tb.dataset.tab!=="picks")UI.team=null;else UI.team=null;UI.tab=tb.dataset.tab;UI.detail=null;if(UI.tab==="apostar"&&!UI.draft)UI.draft=newDraft();render();scrollTo(0,0);return}
   const e=ev.target.closest("[data-act]");if(!e)return;const f=A[e.dataset.act];if(f)f(e,ev)});
 document.addEventListener("input",ev=>{const e=ev.target;
+  if(e.id==="plin"){const p=pick(e.dataset.pid),x=document.getElementById("pist");if(p&&x)x.innerHTML=pickStatsHtml(p,e.value);return}
   if(e.dataset.bind){if(e.dataset.bind==="ret"){(UI.resolve[e.dataset.id]||(UI.resolve[e.dataset.id]={})).ret=e.value;return}
     UI.draft[e.dataset.bind]=e.value;if(e.dataset.bind!=="custom")updDyn()}});
 document.addEventListener("change",ev=>{const e=ev.target;
@@ -1291,6 +1515,9 @@ document.addEventListener("change",ev=>{const e=ev.target;
   if(!e.dataset.set)return;const k=e.dataset.set,s=ST.settings;
   if(k==="ragnarMontos"){const a=e.value.split(",").map(x=>parseFloat(x)).filter(x=>x>0);if(a.length)s.ragnarMontos=a}
   else if(k==="weekendShift")s.weekendShift=e.value;
+  else if(k==="descanso")s.descanso=e.value===""?"":+e.value;
+  else if(k==="autoGames"){s.autoGames=!!e.checked;if(s.autoGames)fetchSports(true)}
+  else if(k.startsWith("cuotas.")){const[,g,q]=k.split("."),v=num(e.value);if(!(v>1)){toast("Escribí una cuota mayor que 1");return}CU()[g][q]=v}
   else{const n=parseFloat(e.value);if(!(n>0))return;if(k.startsWith("capital."))s.capital[k.split(".")[1]]=n;else if(k.startsWith("plan."))P()[k.split(".")[1]]=n;else s[k]=n}
   commit();toast("Ajuste guardado")});
 function updDyn(){const d=UI.draft;if(!d)return;const p=document.getElementById("dynpay"),c=document.getElementById("dyncheck");if(p)p.innerHTML=dynPay(d);if(c)c.innerHTML=dynCheck(d)}
