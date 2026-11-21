@@ -550,7 +550,7 @@ const FN={S:"Skipper",K:"Kowalski",C:"Cabo"},FC={S:"var(--tommy)",K:"var(--walte
 function isWE(date){const w=parseISO(date||todayISO()).getDay();return w===0||w===6}
 function camFb(bal,a){if(a&&(a.cabo||a.method==="cabo"))return"C";if(a&&a.forceK)return"K";return bal<P().s-1e-9?"S":"K"}
 function camCapF(f,a){return f==="S"?P().s:f==="K"?P().k:(a&&a.meta||Infinity)}
-function camCuota(bal,date,a,cap){const c=cap||(cuotaDia(date)||{}).cap;return c?r2(c-0.01):P().cs}
+function camCuota(bal,date,a,cap){const c=cap||(cuotaDia(date)||{}).cap;return c?c:P().cs}
 function cupoMax(n,date){const we=isWE(date);if(n<=0)return null;if(n===1)return 1.11;if(n===2)return we?1.21:1.13;if(n===3)return we?1.21:1.16;return 1.26}
 function camTarget(bal,date,a,solo){a=a||liveAttempt("tommy");const cap=camCapF(camFb(bal,a),a),x=bal*camCuota(bal,date,a,solo);return r2(x>=cap-5?Math.max(cap,bal):x)}
 const betFase=b=>b.fase||(b.stake<P().s-1e-9?"S":"K");
@@ -664,11 +664,12 @@ function cuotaDia(date,ids,qualy){date=date||todayISO();const pl=ids&&ids.length
   if(rb.length){const cap=ot.length?cu.rb[Math.min(ot.length,4)]:(qualy?cu.rb.q:cu.rb.s);return{cap,n:pl.length,cols,unk:raw.filter(c=>!c).length,rb:true,sinRB:base}}
   return{cap:base,n:ot.length,cols,unk:raw.filter(c=>!c).length,rb:false,sinRB:null}}
 const fmtC=x=>String(+(+x).toFixed(4));
+const topLim=cap=>Math.round(cap*100+1)/100;
 function capTxt(q){if(!q)return"";const c=q.cols.map(x=>COLN[x]).join(", ");return q.rb?`Red Bull${q.n>1?" + "+(q.n-1)+(q.n-1===1?" principal":" principales"):""}`:`${q.n} ${q.n===1?"principal":"principales"}${c?" ("+c+")":""}`}
 function dayHero(date,link){const q=cuotaDia(date),dt=parseISO(date||todayISO());const dl=dt.toLocaleDateString("es-SV",{weekday:"long",day:"numeric"});
   const desc=ST.settings.descanso!=null&&ST.settings.descanso!==""&&dt.getDay()===+ST.settings.descanso;
   const tag=link?`button class="hero" data-tab="semana" aria-label="Ver la semana"`:`div class="hero"`;
-  return`<${tag}><span><small>${esc(dl.charAt(0).toUpperCase()+dl.slice(1))}${desc?" · descanso":""}${link?" · ver semana ›":""}</small><br><b class="c" style="font-size:21px">${q?esc(capTxt(q)):"No juega ningún principal"}</b></span><span style="text-align:right"><small>Cuota del día</small><br><span class="big">${q?"&lt; "+q.cap.toFixed(2):"—"}</span></span></${link?"button":"div"}>`}
+  return`<${tag}><span><small>${esc(dl.charAt(0).toUpperCase()+dl.slice(1))}${desc?" · descanso":""}${link?" · ver semana ›":""}</small><br><b class="c" style="font-size:21px">${q?esc(capTxt(q)):"No juega ningún principal"}</b></span><span style="text-align:right"><small>Cuota del día: hasta</small><br><span class="big">${q?q.cap.toFixed(2):"—"}</span>${q?`<br><small>sin llegar a ${topLim(q.cap).toFixed(2)}</small>`:""}</span></${link?"button":"div"}>`}
 function gameRow(g){const t=team(g.teamId);if(!t)return"";const f1=ttype(g.teamId)==="f1",col=colorOf(g),r=gRes(g);
   const dc=col==="V"?"var(--win)":col==="A"?"var(--warn)":col==="R"?"var(--loss)":"var(--line)";const hh=f1?"":h2h(g);
   return`<div class="gm"><div class="l1"><span>${g.time?esc(hm12(g.time))+" · ":""}${esc(gComp(g))}${f1?"":" · "+(g.home?"En casa":"De visita")}${g.date!==todayISO()?" · "+esc(fmtDate(g.date)):""}</span><button class="link" style="font-size:12px" data-act="editgame" data-id="${g.id}">Editar</button></div>
@@ -684,7 +685,7 @@ function viewSemana(){let h=`<button class="back" data-tab="inicio">‹ Inicio</
   for(let i=0;i<7;i++){const dt=new Date(Date.now()+i*864e5),ds=toISO(dt),pl=playingToday(ds),q=cuotaDia(ds);
     const desc=ST.settings.descanso!=null&&ST.settings.descanso!==""&&dt.getDay()===+ST.settings.descanso;
     const dl=dt.toLocaleDateString("es-SV",{weekday:"long",day:"numeric"});
-    h+=`<div class="sem${i===0?" hoyd":""}${!pl.length||desc?" off":""}"><div class="row" style="justify-content:space-between;align-items:flex-start;flex-wrap:nowrap"><span><b class="c" style="font-size:20px">${esc(dl.charAt(0).toUpperCase()+dl.slice(1))}</b><br><span class="small muted">${i===0?"Hoy":i===1?"Mañana":""}${desc?(i<2?" · ":"")+"Descanso (regla 22)":""}</span></span><span style="text-align:right"><b class="c" style="font-size:26px">${q?"&lt; "+q.cap.toFixed(2):"—"}</b><br><span class="small muted">${q?esc(capTxt(q)):"Ningún principal"}</span></span></div>
+    h+=`<div class="sem${i===0?" hoyd":""}${!pl.length||desc?" off":""}"><div class="row" style="justify-content:space-between;align-items:flex-start;flex-wrap:nowrap"><span><b class="c" style="font-size:20px">${esc(dl.charAt(0).toUpperCase()+dl.slice(1))}</b><br><span class="small muted">${i===0?"Hoy":i===1?"Mañana":""}${desc?(i<2?" · ":"")+"Descanso (regla 22)":""}</span></span><span style="text-align:right"><b class="c" style="font-size:26px">${q?"hasta "+q.cap.toFixed(2):"—"}</b><br><span class="small muted">${q?esc(capTxt(q)):"Ningún principal"}</span></span></div>
      <div class="chips" style="margin-top:8px">${pl.map(id=>{const g=gameOn(id,ds),c=g&&colorOf(g);return`<span class="chip" style="padding:3px 10px 3px 4px">${badge(id)}${ttype(id)==="f1"?esc(g?g.rival:"Carrera"):(g&&g.home?"vs ":"en ")+esc(g?g.rival:"")}${c?` <i class="dot" style="margin-left:6px;width:10px;height:10px;background:${c==="V"?"var(--win)":c==="A"?"var(--warn)":"var(--loss)"}"></i>`:""}</span>`}).join("")}</div>
      ${!pl.length?`<p class="small muted" style="margin:6px 0 0">No juega ningún principal: ese día no se apuesta.</p>`:desc?`<p class="small" style="margin:6px 0 0;color:var(--warn);font-weight:600">Día de descanso: si apostás, la app te avisa.</p>`:""}</div>`}
   return h}
@@ -774,10 +775,10 @@ function checks(d){
     else{if(legs.length&&!prin.length)w.push({e:1,lk:1,t:"🔒 La apuesta no lleva ningún principal."});
       const fuera=prin.filter(t=>!pl.includes(t));if(fuera.length)w.push({e:1,lk:1,t:`🔒 ${fuera.map(shn).join(", ")} no juega ese día.`});
       const q=cuotaDia(d.date,prin.length?prin:null,d.qualy);
-      if(q&&c>1){const mg=+ST.settings.margen||0,lim=q.cap+mg;
-        if(c>=lim-1e-9){if(ST.settings.r14modo==="avisar")w.push({t:`Regla 14: te pasás del tope de hoy (menos de ${q.cap.toFixed(2)}${mg?` + margen ${mg}`:""}). Pusiste ${fmtC(c)}.`});
-          else w.push({e:1,lk:1,t:`🔒 Regla 14: con ${capTxt(q)} la cuota tiene que ser menos de ${mg?fmtC(lim)+` (tope ${q.cap.toFixed(2)} + margen ${mg})`:q.cap.toFixed(2)} (pusiste ${fmtC(c)}).`})}}
-      if(q&&q.rb&&q.sinRB&&q.sinRB>q.cap+1e-9)w.push({t:`Sin Red Bull podés llegar a menos de ${q.sinRB.toFixed(2)}.`});
+      if(q&&c>1&&c>=topLim(q.cap)-1e-9){const nx=(topLim(q.cap)).toFixed(2);
+        if(ST.settings.r14modo==="avisar")w.push({t:`Regla 14: te pasás del tope de hoy (hasta ${q.cap.toFixed(2)}, sin llegar a ${nx}). Pusiste ${fmtC(c)}.`});
+        else w.push({e:1,lk:1,t:`🔒 Regla 14: con ${capTxt(q)} la cuota puede llegar hasta ${q.cap.toFixed(2)}, sin llegar a ${nx} (pusiste ${fmtC(c)}).`})}
+      if(q&&q.rb&&q.sinRB&&q.sinRB>q.cap+1e-9)w.push({t:`Sin Red Bull podés llegar hasta ${q.sinRB.toFixed(2)}.`});
       if(q&&q.unk)w.push({t:`${q.unk===1?"Un rival no tiene":"Hay rivales sin"} color: cuenta como amarillo. Podés ponérselo en Inicio.`});}
     if(aux.length===1)w.push({t:"Llevás un auxiliar: no cambia la cuota del día."});
     if(aux.length>1)w.push({e:1,lk:1,t:"🔒 Solo un auxiliar por apuesta."});
@@ -859,7 +860,10 @@ function migPicks33(){const s=ST.settings;if(s.picks33)return false;s.picks33=tr
     if(!mine.some(p=>ptipo(p)==="ata"))ST.picks.push({id:"p"+uid(),teamId:t.id,text:`Más de __ ${u} de ${nm}`,tipo:"ata",player:false,lineas:[],baseUsed:0,baseHit:0});
     if(!mine.some(p=>ptipo(p)==="hcp"))ST.picks.push({id:"p"+uid(),teamId:t.id,text:`Handicap +__ ${nm}`,tipo:"hcp",player:false,lineas:[],baseUsed:0,baseHit:0});}
   return true}
-function migrate(){if(!ST)return false;let r=migRules();if(migPicks33())r=true;if(migRules8())r=true;if(migPicks32())r=true;if(migPlan5())r=true;if(migRules6())r=true;if(migRules7())r=true;if(!ST.settings.undoAnadir){const n0=ST.moves.length;ST.moves=ST.moves.filter(mv=>!/^Añadido al intento|^Saldo de Bet365 que no estaba en la app/.test(mv.note||""));ST.settings.undoAnadir=true;r=true}if(!ST.settings.rules4){const x=ST.rules.find(q=>/En Cabo s[ií] se permiten/.test(q.text));if(x)x.text="En Rico sí se permiten estadísticas de jugadores. En Skipper, Kowalski y Cabo no (salvo de los Warriors).";ST.settings.rules4=true;r=true}return migrate0()||r}
+function migRules9(){const s=ST.settings;if(s.rules9)return false;s.rules9=true;delete s.margen;const x=ST.rules.find(q=>q.id==="r3_13");
+  if(x)x.text="Todos (Skipper, Kowalski y Cabo) apuestan a la cuota del día. La cuota puede llegar hasta el tope, sin llegar al siguiente número (tope 1.12: se vale 1.1299, no 1.13). El tope sale de cuántos principales van y del color de cada rival (verde, amarillo, rojo); ya no cambia el finde. Red Bull va aparte: solo, hasta 1.08 (clasificación 1.09); con otros, +1 → 1.12, +2 → 1.16, +3 → 1.20, +4 → 1.22. Los topes están en Ajustes.";
+  return true}
+function migrate(){if(!ST)return false;let r=migRules();if(migRules9())r=true;if(migPicks33())r=true;if(migRules8())r=true;if(migPicks32())r=true;if(migPlan5())r=true;if(migRules6())r=true;if(migRules7())r=true;if(!ST.settings.undoAnadir){const n0=ST.moves.length;ST.moves=ST.moves.filter(mv=>!/^Añadido al intento|^Saldo de Bet365 que no estaba en la app/.test(mv.note||""));ST.settings.undoAnadir=true;r=true}if(!ST.settings.rules4){const x=ST.rules.find(q=>/En Cabo s[ií] se permiten/.test(q.text));if(x)x.text="En Rico sí se permiten estadísticas de jugadores. En Skipper, Kowalski y Cabo no (salvo de los Warriors).";ST.settings.rules4=true;r=true}return migrate0()||r}
 function migrate0(){
   if(ST.settings.seedTeams2&&!ST.settings.seedTeams3){const nk=NEW_TEAMS.map(x=>x[0]);
     for(const t of ST.teams){const k=tkey(t.id);if(!nk.includes(k))continue;t.tier="principal";
@@ -911,7 +915,7 @@ function camCard(){const m="tommy",a=liveAttempt(m),last=lastAttempt(m),pl=P(),r
     else if(es==="sinmeta")h+=`<p class="one">Cabo arrancó con ${money(bal)}. Poné tu meta.</p><button class="btn pri" style="margin-top:8px" data-act="cammeta">Poner meta de Cabo</button>`;
     else if(es==="meta")h+=`<p class="one"><b>¡Cabo llegó a ${money(a.meta)}!</b> Retirás todo y Skipper vuelve a empezar con ${money(pl.re)} del respaldo.</p><button class="btn pri" style="margin-top:8px" data-act="camretiro">Retirar ${money(bal)}</button>`;
     else if(p)h+=`<p class="one">En juego: ${money(p.stake)} a ${p.cuota.toFixed(2)} → meta ${money(p.target)}</p>`;
-    else{const q=cuotaDia(todayISO());h+=q?`<p class="one">Hoy mete <b>${money(bal)}</b> → <b>${money(targetFor(m,bal))}</b> · cuota del día <b>&lt; ${q.cap.toFixed(2)}</b></p>`:`<p class="one">Hoy no juega ningún principal: no se apuesta.</p>`}
+    else{const q=cuotaDia(todayISO());h+=q?`<p class="one">Hoy mete <b>${money(bal)}</b> → <b>${money(targetFor(m,bal))}</b> · cuota del día hasta <b>${q.cap.toFixed(2)}</b></p>`:`<p class="one">Hoy no juega ningún principal: no se apuesta.</p>`}
     const lo=f==="S"?a.capital:f==="K"?pl.s:(a.caboCap||bal),pct=cap<Infinity?Math.min(100,(bal-lo)/Math.max(1,cap-lo)*100):0;
     h+=`<div class="prog"><i style="width:${Math.max(0,pct).toFixed(0)}%"></i></div>
      <div class="row small muted" style="margin-top:8px;gap:6px;flex-wrap:wrap">${(a.cabo?["S","K","C"]:["S","K"]).map(x=>`<span style="${x===f?"color:"+FC[x]+";font-weight:700":""}">${FN[x]}${x==="S"?" →"+money(pl.s):x==="K"?" →"+money(pl.k):a.meta?" →"+money(a.meta):""}</span>`).join(" · ")}</div>`;
@@ -927,7 +931,7 @@ function caboCard(){const m="cabo",a=liveAttempt(m),last=lastAttempt(m),pl=P();
   if(es==="sinmeta")h+=`<button class="btn pri" style="margin-top:8px" data-act="cabometa">Poner meta de Cabo</button>`;
   else if(es==="meta")h+=`<p class="one"><b>¡Cabo llegó a ${money(a.meta)}!</b> Retirá todo.</p><button class="btn pri" style="margin-top:8px" data-act="caboretiro">Retirar ${money(bal)}</button>`;
   else if(p)h+=`<p class="one">En juego: ${money(p.stake)} a ${p.cuota.toFixed(2)} → meta ${money(p.target)}</p>`;
-  else{const q=cuotaDia(todayISO());h+=`<p class="one">Hoy mete <b>${money(bal)}</b> → <b>${money(targetFor(m,bal))}</b>${q?` · cuota del día <b>&lt; ${q.cap.toFixed(2)}</b>`:""}</p><p class="small muted" style="margin:4px 0 0">Primero el camino, y nunca los mismos equipos.</p>`}
+  else{const q=cuotaDia(todayISO());h+=`<p class="one">Hoy mete <b>${money(bal)}</b> → <b>${money(targetFor(m,bal))}</b>${q?` · cuota del día hasta <b>${q.cap.toFixed(2)}</b>`:""}</p><p class="small muted" style="margin:4px 0 0">Primero el camino, y nunca los mismos equipos.</p>`}
   const pct=a.meta?Math.min(100,(bal-a.capital)/Math.max(1,a.meta-a.capital)*100):0;
   h+=`<div class="prog"><i style="width:${Math.max(0,pct).toFixed(0)}%"></i></div>`;
   if(es!=="meta"&&!p)h+=`<button class="link small" style="margin-top:8px" data-act="caboretiro">Retirar ahora</button>`;
@@ -1028,11 +1032,11 @@ function viewApostar(){
     if(!a)return h+`<div class="card"><p style="margin:0">${M[m].name} no tiene un intento vivo. Puedes empezar uno desde Inicio.</p></div>`;
     if(pendingOf(m).length)return h+`<div class="card"><p style="margin:0">Ya tienes la apuesta del día en juego. Resuélvela en Inicio antes de meter otra.</p></div>`;
     const bal=attemptBal(a);if(d.stake==="")d.stake=String(suggestStake(m,bal)||bal);
-    h+=`<p class="muted small" style="margin:12px 0 0">${m==="tommy"||m==="cabo"?(m==="tommy"?camLabel(a):"Cabo")+(capOf(d)?` · cuota del día menos de ${capOf(d).toFixed(2)}`:""):"Día "+dayNum(a)} · tu saldo en ${M[m].name.split(" ")[0]}: <b style="color:var(--ink)">${money(bal)}</b></p>
+    h+=`<p class="muted small" style="margin:12px 0 0">${m==="tommy"||m==="cabo"?(m==="tommy"?camLabel(a):"Cabo")+(capOf(d)?` · cuota del día hasta ${capOf(d).toFixed(2)} (sin llegar a ${topLim(capOf(d)).toFixed(2)})`:""):"Día "+dayNum(a)} · tu saldo en ${M[m].name.split(" ")[0]}: <b style="color:var(--ink)">${money(bal)}</b></p>
      <label class="f">Cuánto vas a meter</label><input class="in" type="text" inputmode="decimal" autocomplete="off" value="${esc(d.stake)}" data-bind="stake">`}
   else h+=`<label class="f">Cuánto vas a meter (Rico tiene ${money(ragnarFree())})</label><input class="in" type="text" inputmode="decimal" autocomplete="off" value="${esc(d.stake)}" data-bind="stake">`;
-  if((m==="tommy"||m==="walter"||m==="cabo")&&liveAttempt(m)){const pl=playingToday(d.date);h+=`<p class="small muted" style="margin:10px 0 0">Principales que juegan ese día: <b style="color:var(--ink)">${pl.length?pl.map(x=>esc(shn(x))).join(", "):"ninguno"}</b>${capOf(d)?` · menos de <b style="color:var(--ink)">${capOf(d).toFixed(2)}</b>`:""}</p>`;
-    if(pl.some(x=>ttype(x)==="f1"))h+=`<div class="row" style="margin-top:8px"><button class="chip ${d.qualy?"on":""}" data-act="qualy">Red Bull: clasificación</button><span class="small muted">${d.qualy?"Clasificación: menos de "+CU().rb.q.toFixed(2):"Carrera"}</span></div>`}
+  if((m==="tommy"||m==="walter"||m==="cabo")&&liveAttempt(m)){const pl=playingToday(d.date);h+=`<p class="small muted" style="margin:10px 0 0">Principales que juegan ese día: <b style="color:var(--ink)">${pl.length?pl.map(x=>esc(shn(x))).join(", "):"ninguno"}</b>${capOf(d)?` · hasta <b style="color:var(--ink)">${capOf(d).toFixed(2)}</b>`:""}</p>`;
+    if(pl.some(x=>ttype(x)==="f1"))h+=`<div class="row" style="margin-top:8px"><button class="chip ${d.qualy?"on":""}" data-act="qualy">Red Bull: clasificación</button><span class="small muted">${d.qualy?"Clasificación: hasta "+CU().rb.q.toFixed(2):"Carrera"}</span></div>`}
   h+=`<div class="row" style="gap:10px"><div style="flex:1"><label class="f">Cuota del parlay</label><input class="in" type="text" inputmode="decimal" autocomplete="off" placeholder="${m==="ragnar"?"":"1.15"}" value="${esc(d.cuota)}" data-bind="cuota"></div>
    <div style="flex:1"><label class="f">Fecha</label><input class="in" type="date" value="${esc(d.date)}" data-bind="date"></div></div>`;
   h+=`<div id="dynpay">${dynPay(d)}</div>`;
@@ -1143,7 +1147,7 @@ function viewMas(){return`<h1>Más</h1><div class="menu">
   <button data-tab="dinero">Entradas y salidas de dinero <span>${ST.moves.length}</span></button>
   <button data-tab="ajustes">Ajustes <span>tema, cuotas del día, calendario</span></button>
   <button data-tab="drive">Google Drive <span>${DRIVE?"conectado":"sin conectar"}</span></button>
-  <button data-tab="respaldo">Respaldo <span>exportar o importar</span></button></div><p class="small muted" style="text-align:center;margin-top:16px">Versión 33 · Margen y plantillas</p>`}
+  <button data-tab="respaldo">Respaldo <span>exportar o importar</span></button></div><p class="small muted" style="text-align:center;margin-top:16px">Versión 34 · Hasta el tope</p>`}
 function viewDrive(){const bk=ST?back:`<button class="back" data-tab="inicio">‹ Volver</button>`;
   return bk+`<h1>Google Drive</h1><p class="muted">Tus datos se guardan en tu Drive, en la carpeta “Operación Sueldo extra”, con una copia de respaldo por día. Si pierdes el celular, instalas la app en otro y te conectas con estos mismos datos.</p>
   <label class="f">Dirección del script (termina en /exec)</label><input class="in" id="durl" autocomplete="off" value="${esc(DRIVE?.url||"")}" placeholder="https://script.google.com/macros/s/…/exec">
@@ -1151,13 +1155,12 @@ function viewDrive(){const bk=ST?back:`<button class="back" data-tab="inicio">�
   <button class="btn pri full" style="margin-top:14px" data-act="dconnect">${DRIVE?"Guardar y probar":"Conectar"}</button>
   ${DRIVE?`<div class="row" style="margin-top:10px"><button class="btn" data-act="dpush">Subir ahora</button><button class="link" style="margin-left:auto" data-act="dclear">Desconectar</button></div>`:""}`}
 const back=`<button class="back" data-tab="mas">‹ Más</button>`;
-function viewReglas(){const s=ST.settings,mg=+s.margen||0,md=s.r14modo==="avisar"?"avisar":"bloquear",ej=CU().c1.V;
+function viewReglas(){const s=ST.settings,md=s.r14modo==="avisar"?"avisar":"bloquear",ej=CU().c1.V;
   return back+`<h1>Reglas</h1>
   <div class="card"><h3>Cuota del día (regla 14)</h3>
-   <p class="small muted" style="margin:6px 0 8px">Si la cuota que ponés pasa el tope del día:</p>
+   <p class="small" style="margin:6px 0 0">La cuota puede llegar <b>hasta</b> el tope, sin llegar al siguiente número. Ejemplo: tope ${ej.toFixed(2)} → se vale ${ej.toFixed(2)}, ${fmtC(ej+0.0022)} o ${fmtC(ej+0.0099)}; ya no ${topLim(ej).toFixed(2)}.</p>
+   <p class="small muted" style="margin:10px 0 8px">Si la cuota que ponés pasa el tope:</p>
    <div class="seg2"><button class="${md==="bloquear"?"on":""}" data-act="r14modo" data-id="bloquear">Bloquear</button><button class="${md==="avisar"?"on":""}" data-act="r14modo" data-id="avisar">Solo avisar</button></div>
-   <label class="f" for="mg">Margen extra sobre el tope</label><input class="in" id="mg" type="text" inputmode="decimal" data-set="margen" value="${mg||""}" placeholder="0.005">
-   <p class="small muted" style="margin:6px 0 0">${mg?`Ejemplo: con tope ${ej.toFixed(2)} y margen ${mg}, te deja hasta ${fmtC(ej+mg-0.0001)}.`:`Sin margen: con tope ${ej.toFixed(2)} lo más alto es ${fmtC(ej-0.0001)}. Con margen 0.005 te dejaría hasta ${fmtC(ej+0.0049)}.`}</p>
    <button class="btn full" style="margin-top:12px" data-tab="ajustes">Cambiar las cuotas de cada combinación</button></div>
   <p class="muted small">Toca una para editarla.</p><ol class="rules">${ST.rules.map(r=>`<li><button class="link" style="color:var(--ink);text-decoration:none;text-align:left;font-size:16px" data-act="editrule" data-id="${r.id}">${esc(r.text)}</button></li>`).join("")}</ol><button class="btn full" style="margin-top:14px" data-act="newrule">+ Agregar regla</button>`}
 function viewDinero(){const c=cuenta();return back+`<h1>Entradas y salidas</h1><p class="muted small">Entrada es dinero que metes; salida es lo que retiras de Bet365. Toca una entrada para cambiar de dónde salió el dinero.</p>
@@ -1169,7 +1172,7 @@ function viewAjustes(){const s=ST.settings,pl=P(),cu=CU(),th=s.theme||"oscuro";
   const grid=(g,title)=>`<p class="tierlbl">${title}</p><div class="card" style="margin-top:6px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 12px">${Object.keys(CUO0[g]).map(k=>`<label class="row" style="flex-wrap:nowrap;gap:8px"><span style="min-width:62px">${lab(k)}</span>${ci(g,k)}</label>`).join("")}</div>`;
   const days=["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
   return back+`<h1>Ajustes</h1><h2>Apariencia</h2><div class="seg2" style="grid-template-columns:repeat(3,1fr)">${[["oscuro","Oscuro"],["claro","Claro"],["auto","Como el celular"]].map(([k,l])=>`<button class="${th===k?"on":""}" data-act="theme" data-id="${k}">${l}</button>`).join("")}</div>
-  <h2>Cuotas del día</h2><p class="small muted" style="margin:0">Siempre menos de este número. 🟢 verde · 🟡 amarillo · 🔴 rojo, según el rival.</p>
+  <h2>Cuotas del día</h2><p class="small muted" style="margin:0">Podés llegar hasta este número, sin llegar al siguiente (1.12 → se vale 1.1299, no 1.13). 🟢 verde · 🟡 amarillo · 🔴 rojo, según el rival.</p>
   ${grid("c1","1 principal")}${grid("c2","2 principales")}${grid("c3","3 principales")}${grid("c4","4 o más principales")}
   <p class="tierlbl">Red Bull</p><div class="card" style="margin-top:6px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 12px">${[["s","Solo, carrera"],["q","Solo, clasificación"],["1","+1 principal"],["2","+2 principales"],["3","+3 principales"],["4","+4 o más"]].map(([k,l])=>`<label class="small" style="display:block">${l}${ci("rb",k)}</label>`).join("")}</div>
   <h2>Calendario</h2><label class="f">Día de descanso</label><select class="in" data-set="descanso">${days.map((x,i)=>`<option value="${i}" ${+s.descanso===i?"selected":""}>${x}</option>`).join("")}<option value="" ${s.descanso===""?"selected":""}>Ninguno</option></select>
