@@ -863,7 +863,28 @@ function migPicks33(){const s=ST.settings;if(s.picks33)return false;s.picks33=tr
 function migRules9(){const s=ST.settings;if(s.rules9)return false;s.rules9=true;delete s.margen;const x=ST.rules.find(q=>q.id==="r3_13");
   if(x)x.text="Todos (Skipper, Kowalski y Cabo) apuestan a la cuota del día. La cuota puede llegar hasta el tope, sin llegar al siguiente número (tope 1.12: se vale 1.1299, no 1.13). El tope sale de cuántos principales van y del color de cada rival (verde, amarillo, rojo); ya no cambia el finde. Red Bull va aparte: solo, hasta 1.08 (clasificación 1.09); con otros, +1 → 1.12, +2 → 1.16, +3 → 1.20, +4 → 1.22. Los topes están en Ajustes.";
   return true}
-function migrate(){if(!ST)return false;let r=migRules();if(migRules9())r=true;if(migPicks33())r=true;if(migRules8())r=true;if(migPicks32())r=true;if(migPlan5())r=true;if(migRules6())r=true;if(migRules7())r=true;if(!ST.settings.undoAnadir){const n0=ST.moves.length;ST.moves=ST.moves.filter(mv=>!/^Añadido al intento|^Saldo de Bet365 que no estaba en la app/.test(mv.note||""));ST.settings.undoAnadir=true;r=true}if(!ST.settings.rules4){const x=ST.rules.find(q=>/En Cabo s[ií] se permiten/.test(q.text));if(x)x.text="En Rico sí se permiten estadísticas de jugadores. En Skipper, Kowalski y Cabo no (salvo de los Warriors).";ST.settings.rules4=true;r=true}return migrate0()||r}
+function migPW35(){const s=ST.settings;if(s.pw35)return false;s.pw35=true;
+  const old=ST.picks.find(p=>p.teamId==="warriors"&&p.text==="Puntos de Warriors");if(!old)return true;
+  let tpl=ST.picks.find(p=>p.teamId==="warriors"&&p.text==="Más de __ puntos de Warriors");
+  if(!tpl){tpl={id:"p"+uid(),teamId:"warriors",text:"Más de __ puntos de Warriors",tipo:"ata",player:false,lineas:[],baseUsed:0,baseHit:0};ST.picks.push(tpl)}
+  const byName=n=>ST.picks.find(p=>p.teamId==="warriors"&&isTpl(p)&&new RegExp("puntos.*"+n,"i").test(p.text))||ST.picks.find(p=>p.teamId==="warriors"&&isTpl(p)&&new RegExp(n,"i").test(p.text));
+  const NUM=/\d+(?:\.\d+)?/;
+  for(const b of ST.bets)for(const l of b.legs){if(l.pickId!==old.id)continue;const t=l.text||"",m=NUM.exec(t);
+    let dest=tpl;if(/curry/i.test(t))dest=byName("curry")||tpl;else if(/podz/i.test(t))dest=byName("podz")||tpl;else if(/yaxe/i.test(t))dest=byName("yaxe")||tpl;
+    l.pickId=dest.id;if(m&&l.linea==null){l.linea=+m[0];dest.lineas=dest.lineas||[];if(!dest.lineas.includes(l.linea)){dest.lineas.push(l.linea);dest.lineas.sort((a,b)=>a-b)}}}
+  tpl.baseUsed=(tpl.baseUsed||0)+(old.baseUsed||0);tpl.baseHit=(tpl.baseHit||0)+(old.baseHit||0);
+  ST.picks=ST.picks.filter(p=>p!==old);return true}
+function migHcp36(){const s=ST.settings;if(s.hcp36)return false;s.hcp36=true;
+  for(const t of ST.teams){const hs=ST.picks.filter(p=>p.teamId===t.id&&isTpl(p)&&ptipo(p)==="hcp");if(hs.length<2)continue;
+    const keep=hs.slice().sort((a,b)=>pickStats(b).u-pickStats(a).u)[0],ids=new Set(hs.map(p=>p.id));
+    keep.text=`Handicap +__ de ${shn(t.id)}`;keep.tipo="hcp";keep.baseLines=keep.baseLines||{};
+    for(const o of hs){if(o===keep)continue;keep.baseUsed=(keep.baseUsed||0)+(o.baseUsed||0);keep.baseHit=(keep.baseHit||0)+(o.baseHit||0);
+      for(const[ln,b]of Object.entries(o.baseLines||{})){const k=keep.baseLines[ln]||(keep.baseLines[ln]={u:0,h:0});k.u+=b.u||0;k.h+=b.h||0}}
+    keep.lineas=[...new Set(hs.flatMap(p=>p.lineas||[]))].sort((a,b)=>a-b);
+    for(const b of ST.bets)for(const l of b.legs)if(ids.has(l.pickId))l.pickId=keep.id;
+    ST.picks=ST.picks.filter(p=>p===keep||!ids.has(p.id))}
+  return true}
+function migrate(){if(!ST)return false;let r=migRules();if(migHcp36())r=true;if(migPW35())r=true;if(migRules9())r=true;if(migPicks33())r=true;if(migRules8())r=true;if(migPicks32())r=true;if(migPlan5())r=true;if(migRules6())r=true;if(migRules7())r=true;if(!ST.settings.undoAnadir){const n0=ST.moves.length;ST.moves=ST.moves.filter(mv=>!/^Añadido al intento|^Saldo de Bet365 que no estaba en la app/.test(mv.note||""));ST.settings.undoAnadir=true;r=true}if(!ST.settings.rules4){const x=ST.rules.find(q=>/En Cabo s[ií] se permiten/.test(q.text));if(x)x.text="En Rico sí se permiten estadísticas de jugadores. En Skipper, Kowalski y Cabo no (salvo de los Warriors).";ST.settings.rules4=true;r=true}return migrate0()||r}
 function migrate0(){
   if(ST.settings.seedTeams2&&!ST.settings.seedTeams3){const nk=NEW_TEAMS.map(x=>x[0]);
     for(const t of ST.teams){const k=tkey(t.id);if(!nk.includes(k))continue;t.tier="principal";
@@ -1147,7 +1168,7 @@ function viewMas(){return`<h1>Más</h1><div class="menu">
   <button data-tab="dinero">Entradas y salidas de dinero <span>${ST.moves.length}</span></button>
   <button data-tab="ajustes">Ajustes <span>tema, cuotas del día, calendario</span></button>
   <button data-tab="drive">Google Drive <span>${DRIVE?"conectado":"sin conectar"}</span></button>
-  <button data-tab="respaldo">Respaldo <span>exportar o importar</span></button></div><p class="small muted" style="text-align:center;margin-top:16px">Versión 34 · Hasta el tope</p>`}
+  <button data-tab="respaldo">Respaldo <span>exportar o importar</span></button></div><p class="small muted" style="text-align:center;margin-top:16px">Versión 36 · Picks juntos</p>`}
 function viewDrive(){const bk=ST?back:`<button class="back" data-tab="inicio">‹ Volver</button>`;
   return bk+`<h1>Google Drive</h1><p class="muted">Tus datos se guardan en tu Drive, en la carpeta “Operación Sueldo extra”, con una copia de respaldo por día. Si pierdes el celular, instalas la app en otro y te conectas con estos mismos datos.</p>
   <label class="f">Dirección del script (termina en /exec)</label><input class="in" id="durl" autocomplete="off" value="${esc(DRIVE?.url||"")}" placeholder="https://script.google.com/macros/s/…/exec">
